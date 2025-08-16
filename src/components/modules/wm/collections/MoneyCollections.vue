@@ -87,7 +87,7 @@ import DataTablesCore from "datatables.net";
 import { defineAsyncComponent, onMounted, ref } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import { formatDate, initDataTable } from "@/composables/dataTables";
-import { formatAmount, formatNumber } from "@/composables/helper_functions";
+import { formatAmount } from "@/composables/helper_functions";
 import { useWaterCollectionsStore } from "@/store/water-collections.store";
 
 const WaterDeliveryFormModal = defineAsyncComponent(
@@ -103,18 +103,7 @@ const formData = ref({});
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
-const addItem = () => {
-  action.value = "create";
-  formData.value = {};
-  dialogVisible.value = true;
-};
 
-
-const editItem = (item: any) => {
-  action.value = "edit";
-  formData.value = item;
-  dialogVisible.value = true;
-};
 
 
 onMounted(async () => {

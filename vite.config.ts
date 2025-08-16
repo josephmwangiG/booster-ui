@@ -4,7 +4,17 @@ import { fileURLToPath, URL } from "node:url";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-
+  server: {
+    port: 8080,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:3000',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      }
+    }
+  },
   plugins: [
     vue({
       // This is needed, or else Vite will try to find image paths (which it wont be able to find because this will be called on the web, not directly)

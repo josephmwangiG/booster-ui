@@ -1,5 +1,5 @@
 <template>
-  <div class="lg:flex relative min-h-screen" v-if="!loading">
+  <div class="lg:flex relative min-h-screen">
     <!-- Body -->
     <div
       class="flex-1 w-full h-full lg:relative absolute inset-0 z-0 order-2 overflow-y-auto lg:ml-64"
@@ -57,7 +57,7 @@
         </nav>
       </div>
       <div class="h-full mb-20">
-        <router-view> </router-view>
+        <router-view v-if="!loading"> </router-view>
       </div>
     </div>
     <!-- End Body -->

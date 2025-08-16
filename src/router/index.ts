@@ -502,12 +502,12 @@ router.beforeEach((to: any, _from: any) => {
   const user = userStr ? JSON.parse(userStr) : null;
   const isAdmin = user?.type === "admin";
 
-  if (to.matched.some((record) => record.meta.require_auth)) {
+  if (to.matched.some((record: any) => record.meta.require_auth)) {
     if (!token) {
       return { name: "login", query: { redirect: to.fullPath } };
     }
 
-    const requiresAdmin = to.matched.some((record) => record.meta.isAdmin);
+    const requiresAdmin = to.matched.some((record: any) => record.meta.isAdmin);
 
     if (requiresAdmin && !isAdmin) {
       return { name: "dashboard" };

@@ -1,7 +1,5 @@
-<template>
-  <div class="content pb-12" v-if="!loading">
-    <InvoiceDetails />
-    <OrderItems />
+<InvoiceDetails />
+    <!-- <OrderItems /> -->
   </div>
 </template>
 
@@ -17,9 +15,9 @@ const store = useFinanceStore();
 const InvoiceDetails = defineAsyncComponent(
   () => import("@/components/finance/InvoiceDetails.vue")
 );
-const OrderItems = defineAsyncComponent(
-  () => import("@/components/finance/OrderItems.vue")
-);
+// const OrderItems = defineAsyncComponent(
+//   () => import("@/components/finance/OrderItems.vue")
+// );
 
 onMounted(async () => {
   await store.getInvoice(router.currentRoute.value.params.id as string);

@@ -12,10 +12,10 @@
   </div>
   <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="space-y-6 p-2 lg-px-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-1">
-      <OrderDetailsCard :order="store.invoice.order" :labels="labels" />
+            <!-- <OrderDetailsCard :order="store.invoice.order" :labels="labels" /> -->
     </div>
     <div class="space-y-6 p-2 lg-px-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-1">
-      <OrderContact :contact="store.invoice.order.contact" />
+      <!-- <OrderContact :contact="store.invoice.order.contact" /> -->
     </div>
     <div class="space-y-6 p-2 lg-px-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-1">
       <InvoiceDetailsCard :invoice="store.invoice" />
@@ -53,13 +53,13 @@
 import { useFinanceStore } from "@/store/finance.store";
 import { defineAsyncComponent, onMounted, ref } from "vue";
 
-const OrderContact = defineAsyncComponent(
-  () => import("@/components/orders/OrderContact.vue")
-)
+// const OrderContact = defineAsyncComponent(
+//   () => import("@/components/orders/OrderContact.vue")
+// )
 
-const OrderDetailsCard = defineAsyncComponent(
-  () => import("@/components/orders/OrderDetailsCard.vue")
-)
+// const OrderDetailsCard = defineAsyncComponent(
+//   () => import("@/components/orders/OrderDetailsCard.vue")
+// )
 const InvoiceDetailsCard = defineAsyncComponent(
   () => import("@/components/finance/InvoiceDetailsCard.vue")
 )

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "@/api";
 import { defineStore } from "pinia";
 export type LoginFormData = {
   email?: string;
@@ -27,7 +27,7 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     async login(data: LoginFormData) {
       try {
-        const res = await axios.post("/login", data, {});
+        const res = await api.post("/api/login", data);
 
         localStorage.setItem("token", res.data.token);
 
@@ -45,11 +45,10 @@ export const useAuthStore = defineStore("auth", {
     },
     async forgotPassword(data: LoginFormData) {
       try {
-        const res = await axios.post(
-          "/forgot-password",
-          { ...data, base_url: window.location.origin + "/reset-password/" },
-          {}
-        );
+        const res = await api.post("/api/forgot-password", {
+          ...data,
+          base_url: window.location.origin + "/reset-password/"
+        });
 
         return res;
       } catch (err: any) {
@@ -58,7 +57,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async resetPassword(data: LoginFormData, token: string) {
       try {
-        const res = await axios.post("/reset-password/" + token, data, {});
+        const res = await api.post(`/api/reset-password/${token}`, data);
 
         return res;
       } catch (err: any) {
@@ -67,7 +66,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async verifyAccount(token: string) {
       try {
-        const res = await axios.post("/verify-account/" + token, {}, {});
+        const res = await api.post(`/api/verify-account/${token}`, {});
 
         return res;
       } catch (err: any) {
@@ -77,7 +76,7 @@ export const useAuthStore = defineStore("auth", {
 
     async register(data: RegisterFormData) {
       try {
-        const res = await axios.post("/register", data, {});
+        const res = await api.post("/api/register", data);
         return res;
       } catch (err: any) {
         return err.response;
@@ -86,11 +85,7 @@ export const useAuthStore = defineStore("auth", {
 
     async getUser() {
       try {
-        const res = await axios.get("/get-user", {
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        });
+        const res = await api.get("/api/get-user");
         this.user = res.data;
         return res;
       } catch (error: any) {
@@ -99,11 +94,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async updateOrganization(data: any) {
       try {
-        const res = await axios.post("/update-organization", data, {
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        });
+        const res = await api.post("/api/update-organization", data);
         this.user = res.data;
         return res;
       } catch (error: any) {
