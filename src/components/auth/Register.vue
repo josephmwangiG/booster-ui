@@ -150,7 +150,7 @@ const formData = ref({
   password: "",
   password_confirmation: "",
   accept_terms: false,
-  base_url: import.meta.env.VITE_APP_URL + "/verify-account/",
+  base_url: window.location.origin + "/verify-account/",
 });
 
 const register = async () => {

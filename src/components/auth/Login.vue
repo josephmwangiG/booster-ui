@@ -115,7 +115,9 @@ const login = async () => {
     if (router.currentRoute.value.query.redirect) {
       router.push({ path: router.currentRoute.value.query.redirect as string });
     } else {
-      router.push({ name: "dashboard" });
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      router.push({ name: user?.type === 'admin' ? 'admin-dashboard' : 'dashboard' });
       errors.value = {};
     }
   } else if (res.status == 422 && res.data.errors) {
@@ -131,7 +133,9 @@ const login = async () => {
 
 onMounted(() => {
   if (localStorage.getItem("token")) {
-    router.push({ name: "dashboard" });
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+    router.push({ name: user?.type === 'admin' ? 'admin-dashboard' : 'dashboard' });
   }
 });
 </script>

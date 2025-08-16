@@ -39,7 +39,9 @@ onMounted(async () => {
   );
 
   if (localStorage.getItem("token")) {
-    router.push({ name: "dashboard" });
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+    router.push({ name: user?.type === 'admin' ? 'admin-dashboard' : 'dashboard' });
   }
 });
 </script>

@@ -346,6 +346,10 @@ const routes = [
     name: "admin-home",
     path: "/app/adm",
     component: () => import("@/components/admin/Index.vue"),
+    meta: {
+      require_auth: true,
+      isAdmin: true,
+    },
     children: [
       {
         name: "admin-dashboard",
@@ -491,12 +495,31 @@ router.beforeEach((to: any, _from: any) => {
   if (to.meta.title) {
     title = to.meta.title;
   }
+  document.title = title;
 
-  if (to.meta.require_auth) {
-    if (!localStorage.getItem("token")) {
+  const token = localStorage.getItem("token");
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isAdmin = user?.type === "admin";
+
+  if (to.matched.some((record) => record.meta.require_auth)) {
+    if (!token) {
       return { name: "login", query: { redirect: to.fullPath } };
     }
-  }
 
-  document.title = title;
+    const requiresAdmin = to.matched.some((record) => record.meta.isAdmin);
+
+    if (requiresAdmin && !isAdmin) {
+      return { name: "dashboard" };
+    }
+
+    if (to.name === "dashboard" && isAdmin) {
+      return { name: "admin-dashboard" };
+    }
+  } else {
+    // Public routes
+    if (token && (to.name === 'login' || to.name === 'register')) {
+      return { name: isAdmin ? 'admin-dashboard' : 'dashboard' };
+    }
+  }
 });

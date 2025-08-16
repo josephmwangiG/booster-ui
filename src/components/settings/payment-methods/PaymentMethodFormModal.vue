@@ -49,7 +49,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     } else {
       if (props.action === "create") {
         const res = await store.createPaymentMethod(formData);
-        if (res.status == 200 || res.status == 201) {
+        if (res && (res.status == 200 || res.status == 201)) {
           resetForm(itemFormRef.value as FormInstance);
           emits("close-modal");
           ElNotification({
@@ -57,16 +57,28 @@ const submitForm = async (formEl: FormInstance | undefined) => {
             type: "success",
             message: "Payment method created!",
           })
+        } else {
+          ElNotification({
+            title: "Error",
+            type: "error",
+            message: (res && res.data && res.data.message) ? res.data.message : "Failed to create payment method",
+          })
         }
       } else {
         const res = await store.updatePaymentMethod(formData);
-        if (res.status == 200 || res.status == 201) {
+        if (res && (res.status == 200 || res.status == 201)) {
           resetForm(itemFormRef.value as FormInstance);
           emits("close-modal");
           ElNotification({
             title: "Success",
             type: "success",
             message: "Payment method updated!",
+          })
+        } else {
+          ElNotification({
+            title: "Error",
+            type: "error",
+            message: (res && res.data && res.data.message) ? res.data.message : "Failed to update payment method",
           })
         }
       }

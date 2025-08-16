@@ -15,13 +15,11 @@ axios.defaults.headers.common = {
   "X-Requested-With": "XMLHttpRequest"
 };
 
-axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL || `${window.location.origin}/api`;
 
 const app = createApp(App);
 
 app.use(VueApexCharts)
-
-app.component('apexchart', VueApexCharts)
 app.use(createPinia());
 
 app.use(router);

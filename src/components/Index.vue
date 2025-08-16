@@ -118,6 +118,10 @@ onMounted(async () => {
       localStorage.clear();
       window.location.href = `/login?redirect=${router.currentRoute.value.fullPath}`;
     }
+    if (res.status == 200 && res.data) {
+      const u = res.data;
+      localStorage.setItem("user", JSON.stringify({ id: u.id, type: u.type || 'user' }));
+    }
   }
 });
 </script>

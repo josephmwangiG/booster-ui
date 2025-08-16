@@ -1,6 +1,5 @@
 import axios from "axios";
 import { defineStore } from "pinia";
-
 export type LoginFormData = {
   email?: string;
   password?: string;
@@ -32,7 +31,12 @@ export const useAuthStore = defineStore("auth", {
 
         localStorage.setItem("token", res.data.token);
 
-        this.user = res.data.user;
+        // The backend wraps the user in an extra "user" property
+        this.user = (res.data && res.data.user && res.data.user.user) ? res.data.user.user : res.data.user;
+        // Persist minimal user object to support router role guards
+        if (this.user) {
+          localStorage.setItem("user", JSON.stringify({ id: this.user.id, type: this.user.type || 'user' }));
+        }
 
         return res;
       } catch (err: any) {
@@ -41,7 +45,11 @@ export const useAuthStore = defineStore("auth", {
     },
     async forgotPassword(data: LoginFormData) {
       try {
-        const res = await axios.post("/forgot-password", data, {});
+        const res = await axios.post(
+          "/forgot-password",
+          { ...data, base_url: window.location.origin + "/reset-password/" },
+          {}
+        );
 
         return res;
       } catch (err: any) {

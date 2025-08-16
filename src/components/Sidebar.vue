@@ -51,7 +51,7 @@
 
     </div>
 
-    <div v-if="subscriptions.includes('Properties')">
+    <div v-if="subscriptions.includes('Water Management')">
       <li class="p-3 pt-4 pb-2 uppercase text-xs font-semibold text-gray-500">
         Water Management
       </li>
@@ -352,6 +352,12 @@
     <li class="p-3 pt-3 pb-2 uppercase text-xs font-semibold text-gray-500">
       Settings
     </li>
+    <li class="">
+      <router-link :to="{ name: 'organization' }" :class="router.currentRoute.value.name === 'organization'
+        ? 'sidebar-menu-active'
+        : 'sidebar-menu'
+        "><i class="ri-building-2-line mr-2"></i> Organization</router-link>
+    </li>
     <li>
       <button @click="settingsDropdown = !settingsDropdown" type="button" :class="router.currentRoute.value.path.startsWith('/settings')
         ? 'sidebar-menu-active'
@@ -383,12 +389,6 @@
             "><i class="ri-circle-fill text-[8px] mr-2"></i> Payment Methods</router-link>
         </li>
         <li>
-          <router-link :to="{ name: 'organization' }" class="drop-menu" :class="router.currentRoute.value.name === 'organization'
-            ? 'text-orange-500'
-            : ''
-            "><i class="ri-circle-fill text-[8px] mr-2"></i> Organization</router-link>
-        </li>
-        <li>
           <router-link :to="{ name: 'profile' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'profile'
             ? 'text-orange-500'
             : ''
@@ -403,11 +403,16 @@ import { useAuthStore } from "@/store/auth.store";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
-const store = useAuthStore()
+const store = useAuthStore();
 
 const subscriptions = computed(() => {
-  const subscriptions = store.user.organization?.subscriptions?.filter((sub: any) => sub.is_active).map((sub: any) => sub?.module?.name)
-  return subscriptions ? subscriptions : []
+  const org = store.user?.organization
+  if (!org || !Array.isArray(org.subscriptions)) return []
+  const subs = org.subscriptions
+    .filter((sub: any) => sub && sub.is_active)
+    .map((sub: any) => sub?.module?.name || sub?.plan_name)
+    .filter((name: any) => typeof name === 'string' && name.length > 0)
+  return subs
 })
 
 const contactsDropdown = ref(false);

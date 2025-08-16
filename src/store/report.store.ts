@@ -43,7 +43,7 @@ export const useReportsStore = defineStore("reports", {
     },
     async getWMDashboardReports() {
       try {
-        const res = await axios.get("reports/wm/dashboard", this.headers);
+        const res = await axios.get("/reports/wm/dashboard", this.headers);
         this.wmDashboardReports = res.data;
         return res;
       } catch (error: any) {

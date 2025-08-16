@@ -27,7 +27,7 @@
           <div class="col-span-2 space-y-6 p-6 mt-6 bg-white">
             <h4>Orders Report</h4>
             <span class="text-gray-400 text-sm">
-              Total 2,356 Items in the sold
+              Total {{ (reportsStore.dashboardReports?.orders || []).length }} recent orders
             </span>
             <div class="w-full overflow-x-auto">
               <table class="w-full">
@@ -62,29 +62,29 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                   <tr
-                    v-for="(item, index) in items"
+                    v-for="(item, index) in (reportsStore.dashboardReports?.orders || [])"
                     :key="index"
                     :class="index % 2 != 0 ? 'bg-gray-50' : ''"
                   >
                     <td
                       class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500"
                     >
-                      {{ item.item }}
+                      {{ item.contact?.name || '-' }}
                     </td>
                     <td
                       class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500"
                     >
-                      {{ item.product }}
+                      {{ item.order_number || item.sale_number || item.purchase_number || '-' }}
                     </td>
                     <td
                       class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500"
                     >
-                      {{ item.date }}
+                      {{ formatDate(item.order_date) }}
                     </td>
                     <td
                       class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500"
                     >
-                      {{ item.price }}
+                      {{ formatAmount(item.total_amount) }}
                     </td>
                     <td
                       class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500"
@@ -103,77 +103,47 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/store/auth.store";
+import { useReportsStore } from "@/store/report.store";
+import { formatAmount } from "@/composables/helper_functions";
+import { formatDate } from "@/composables/dataTables";
 
-const store = useAuthStore();
+const authStore = useAuthStore();
+const reportsStore = useReportsStore();
 
-const series = [store.user.vendor.stores_count, store.user.vendor.products_count, store.user.vendor.brands_count]
+const loading = ref(true);
 
+const series = [
+  authStore.user.vendor.stores_count,
+  authStore.user.vendor.products_count,
+  authStore.user.vendor.brands_count,
+];
 
 var options = {
   chart: {
     type: "donut",
   },
-  labels: ['Stores ' + store.user.vendor.stores_count, 'Products ' + store.user.vendor.products_count, 'Brands ' + store.user.vendor.brands_count],
+  labels: [
+    "Stores " + authStore.user.vendor.stores_count,
+    "Products " + authStore.user.vendor.products_count,
+    "Brands " + authStore.user.vendor.brands_count,
+  ],
   dataLabels: {
     enabled: true,
     formatter: function (_val: any, opts: any) {
-      // opts.series[opts.seriesIndex] gives the count for the respective category
-      return series[opts.seriesIndex]
+      return series[opts.seriesIndex];
     },
     dropShadow: {
-      enabled: false
-    }
+      enabled: false,
+    },
   },
 };
 
-
-
-const items = [
-  {
-    item: "Macbook Air",
-    product: "#XGY-356",
-    date: "02 Apr, 2023",
-    price: "$1,230",
-  },
-  {
-    item: "Macbook Air",
-    product: "#XGY-356",
-    date: "02 Apr, 2023",
-    price: "$1,230",
-  },
-  {
-    item: "Macbook Air",
-    product: "#XGY-356",
-    date: "02 Apr, 2023",
-    price: "$1,230",
-  },
-  {
-    item: "Macbook Air",
-    product: "#XGY-356",
-    date: "02 Apr, 2023",
-    price: "$1,230",
-  },
-  {
-    item: "Macbook Air",
-    product: "#XGY-356",
-    date: "02 Apr, 2023",
-    price: "$1,230",
-  },
-  {
-    item: "Macbook Air",
-    product: "#XGY-356",
-    date: "02 Apr, 2023",
-    price: "$1,230",
-  },
-
-  {
-    item: "Macbook Air",
-    product: "#XGY-356",
-    date: "02 Apr, 2023",
-    price: "$1,230",
-  },
-];
+onMounted(async () => {
+  await reportsStore.getVendorDashboardReports();
+  loading.value = false;
+});
 </script>
 
 <style></style>

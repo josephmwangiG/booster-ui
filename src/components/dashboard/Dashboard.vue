@@ -20,7 +20,7 @@
     </div>
     <PropertiesDashboard v-if="activeDashboard == 'Properties'" />
     <WMDashboard v-if="activeDashboard == 'Water Management'" />
-    <VendorDashboard v-if="activeDashboard == 'Inventory'" />
+    
   </div>
 </template>
 
@@ -32,9 +32,6 @@ import { computed, defineAsyncComponent, onMounted, ref } from "vue";
 const PropertiesDashboard = defineAsyncComponent(
   () => import("@/components/dashboard/PropertiesDashboard.vue")
 );
-const VendorDashboard = defineAsyncComponent(
-  () => import("@/components/dashboard/VendorDashboard.vue")
-);
 const WMDashboard = defineAsyncComponent(
   () => import("@/components/dashboard/WMDashboard.vue")
 );
@@ -42,11 +39,16 @@ const WMDashboard = defineAsyncComponent(
 const store = useAuthStore();
 
 const subscriptions = computed(() => {
-  const subscriptions = store.user.organization?.subscriptions?.filter((sub: any) => sub.is_active).map((sub: any) => sub?.module?.name)
-  return subscriptions ? subscriptions : []
+  const org = store.user?.organization
+  if (!org || !Array.isArray(org.subscriptions)) return []
+  const subs = org.subscriptions
+    .filter((sub: any) => sub && sub.is_active)
+    .map((sub: any) => sub?.module?.name || sub?.plan_name)
+    .filter((name: any) => typeof name === 'string' && name.length > 0)
+  return subs
 })
 
-console.log(subscriptions.value);
+
 
 const activeDashboard = ref(subscriptions.value[0] ? subscriptions.value[0] : "")
 const handleSelect = (dashboard: string) => {

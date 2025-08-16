@@ -13,31 +13,51 @@ export const usePaymentMethodsStore = defineStore("payment-methods", {
   }),
   actions: {
     async getPaymentMethods() {
-      const res = await axios.get("/payment-methods", this.headers);
-      this.paymentMethods = res.data;
+      try {
+        const res = await axios.get("/payment-methods", this.headers);
+        this.paymentMethods = Array.isArray(res.data)
+          ? res.data
+          : (res.data?.payment_methods ?? []);
+        return res;
+      } catch (error: any) {
+        // Ensure state remains consistent and avoid throwing in mounted hooks
+        this.paymentMethods = [];
+        return error?.response ?? null;
+      }
     },
 
     async createPaymentMethod(data: PaymentMethodForm) {
-      const res = await axios.post("/payment-methods", data, this.headers);
-
-      this.paymentMethods.unshift(res.data);
-
-      return res;
+      try {
+        const res = await axios.post("/payment-methods", data, this.headers);
+        if (res?.data) {
+          this.paymentMethods.unshift(res.data);
+        }
+        return res;
+      } catch (error: any) {
+        return error?.response ?? null;
+      }
     },
     async updatePaymentMethod(data: PaymentMethodForm) {
-      const res = await axios.put(
-        "/payment-methods/" + data.id,
-        data,
-        this.headers
-      );
+      try {
+        const res = await axios.put(
+          "/payment-methods/" + data.id,
+          data,
+          this.headers
+        );
 
-      if (res.status == 200 || res.status == 201) {
-        this.paymentMethods[
-          this.paymentMethods.findIndex((t: any) => t.id == data.id)
-        ] = res.data;
+        if (res.status == 200 || res.status == 201) {
+          const indexOfUpdated = this.paymentMethods.findIndex(
+            (existingItem: any) => existingItem.id == data.id
+          );
+          if (indexOfUpdated !== -1) {
+            this.paymentMethods[indexOfUpdated] = res.data;
+          }
+        }
+
+        return res;
+      } catch (error: any) {
+        return error?.response ?? null;
       }
-
-      return res;
     },
   },
 });
