@@ -53,7 +53,16 @@
                   {{ item.can_login ? "Yes" : "No" }}
                 </td>
 
-                <td class="t-td">Edit Delete</td>
+                <td class="t-td">
+                  <div class="flex space-x-2">
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                      Edit
+                    </button>
+                    <button class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded">
+                      Delete
+                    </button>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>

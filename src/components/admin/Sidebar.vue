@@ -54,8 +54,8 @@
       </button>
       <ul id="dropdown-example" class="pb-2" :class="contactsDropdown ? 'show' : 'hidden'">
         <li>
-          <router-link :to="{ name: 'admin-products' }" class="drop-menu py-4"
-            :class="router.currentRoute.value.name === 'admin-products' ? 'text-orange-500' : ''"><i
+          <router-link :to="{ name: 'admin-suppliers' }" class="drop-menu py-4"
+            :class="router.currentRoute.value.name === 'admin-suppliers' ? 'text-orange-500' : ''"><i
               class="ri-circle-fill text-[8px] mr-2"></i>
             Suppliers</router-link>
         </li>
@@ -80,7 +80,7 @@
 
 
     <li class="">
-      <router-link :to="{ name: 'admin-products' }"
+      <router-link :to="{ name: 'admin-reports' }"
         :class="router.currentRoute.value.name === 'admin-reports' ? 'sidebar-menu-active' : 'sidebar-menu'"><i
           class="ri-bar-chart-fill mr-2"></i>
         Reports</router-link>

@@ -73,23 +73,24 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
-import { useReportStore } from "@/store/report.store";
+import { useReportsStore } from "@/store/report.store";
 
 const loading = ref(true);
-const reportStore = useReportStore();
+const reportStore = useReportsStore();
 
-const totalEarnings = computed(() => reportStore.adminDashboard?.earnings || 0);
-const totalOrders = computed(() => reportStore.adminDashboard?.orders || 0);
-const totalProducts = computed(() => reportStore.adminDashboard?.products || 0);
+const totalEarnings = computed(() => reportStore.dashboardReports?.total_sales || 0);
+const totalOrders = computed(() => reportStore.dashboardReports?.total_orders || 0);
+const totalProducts = computed(() => reportStore.dashboardReports?.total_products || 0);
 
 onMounted(async () => {
   loading.value = true;
   try {
-    await reportStore.getAdminDashboard();
+    await reportStore.getAdminDashboardReports();
   } catch (error) {
     console.error('Failed to fetch earnings data:', error);
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
 });
 </script>
 

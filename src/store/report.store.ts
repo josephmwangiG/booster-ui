@@ -28,39 +28,67 @@ export const useReportsStore = defineStore("reports", {
   actions: {
     async getVendorDashboardReports() {
       try {
-        const res = await api.get("/api/reports/vendor/dashboard");
+        const res = await api.get("/reports/vendor/dashboard");
         this.dashboardReports = res.data;
         return res;
       } catch (error: any) {
+        console.error('Failed to fetch vendor dashboard reports:', error);
+        // Set default values to prevent errors
+        this.dashboardReports = {
+          total_orders: 0,
+          total_sales: 0,
+          customers: 0,
+          suppliers: 0,
+          closed_orders: 0,
+          closed_sales: 0,
+          orders: [],
+          total_users: 0,
+          total_organizations: 0,
+          total_stores: 0
+        };
         return error.response;
       }
     },
     async getAdminDashboardReports() {
       try {
-        const res = await api.get("/api/reports/admin/dashboard");
+        const res = await api.get("/reports/admin/dashboard");
         this.dashboardReports = res.data;
         return res;
       } catch (error: any) {
+        console.error('Failed to fetch admin dashboard reports:', error);
+        // Set default values to prevent errors
+        this.dashboardReports = {
+          total_orders: 0,
+          total_sales: 0,
+          customers: 0,
+          suppliers: 0,
+          closed_orders: 0,
+          closed_sales: 0,
+          orders: [],
+          total_users: 0,
+          total_organizations: 0,
+          total_stores: 0
+        };
         return error.response;
       }
     },
     async getPropertiesDashboardReports() {
       try {
-        const res = await api.get("/api/reports/properties/dashboard");
+        const res = await api.get("/reports/properties/dashboard");
         this.propertiesDashboardReports = res.data;
         return res;
       } catch (error: any) {
         return error.response;
       }
     },
-    async getWMDashboardReports() {
+        async getWMDashboardReports() {
       try {
-        const res = await api.get("/api/reports/wm/dashboard");
+        const res = await api.get("/reports/wm/dashboard");
         this.wmDashboardReports = res.data;
         return res;
       } catch (error: any) {
         return error.response;
       }
-    },
-  },
+    }
+  }
 });

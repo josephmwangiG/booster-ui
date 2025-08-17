@@ -55,8 +55,8 @@
                   {{ new Date(item.created_at).toLocaleDateString() }}
                 </td>
                 <td class="t-td">
-                  <button class="text-blue-600 hover:text-blue-800 mr-2">View</button>
-                  <button class="text-green-600 hover:text-green-800">Update</button>
+                  <button @click="viewOrder(item)" class="text-blue-600 hover:text-blue-800 mr-2">View</button>
+                  <button @click="updateOrder(item)" class="text-green-600 hover:text-green-800">Update</button>
                 </td>
               </tr>
             </tbody>
@@ -72,18 +72,17 @@ import { onMounted, ref, computed } from "vue";
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
 import { initDataTable } from "@/composables/dataTables";
-import { useReportStore } from "@/store/report.store";
+import { useReportsStore } from "@/store/report.store";
 
 const dataTableRef = ref(null);
 
 DataTable.use(DataTablesCore);
 const loading = ref(true);
-const reportStore = useReportStore();
+const reportStore = useReportsStore();
 
 const orders = computed(() => {
-  // This would typically come from a dedicated orders store
-  // For now, we'll use mock data or empty array
-  return [];
+  // Get orders from the reports store
+  return reportStore.dashboardReports?.orders || [];
 });
 
 const getStatusColor = (status: string) => {
@@ -99,15 +98,26 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const viewOrder = (order: any) => {
+  console.log('View order:', order);
+  // TODO: Navigate to order details page
+};
+
+const updateOrder = (order: any) => {
+  console.log('Update order:', order);
+  // TODO: Open update modal or navigate to edit page
+};
+
 onMounted(async () => {
   loading.value = true;
   try {
-    await reportStore.getAdminDashboard();
+    await reportStore.getAdminDashboardReports();
   } catch (error) {
     console.error('Failed to fetch orders data:', error);
+  } finally {
+    loading.value = false;
   }
   initDataTable(dataTableRef.value);
-  loading.value = false;
 });
 </script>
 

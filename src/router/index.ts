@@ -416,6 +416,15 @@ const routes = [
         },
       },
       {
+        name: "admin-suppliers",
+        path: "suppliers",
+        component: () => import("@/components/admin/suppliers/Suppliers.vue"),
+        meta: {
+          require_auth: true,
+          title: "suppliers",
+        },
+      },
+      {
         name: "admin-organizations",
         path: "organizations",
         component: () =>
@@ -479,6 +488,15 @@ const routes = [
         meta: {
           require_auth: true,
           title: "Orders",
+        },
+      },
+      {
+        name: "admin-reports",
+        path: "reports",
+        component: () => import("@/components/admin/reports/Reports.vue"),
+        meta: {
+          require_auth: true,
+          title: "Reports",
         },
       },
     ],

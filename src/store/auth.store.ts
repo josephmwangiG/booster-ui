@@ -27,7 +27,7 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     async login(data: LoginFormData) {
       try {
-        const res = await api.post("/api/login", data);
+        const res = await api.post("/login", data);
 
         localStorage.setItem("token", res.data.token);
 
@@ -45,7 +45,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async forgotPassword(data: LoginFormData) {
       try {
-        const res = await api.post("/api/forgot-password", {
+        const res = await api.post("/forgot-password", {
           ...data,
           base_url: window.location.origin + "/reset-password/"
         });
@@ -57,7 +57,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async resetPassword(data: LoginFormData, token: string) {
       try {
-        const res = await api.post(`/api/reset-password/${token}`, data);
+        const res = await api.post(`/reset-password/${token}`, data);
 
         return res;
       } catch (err: any) {
@@ -66,7 +66,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async verifyAccount(token: string) {
       try {
-        const res = await api.post(`/api/verify-account/${token}`, {});
+        const res = await api.post(`/verify-account/${token}`, {});
 
         return res;
       } catch (err: any) {
@@ -76,7 +76,7 @@ export const useAuthStore = defineStore("auth", {
 
     async register(data: RegisterFormData) {
       try {
-        const res = await api.post("/api/register", data);
+        const res = await api.post("/register", data);
         return res;
       } catch (err: any) {
         return err.response;
@@ -85,7 +85,7 @@ export const useAuthStore = defineStore("auth", {
 
     async getUser() {
       try {
-        const res = await api.get("/api/get-user");
+        const res = await api.get("/get-user");
         this.user = res.data;
         return res;
       } catch (error: any) {
@@ -94,7 +94,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async updateOrganization(data: any) {
       try {
-        const res = await api.post("/api/update-organization", data);
+        const res = await api.post("/update-organization", data);
         this.user = res.data;
         return res;
       } catch (error: any) {

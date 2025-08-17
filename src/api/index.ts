@@ -2,7 +2,7 @@ import axios from "axios";
 
 
   const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: '/api',
   withCredentials: true,
   headers: {
     Accept: "application/json",
@@ -43,7 +43,17 @@ api.interceptors.response.use(
 // Initialize Sanctum CSRF cookie
 export const initializeSanctum = async () => {
   try {
-    await api.get("/sanctum/csrf-cookie");
+    // Create a separate axios instance for Sanctum (not going through /api proxy)
+    const sanctumApi = axios.create({
+      baseURL: 'http://localhost:8000',
+      withCredentials: true,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    });
+    await sanctumApi.get("/sanctum/csrf-cookie");
   } catch (error) {
     console.error("Failed to initialize Sanctum:", error);
   }

@@ -157,12 +157,15 @@ const chartSeries = computed(() => {
   const data = dashboardData.value;
   if (!data || typeof data !== 'object') return [];
   
-  return [
+  const series = [
     data.total_users || 0,
     data.total_organizations || 0,
     data.total_properties || 0,
     data.total_bills || 0
-  ].filter(val => val > 0);
+  ];
+  
+  // Only return series if we have valid data
+  return series.filter(val => val > 0);
 });
 
 const chartOptions = computed(() => ({
@@ -175,7 +178,8 @@ const chartOptions = computed(() => ({
   dataLabels: {
     enabled: true,
     formatter: function (val: any, opts: any) {
-      return chartSeries.value[opts.seriesIndex];
+      const series = chartSeries.value;
+      return opts.seriesIndex < series.length ? series[opts.seriesIndex] : 0;
     }
   },
   legend: {
