@@ -16,15 +16,15 @@ export const useTenantsStore = defineStore("tenants", {
   }),
   actions: {
     async getTenants() {
-      const res = await axios.get("/tenants", this.headers);
+      const res = await axios.get("/api/tenants", this.headers);
       this.tenants = res.data;
     },
     async getProperties() {
-      const res = await axios.get("/properties/get/items", this.headers);
+      const res = await axios.get("/api/properties/get/items", this.headers);
       this.properties = res.data;
     },
     async createTenant(data: TenantForm) {
-      const res = await axios.post("/tenants", data, this.headers);
+      const res = await axios.post("/api/tenants", data, this.headers);
 
       this.tenants.unshift(res.data);
 
@@ -33,7 +33,7 @@ export const useTenantsStore = defineStore("tenants", {
 
     async createTenancy(data: TenancyForm) {
       const res = await axios.post(
-        "/tenants/tenancies/create",
+        "/api/tenants/tenancies/create",
         data,
         this.headers
       );
@@ -46,7 +46,7 @@ export const useTenantsStore = defineStore("tenants", {
 
     async endTenancy(data: TenancyForm) {
       const res = await axios.post(
-        "/tenants/tenancies/end/" + data.id,
+        "/api/tenants/tenancies/end/" + data.id,
         {},
         this.headers
       );
@@ -57,11 +57,11 @@ export const useTenantsStore = defineStore("tenants", {
     },
 
     async getTenant(id: string) {
-      const res = await axios.get("/tenants/" + id, this.headers);
+      const res = await axios.get("/api/tenants/" + id, this.headers);
       this.tenant = res.data;
     },
     async updateTenant(data: TenantForm) {
-      const res = await axios.put("/tenants/" + data.id, data, this.headers);
+      const res = await axios.put("/api/tenants/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.tenants[this.tenants.findIndex((t: any) => t.id == data.id)] =

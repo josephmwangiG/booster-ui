@@ -25,14 +25,14 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
   actions: {
     async getWaterDeliveryItems() {
       const res = await axios.get(
-        "/water-collections/get/delivery-items",
+        "/api/water-collections/get/delivery-items",
         this.headers
       );
       this.waterDeliverItems = res.data.deliveries;
       this.payment_methods = res.data.payment_methods;
     },
     async getDeliveryItems() {
-      const res = await axios.get("/water-collections/get/items", this.headers);
+      const res = await axios.get("/api/water-collections/get/items", this.headers);
       this.drivers = res.data.drivers;
       this.vehicles = res.data.vehicles;
       this.payment_methods = res.data.payment_methods;
@@ -43,7 +43,7 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
       this.payment_methods = res.data.payment_methods;
     },
     async createWaterDelivery(data: WaterDeliveryForm) {
-      const res = await axios.post("/water-collections", data, this.headers);
+      const res = await axios.post("/api/water-collections", data, this.headers);
 
       this.waterCollections.unshift(res.data);
 
@@ -52,7 +52,7 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
 
     async updateWaterDelivery(data: WaterDeliveryForm) {
       const res = await axios.put(
-        "/water-collections/" + data.id,
+        "/api/water-collections/" + data.id,
         data,
         this.headers
       );
@@ -67,7 +67,7 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
     },
 
     async getWaterCollections() {
-      const res = await axios.get("/water-collections", this.headers);
+      const res = await axios.get("/api/water-collections", this.headers);
       this.waterCollections = res.data;
     },
     async getPendingWaterCollections() {
@@ -87,18 +87,18 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
       return res;
     },
     async getPayments() {
-      const res = await axios.get("/water-collection-payments", this.headers);
+      const res = await axios.get("/api/water-collection-payments", this.headers);
       this.waterCollectionsPayments = res.data;
     },
 
 
     async getClientBalance(phone_number: string) {
-      return await axios.get("/water-collection-payments/get-client-balance/" + phone_number, this.headers);
+      return await axios.get("/api/water-collection-payments/get-client-balance/" + phone_number, this.headers);
     },
 
     async createPayment(data: any) {
       const res = await axios.post(
-        "/water-collection-payments",
+        "/api/water-collection-payments",
         data,
         this.headers
       );

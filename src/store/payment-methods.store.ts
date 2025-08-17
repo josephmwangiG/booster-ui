@@ -14,7 +14,7 @@ export const usePaymentMethodsStore = defineStore("payment-methods", {
   actions: {
     async getPaymentMethods() {
       try {
-        const res = await axios.get("/payment-methods", this.headers);
+        const res = await axios.get("/api/payment-methods", this.headers);
         this.paymentMethods = Array.isArray(res.data)
           ? res.data
           : (res.data?.payment_methods ?? []);
@@ -28,7 +28,7 @@ export const usePaymentMethodsStore = defineStore("payment-methods", {
 
     async createPaymentMethod(data: PaymentMethodForm) {
       try {
-        const res = await axios.post("/payment-methods", data, this.headers);
+        const res = await axios.post("/api/payment-methods", data, this.headers);
         if (res?.data) {
           this.paymentMethods.unshift(res.data);
         }
@@ -40,7 +40,7 @@ export const usePaymentMethodsStore = defineStore("payment-methods", {
     async updatePaymentMethod(data: PaymentMethodForm) {
       try {
         const res = await axios.put(
-          "/payment-methods/" + data.id,
+          "/api/payment-methods/" + data.id,
           data,
           this.headers
         );

@@ -5,7 +5,7 @@ import { defineStore } from "pinia";
 export const useAdmStoresStore = defineStore("adm-stores", {
   state: () => ({
     stores: [] as any[],
-    user: null as any,
+    store: null as any,
     headers: {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
@@ -14,22 +14,22 @@ export const useAdmStoresStore = defineStore("adm-stores", {
   }),
   actions: {
     async getStores() {
-      const res = await axios.get("/app/adm/stores", this.headers);
+      const res = await axios.get("/api/app/adm/stores", this.headers);
       this.stores = res.data;
     },
     async createCategory(data: CategoryForm) {
-      const res = await axios.post("/app/adm/categories", data, this.headers);
+      const res = await axios.post("/api/app/adm/categories", data, this.headers);
 
       this.stores.unshift(res.data);
 
       return res;
     },
-    async getUser(id: string) {
-      const res = await axios.get("/app/adm/categories/" + id, this.headers);
-      this.user = res.data;
+    async getStore(id: string) {
+      const res = await axios.get("/api/app/adm/stores/" + id, this.headers);
+      this.store = res.data;
     },
     async updateCategory(data: CategoryForm) {
-      const res = await axios.put("/app/adm/categories/" + data.id, data, this.headers);
+      const res = await axios.put("/api/app/adm/categories/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.user = res.data;
@@ -39,7 +39,7 @@ export const useAdmStoresStore = defineStore("adm-stores", {
     },
     async uploadThumbnail(formData: any, id: string) {
       const res = await axios.post(
-        "/app/adm/categories/" + id + "/upload-thumbnail",
+        "/api/app/adm/categories/" + id + "/upload-thumbnail",
         formData,
         {
           headers: {

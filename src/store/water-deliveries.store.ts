@@ -60,13 +60,13 @@ export const useWaterDeliveriesStore = defineStore("water-deliveries", {
       return res;
     },
     async getPayments() {
-      const res = await axios.get("/water-deliveries-payments", this.headers);
+      const res = await axios.get("/api/water-deliveries-payments", this.headers);
       this.waterDeliveriesPayments = res.data;
     },
 
     async createWaterDeliveryItemPayment(data: any) {
       const res = await axios.post(
-        "/water-deliveries-payments",
+        "/api/water-deliveries-payments",
         data,
         this.headers
       );

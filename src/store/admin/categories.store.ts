@@ -14,22 +14,22 @@ export const useAdmCategoriesStore = defineStore("adm-categories", {
   }),
   actions: {
     async getCategories() {
-      const res = await axios.get("/app/adm/categories", this.headers);
+      const res = await axios.get("/api/app/adm/categories", this.headers);
       this.categories = res.data;
     },
     async createCategory(data: CategoryForm) {
-      const res = await axios.post("/app/adm/categories", data, this.headers);
+      const res = await axios.post("/api/app/adm/categories", data, this.headers);
 
       this.categories.unshift(res.data);
 
       return res;
     },
     async getCategory(id: string) {
-      const res = await axios.get("/app/adm/categories/" + id, this.headers);
+      const res = await axios.get("/api/app/adm/categories/" + id, this.headers);
       this.category = res.data;
     },
     async updateCategory(data: CategoryForm) {
-      const res = await axios.put("/app/adm/categories/" + data.id, data, this.headers);
+      const res = await axios.put("/api/app/adm/categories/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.category = res.data;
@@ -39,7 +39,7 @@ export const useAdmCategoriesStore = defineStore("adm-categories", {
     },
     async uploadThumbnail(formData: any, id: string) {
       const res = await axios.post(
-        "/app/adm/categories/" + id + "/upload-thumbnail",
+        "/api/app/adm/categories/" + id + "/upload-thumbnail",
         formData,
         {
           headers: {

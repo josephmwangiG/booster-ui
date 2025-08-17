@@ -20,25 +20,25 @@ export const useInventoriesStore = defineStore("inventories", {
   }),
   actions: {
     async getInventories() {
-      const res = await axios.get("/inventories", this.headers);
+      const res = await axios.get("/api/inventories", this.headers);
       this.inventories = res.data.inventories;
       this.stores = res.data.stores;
       this.products = res.data.products;
       this.contacts = res.data.contacts;
     },
     async getInventoryMovements() {
-      const res = await axios.get("/inventories-movements", this.headers);
+      const res = await axios.get("/api/inventories-movements", this.headers);
       this.inventoryMovements = res.data.inventoryMovements;
       this.inventoryList = res.data.inventories;
       this.stores = res.data.stores;
     },
     async getInventoriesAdjustments() {
-      const res = await axios.get("/inventories-adjustments", this.headers);
+      const res = await axios.get("/api/inventories-adjustments", this.headers);
       this.inventoryAdjustments = res.data.inventoryAdjustments;
       this.inventoryList = res.data.inventories;
     },
     async createInventory(data: InventoryForm) {
-      const res = await axios.post("/inventories", data, this.headers);
+      const res = await axios.post("/api/inventories", data, this.headers);
 
       this.inventories.unshift(res.data);
 
@@ -46,7 +46,7 @@ export const useInventoriesStore = defineStore("inventories", {
     },
     async createInventoryAdjustment(data: InventoryAdjustmentForm) {
       const res = await axios.post(
-        "/inventories-adjustments",
+        "/api/inventories-adjustments",
         data,
         this.headers
       );
@@ -57,7 +57,7 @@ export const useInventoriesStore = defineStore("inventories", {
     },
     async createInventoryMovement(data: InventoryMovementForm) {
       const res = await axios.post(
-        "/inventories-movements",
+        "/api/inventories-movements",
         data,
         this.headers
       );
@@ -67,7 +67,7 @@ export const useInventoriesStore = defineStore("inventories", {
       return res;
     },
     async getInventory(id: string) {
-      const res = await axios.get("/inventories/" + id, this.headers);
+      const res = await axios.get("/api/inventories/" + id, this.headers);
       this.inventory = res.data.inventory;
       this.stores = res.data.stores;
       this.products = res.data.products;
@@ -76,7 +76,7 @@ export const useInventoriesStore = defineStore("inventories", {
     async updateInventory(data: InventoryForm) {
       try{
         const res = await axios.put(
-          "/inventories/" + data.id,
+          "/api/inventories/" + data.id,
           data,
           this.headers
         );
@@ -92,7 +92,7 @@ export const useInventoriesStore = defineStore("inventories", {
     },
     async publishInventory(id: string, is_published: boolean) {
       const res = await axios.put(
-        "/inventories/" + id + "/publish",
+        "/api/inventories/" + id + "/publish",
         {
           is_published: is_published,
         },

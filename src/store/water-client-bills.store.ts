@@ -18,7 +18,7 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
   }),
   actions: {
     async getWaterClientBills() {
-      const res = await axios.get("/water-client-bills", {
+      const res = await axios.get("/api/water-client-bills", {
         ...this.headers,
       });
       this.clientBills = res.data;
@@ -36,14 +36,14 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
       this.clientItems = res.data;
     },
     async getWaterClientBillPayments() {
-      const res = await axios.get("/water-client-payments", {
+      const res = await axios.get("/api/water-client-payments", {
         ...this.headers,
       });
       this.clientBillPayments = res.data;
     },
 
     async generateWaterClientBills(data: any) {
-      const res = await axios.post("/water-client-bills", data, this.headers);
+      const res = await axios.post("/api/water-client-bills", data, this.headers);
 
       this.clientBills = res.data;
 
@@ -51,7 +51,7 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     },
     async createWaterClientBill(data: any) {
       const res = await axios.post(
-        "/water-client-bills",
+        "/api/water-client-bills",
         data,
         this.headers
       );
@@ -62,7 +62,7 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     },
     async updateWaterClientBill(data: any) {
       const res = await axios.put(
-        "/water-client-bills/" + data.id,
+        "/api/water-client-bills/" + data.id,
         data,
         this.headers
       );
@@ -73,7 +73,7 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     },
 
     async createWaterClientBillPayment(data: WaterClientBillPaymentForm) {
-      const res = await axios.post("/water-client-payments", data, {
+      const res = await axios.post("/api/water-client-payments", data, {
         ...this.headers,
       });
       this.clientBillPayments.unshift(res.data);
@@ -82,7 +82,7 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     },
     async completeWaterClientBill(id: any) {
       const res = await axios.post(
-        "/water-client-bills/complete/" + id,
+        "/api/water-client-bills/complete/" + id,
         {},
         this.headers
       );
@@ -93,7 +93,7 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     },
 
     async getWaterClientBill(id: string) {
-      const res = await axios.get("/water-client-bills/" + id, this.headers);
+      const res = await axios.get("/api/water-client-bills/" + id, this.headers);
       this.tenantBill = res.data;
     },
   },

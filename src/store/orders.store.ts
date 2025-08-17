@@ -21,14 +21,14 @@ export const useOrdersStore = defineStore("orders", {
   }),
   actions: {
     async getOrders() {
-      const res = await axios.get("/sales-orders", this.headers);
+      const res = await axios.get("/api/sales-orders", this.headers);
       this.salesOrders = res.data.orders;
       this.products = res.data.products;
       this.contacts = res.data.contacts;
       this.stores = res.data.stores;
     },
     async getSales() {
-      const res = await axios.get("/sales", this.headers);
+      const res = await axios.get("/api/sales", this.headers);
       this.sales = res.data.orders;
       this.products = res.data.products;
       this.inventories = res.data.inventories;
@@ -81,7 +81,7 @@ export const useOrdersStore = defineStore("orders", {
     async generateInvoice(id: string) {
       try {
         const res = await axios.post(
-          "/invoices",
+          "/api/invoices",
           {
             order_id: id,
           },

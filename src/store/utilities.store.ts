@@ -16,15 +16,15 @@ export const useUtilitiesStore = defineStore("utilities", {
   }),
   actions: {
     async getUtilities() {
-      const res = await axios.get("/utilities", this.headers);
+      const res = await axios.get("/api/utilities", this.headers);
       this.utilities = res.data;
     },
     async getProperties() {
-      const res = await axios.get("/properties/get/items", this.headers);
+      const res = await axios.get("/api/properties/get/items", this.headers);
       this.properties = res.data;
     },
     async createUtility(data: UtilityForm) {
-      const res = await axios.post("/utilities", data, this.headers);
+      const res = await axios.post("/api/utilities", data, this.headers);
 
       this.utilities.unshift(res.data);
 
@@ -32,11 +32,11 @@ export const useUtilitiesStore = defineStore("utilities", {
     },
 
     async getUtility(id: string) {
-      const res = await axios.get("/utilities/" + id, this.headers);
+      const res = await axios.get("/api/utilities/" + id, this.headers);
       this.utility = res.data;
     },
     async updateUtility(data: UtilityForm) {
-      const res = await axios.put("/utilities/" + data.id, data, this.headers);
+      const res = await axios.put("/api/utilities/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.utilities[this.utilities.findIndex((t: any) => t.id == data.id)] =

@@ -25,12 +25,12 @@ export const useFinanceStore = defineStore("finance", {
       this.invoices = res.data.invoices;
     },
     async getPayments() {
-      const res = await axios.get("/payments", this.headers);
+      const res = await axios.get("/api/payments", this.headers);
       this.payments = res.data.payments;
       this.invoicesList = res.data.invoices;
     },
     async getOrders() {
-      const res = await axios.get("list/orders", this.headers);
+      const res = await axios.get("/api/list/orders", this.headers);
       this.salesOrders = res.data.orders;
     },
 
@@ -46,7 +46,7 @@ export const useFinanceStore = defineStore("finance", {
 
     async createPayment(data: PaymentForm) {
       try {
-        const res = await axios.post("/payments", data, this.headers);
+        const res = await axios.post("/api/payments", data, this.headers);
         this.payments.unshift(res.data);
         return res;
       } catch (error: any) {

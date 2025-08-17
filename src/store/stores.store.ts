@@ -16,22 +16,22 @@ export const useStoresStore = defineStore("stores", {
   }),
   actions: {
     async getStores() {
-      const res = await axios.get("/stores", this.headers);
+      const res = await axios.get("/api/stores", this.headers);
       this.stores = res.data;
     },
     async createStore(data: StoreForm) {
-      const res = await axios.post("/stores", data, this.headers);
+      const res = await axios.post("/api/stores", data, this.headers);
 
       this.stores.unshift(res.data);
 
       return res;
     },
     async getStore(id: string) {
-      const res = await axios.get("/stores/" + id, this.headers);
+      const res = await axios.get("/api/stores/" + id, this.headers);
       this.store = res.data;
     },
     async updateStore(data: StoreForm) {
-      const res = await axios.put("/stores/" + data.id, data, this.headers);
+      const res = await axios.put("/api/stores/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.store = res.data;
@@ -41,7 +41,7 @@ export const useStoresStore = defineStore("stores", {
     },
     async uploadThumbnail(formData: any, id: string) {
       const res = await axios.post(
-        "/stores/" + id + "/upload-thumbnail",
+        "/api/stores/" + id + "/upload-thumbnail",
         formData,
         {
           headers: {
@@ -59,7 +59,7 @@ export const useStoresStore = defineStore("stores", {
     },
     async publishStore(id: string, is_published: boolean) {
       const res = await axios.put(
-        "/stores/" + id + "/publish",
+        "/api/stores/" + id + "/publish",
         {
           is_published: is_published,
         },

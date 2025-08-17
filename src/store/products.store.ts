@@ -14,22 +14,22 @@ export const useProductsStore = defineStore("products", {
   }),
   actions: {
     async getProducts() {
-      const res = await axios.get("/products", this.headers);
+      const res = await axios.get("/api/products", this.headers);
       this.products = res.data;
     },
     async createProduct(data: ProductForm) {
-      const res = await axios.post("/products", data, this.headers);
+      const res = await axios.post("/api/products", data, this.headers);
 
       this.products.unshift(res.data);
 
       return res;
     },
     async getProduct(id: string) {
-      const res = await axios.get("/products/" + id, this.headers);
+      const res = await axios.get("/api/products/" + id, this.headers);
       this.product = res.data;
     },
     async updateProduct(data: ProductForm) {
-      const res = await axios.put("/products/" + data.id, data, this.headers);
+      const res = await axios.put("/api/products/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.product = res.data;
@@ -39,7 +39,7 @@ export const useProductsStore = defineStore("products", {
     },
     async uploadImage(formData: any, id: string) {
       const res = await axios.post(
-        "/products/" + id + "/media-upload",
+        "/api/products/" + id + "/media-upload",
         formData,
         {
           headers: {
@@ -53,7 +53,7 @@ export const useProductsStore = defineStore("products", {
     },
     async uploadThumbnail(formData: any, id: string) {
       const res = await axios.post(
-        "/products/" + id + "/upload-thumbnail",
+        "/api/products/" + id + "/upload-thumbnail",
         formData,
         {
           headers: {
@@ -70,7 +70,7 @@ export const useProductsStore = defineStore("products", {
       return res;
     },
     async removeMedia(id: string) {
-      const res = await axios.delete("/products/" + id + "/media-remove", {
+      const res = await axios.delete("/api/products/" + id + "/media-remove", {
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
@@ -80,7 +80,7 @@ export const useProductsStore = defineStore("products", {
     },
     async publishProduct(id: string, is_published: boolean) {
       const res = await axios.put(
-        "/products/" + id + "/publish",
+        "/api/products/" + id + "/publish",
         {
           is_published: is_published,
         },

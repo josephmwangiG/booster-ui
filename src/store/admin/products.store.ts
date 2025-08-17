@@ -5,7 +5,7 @@ import { defineStore } from "pinia";
 export const useAdmProductsStore = defineStore("adm-products", {
   state: () => ({
     products: [] as any[],
-    user: null as any,
+    product: null as any,
     headers: {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
@@ -14,49 +14,34 @@ export const useAdmProductsStore = defineStore("adm-products", {
   }),
   actions: {
     async getProducts() {
-      const res = await axios.get("/app/adm/products", this.headers);
+      const res = await axios.get("/api/app/adm/products", this.headers);
       this.products = res.data;
     },
-    async createCategory(data: CategoryForm) {
-      const res = await axios.post("/app/adm/categories", data, this.headers);
-
+    async getProduct(id: string) {
+      const res = await axios.get("/api/app/adm/products/" + id, this.headers);
+      this.product = res.data;
+    },
+    async createProduct(data: any) {
+      const res = await axios.post("/api/app/adm/products", data, this.headers);
       this.products.unshift(res.data);
-
       return res;
     },
-    async getUser(id: string) {
-      const res = await axios.get("/app/adm/categories/" + id, this.headers);
-      this.user = res.data;
-    },
-    async updateCategory(data: CategoryForm) {
+    async updateProduct(data: any) {
       const res = await axios.put(
-        "/app/adm/categories/" + data.id,
+        "/api/app/adm/products/" + data.id,
         data,
         this.headers
       );
 
       if (res.status == 200 || res.status == 201) {
-        this.user = res.data;
+        this.product = res.data;
       }
 
       return res;
     },
-    async uploadThumbnail(formData: any, id: string) {
-      const res = await axios.post(
-        "/app/adm/categories/" + id + "/upload-thumbnail",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        }
-      );
-
-      if (res.status == 200 || res.status == 201) {
-        this.user = res.data;
-      }
-
+    async deleteProduct(id: string) {
+      const res = await axios.delete("/api/app/adm/products/" + id, this.headers);
+      this.products = this.products.filter(p => p.id !== id);
       return res;
     },
   },

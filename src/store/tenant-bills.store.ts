@@ -17,7 +17,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
   }),
   actions: {
     async getTenantBills(params: any) {
-      const res = await axios.get("/tenant-bills", {
+      const res = await axios.get("/api/tenant-bills", {
         ...this.headers,
         params: { ...params },
       });
@@ -30,14 +30,14 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
       this.tenantBillItems = res.data;
     },
     async getTenantBillPayments() {
-      const res = await axios.get("/tenant-payments", {
+      const res = await axios.get("/api/tenant-payments", {
         ...this.headers,
       });
       this.tenantBillPayments = res.data;
     },
 
     async generateTenantBills(data: any) {
-      const res = await axios.post("/tenant-bills", data, this.headers);
+      const res = await axios.post("/api/tenant-bills", data, this.headers);
 
       this.tenantBills = res.data;
 
@@ -45,7 +45,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
     async updateTenantBillItem(data: any) {
       const res = await axios.post(
-        "/tenant-bills/items/update/" + data.id,
+        "/api/tenant-bills/items/update/" + data.id,
         data,
         this.headers
       );
@@ -56,7 +56,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
 
     async createTenantBillPayment(data: TenantBillPaymentForm) {
-      const res = await axios.post("/tenant-payments", data, {
+      const res = await axios.post("/api/tenant-payments", data, {
         ...this.headers,
       });
       this.tenantBillPayments.unshift(res.data);
@@ -65,7 +65,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
     async completeTenantBill(id: any) {
       const res = await axios.post(
-        "/tenant-bills/complete/" + id,
+        "/api/tenant-bills/complete/" + id,
         {},
         this.headers
       );
@@ -76,7 +76,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
 
     async getTenantBill(id: string) {
-      const res = await axios.get("/tenant-bills/" + id, this.headers);
+      const res = await axios.get("/api/tenant-bills/" + id, this.headers);
       this.tenantBill = res.data;
     },
   },
