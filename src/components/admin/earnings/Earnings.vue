@@ -19,7 +19,7 @@
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600">Total Earnings</p>
-              <p class="text-2xl font-semibold text-gray-900">${{ totalEarnings?.toFixed(2) || '0.00' }}</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ formatAmount(totalEarnings) }}</p>
             </div>
           </div>
         </div>
@@ -74,6 +74,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
 import { useReportsStore } from "@/store/report.store";
+import { formatAmount } from "@/composables/helper_functions";
 
 const loading = ref(true);
 const reportStore = useReportsStore();

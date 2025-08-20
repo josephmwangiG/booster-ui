@@ -41,7 +41,7 @@
                   {{ item.customer_name || 'Unknown' }}
                 </td>
                 <td class="t-td">
-                  ${{ item.total?.toFixed(2) || '0.00' }}
+                  {{ formatAmount(item.total) }}
                 </td>
                 <td class="t-td">
                   <span :class="[
@@ -52,7 +52,7 @@
                   </span>
                 </td>
                 <td class="t-td">
-                  {{ new Date(item.created_at).toLocaleDateString() }}
+                  {{ formatDate(item.created_at) }}
                 </td>
                 <td class="t-td">
                   <button @click="viewOrder(item)" class="text-blue-600 hover:text-blue-800 mr-2">View</button>
@@ -73,6 +73,8 @@ import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
 import { initDataTable } from "@/composables/dataTables";
 import { useReportsStore } from "@/store/report.store";
+import { formatAmount } from "@/composables/helper_functions";
+import { formatDate } from "@/composables/dataTables";
 
 const dataTableRef = ref(null);
 

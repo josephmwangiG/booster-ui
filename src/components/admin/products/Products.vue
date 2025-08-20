@@ -48,7 +48,7 @@
                   {{ item.category?.name || 'No category' }}
                 </td>
                 <td class="t-td">
-                  ${{ (Number(item.price) || 0).toFixed(2) }}
+                  {{ formatAmount(item.price) }}
                 </td>
                 <td class="t-td">
                   <span :class="item.status === 'active' ? 'text-green-600' : 'text-red-600'">
@@ -56,7 +56,7 @@
                   </span>
                 </td>
                 <td class="t-td">
-                  {{ new Date(item.created_at).toLocaleDateString() }}
+                  {{ formatDate(item.created_at) }}
                 </td>
                 <td class="t-td">
                   <button @click="editProduct(item)" class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
@@ -75,8 +75,9 @@
 import { onMounted, ref } from "vue";
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { initDataTable } from "@/composables/dataTables";
+import { initDataTable, formatDate } from "@/composables/dataTables";
 import { useAdmProductsStore } from "@/store/admin/products.store";
+import { formatAmount } from "@/composables/helper_functions";
 
 const dataTableRef = ref(null);
 

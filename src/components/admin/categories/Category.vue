@@ -38,7 +38,7 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Created At</label>
-                  <p class="mt-1 text-sm text-gray-900">{{ new Date(store.category.created_at).toLocaleDateString() }}</p>
+                  <p class="mt-1 text-sm text-gray-900">{{ formatDate(store.category.created_at) }}</p>
                 </div>
               </div>
             </div>
@@ -67,6 +67,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAdmCategoriesStore } from "@/store/admin/categories.store";
+import { formatDate } from "@/composables/dataTables";
 
 const route = useRoute();
 const store = useAdmCategoriesStore();

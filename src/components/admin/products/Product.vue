@@ -33,7 +33,7 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Price</label>
-                  <p class="mt-1 text-sm text-gray-900">${{ store.product.price?.toFixed(2) || '0.00' }}</p>
+                  <p class="mt-1 text-sm text-gray-900">{{ formatAmount(store.product.price) }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Status</label>
@@ -46,7 +46,7 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Created At</label>
-                  <p class="mt-1 text-sm text-gray-900">{{ new Date(store.product.created_at).toLocaleDateString() }}</p>
+                  <p class="mt-1 text-sm text-gray-900">{{ formatDate(store.product.created_at) }}</p>
                 </div>
               </div>
             </div>
@@ -75,6 +75,8 @@
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAdmProductsStore } from "@/store/admin/products.store";
+import { formatAmount } from "@/composables/helper_functions";
+import { formatDate } from "@/composables/dataTables";
 
 const route = useRoute();
 const store = useAdmProductsStore();
