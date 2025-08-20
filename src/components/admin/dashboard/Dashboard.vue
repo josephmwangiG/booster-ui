@@ -17,7 +17,14 @@
                             <h4 class="font-semibold">Products Summary</h4>
                         </div>
                         <div id="chart">
-                            <apexchart type="donut" class="w-full" :options="options" :series="series"></apexchart>
+                            <apexchart
+                              v-if="Array.isArray(series) && series.length > 0 && series.some((v: any) => v > 0) && options && (options as any).chart && (options as any).chart.type"
+                              type="donut"
+                              class="w-full"
+                              :options="options"
+                              :series="series"
+                            />
+                            <div v-else class="text-gray-400 text-sm py-6">No data available</div>
                         </div>
                     </div>
                     <div class="col-span-2 space-y-6 p-6 mt-6 bg-white">
@@ -33,7 +40,7 @@
                                             Item
                                         </th>
                                         <th class="p-3 font-semibold whitespace-nowrap tracking-wide text-left">
-                                            Product ID
+                                            Order ID
                                         </th>
                                         <th class="p-3 font-semibold whitespace-nowrap tracking-wide text-left">
                                             Date Sold
@@ -47,19 +54,19 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
-                                    <tr v-for="(item, index) in (reportsStore.dashboardReports?.orders || [])" :key="index"
+                                    <tr v-for="(item, index) in (toRaw(reportsStore.dashboardReports.orders) || [])" :key="index"
                                         :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                                         <td class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500">
-                                            {{ item.contact?.name || '-' }}
+                                            {{ item.category || '-' }}
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500">
-                                            {{ item.order_number || item.sale_number || item.purchase_number || '-' }}
+                                            {{ item.order_number || '-' }}
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500">
-                                            {{ formatDate(item.order_date) }}
+                                            {{ formatDate(item.created_at) }}
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500">
-                                            {{ formatAmount(item.total_amount) }}
+                                            {{ formatAmount(item.total) }}
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500">
                                             Actions
@@ -82,6 +89,7 @@ import { useReportsStore } from "@/store/report.store";
 import { formatAmount } from "@/composables/helper_functions";
 import { formatDate } from "@/composables/dataTables";
 import AdminDashboard from "./AdminDashboard.vue";
+import { toRaw } from "vue";
 
 const authStore = useAuthStore();
 const reportsStore = useReportsStore();
@@ -94,12 +102,15 @@ const options = ref({});
 onMounted(async () => {
     if (authStore.user.type !== 'admin') {
         await reportsStore.getVendorDashboardReports();
-        
+        console.log("Hammond!");
+        const rawOrders = toRaw(reportsStore.dashboardReports.orders);
+        console.log(rawOrders);
 
+        const vendor = (authStore.user && authStore.user.vendor) ? authStore.user.vendor : {} as any;
         series.value = [
-            authStore.user.vendor.stores_count,
-            authStore.user.vendor.products_count,
-            authStore.user.vendor.brands_count,
+            vendor.stores_count || 0,
+            vendor.products_count || 0,
+            vendor.brands_count || 0,
         ];
 
         options.value = {

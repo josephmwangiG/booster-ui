@@ -30,7 +30,7 @@ export const useReportsStore = defineStore("reports", {
       try {
         const res = await api.get("/reports/vendor/dashboard");
         this.dashboardReports = res.data;
-        return res;
+        return res.data.orders;
       } catch (error: any) {
         console.error('Failed to fetch vendor dashboard reports:', error);
         // Set default values to prevent errors
