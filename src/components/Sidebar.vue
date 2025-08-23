@@ -8,7 +8,7 @@
         </router-link>
       </li>
 
-      <li v-if="subscriptions.includes('Properties')">
+      <li>
         <h3 class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase">Property Management</h3>
         <ul class="space-y-2">
           <li>
@@ -44,7 +44,7 @@
         </ul>
       </li>
 
-      <li v-if="subscriptions.includes('Water Management')">
+      <li>
         <h3 class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase">Water Management</h3>
         <ul class="space-y-2">
           <li>
@@ -106,120 +106,6 @@
                 <router-link :to="{ name: 'water-delivery-payments' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'water-delivery-payments' }">Payments</router-link>
               </li>
             </ul>
-          </li>
-        </ul>
-      </li>
-
-      <li v-if="subscriptions.includes('Inventory')">
-        <h3 class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase">Inventory Management</h3>
-        <ul class="space-y-2">
-          <li>
-            <router-link :to="{ name: 'stores' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.path.startsWith('/stores') }">
-              <i class="ri-store-2-fill mr-3"></i>
-              <span>Stores</span>
-            </router-link>
-          </li>
-          <li>
-            <button @click="toggleDropdown('products')" class="flex items-center w-full px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700">
-              <i class="ri-shopping-basket-2-line mr-3"></i>
-              <span class="flex-1 text-left">Products</span>
-              <i class="ri-arrow-down-s-line transform" :class="{ 'rotate-180': dropdowns.products }"></i>
-            </button>
-            <ul v-if="dropdowns.products" class="pl-8 space-y-2">
-              <li>
-                <router-link :to="{ name: 'products' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'products' }">Products</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'brands' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'brands' }">Brands</router-link>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <button @click="toggleDropdown('inventories')" class="flex items-center w-full px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700">
-              <i class="ri-shopping-basket-2-line mr-3"></i>
-              <span class="flex-1 text-left">Inventory</span>
-              <i class="ri-arrow-down-s-line transform" :class="{ 'rotate-180': dropdowns.inventories }"></i>
-            </button>
-            <ul v-if="dropdowns.inventories" class="pl-8 space-y-2">
-              <li>
-                <router-link :to="{ name: 'inventories' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'inventories' }">Stock</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'stock-adjustment' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'stock-adjustment' }">Stock Adjustment</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'stock-movement' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'stock-movement' }">Stock Movement</router-link>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <button @click="toggleDropdown('contacts')" class="flex items-center w-full px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700">
-              <i class="ri-contacts-fill mr-3"></i>
-              <span class="flex-1 text-left">Contacts</span>
-              <i class="ri-arrow-down-s-line transform" :class="{ 'rotate-180': dropdowns.contacts }"></i>
-            </button>
-            <ul v-if="dropdowns.contacts" class="pl-8 space-y-2">
-              <li>
-                <router-link :to="{ name: 'suppliers' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'suppliers' }">Suppliers</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'customers' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'customers' }">Customers</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'contact-groups' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'contact-groups' }">Contact Groups</router-link>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <button @click="toggleDropdown('purchases')" class="flex items-center w-full px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700">
-              <i class="ri-wallet-2-line mr-3"></i>
-              <span class="flex-1 text-left">Purchases</span>
-              <i class="ri-arrow-down-s-line transform" :class="{ 'rotate-180': dropdowns.purchases }"></i>
-            </button>
-            <ul v-if="dropdowns.purchases" class="pl-8 space-y-2">
-              <li>
-                <router-link :to="{ name: 'purchases' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'purchases' }">Purchases</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'purchase-orders' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'purchase-orders' }">Purchase Orders</router-link>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <button @click="toggleDropdown('sales')" class="flex items-center w-full px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700">
-              <i class="ri-shopping-cart-2-fill mr-3"></i>
-              <span class="flex-1 text-left">Sales</span>
-              <i class="ri-arrow-down-s-line transform" :class="{ 'rotate-180': dropdowns.sales }"></i>
-            </button>
-            <ul v-if="dropdowns.sales" class="pl-8 space-y-2">
-              <li>
-                <router-link :to="{ name: 'sales' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'sales' }">Sales</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'orders' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'orders' }">Sales Orders</router-link>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <button @click="toggleDropdown('finance')" class="flex items-center w-full px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700">
-              <i class="ri-money-dollar-circle-line mr-3"></i>
-              <span class="flex-1 text-left">Finance</span>
-              <i class="ri-arrow-down-s-line transform" :class="{ 'rotate-180': dropdowns.finance }"></i>
-            </button>
-            <ul v-if="dropdowns.finance" class="pl-8 space-y-2">
-              <li>
-                <router-link :to="{ name: 'invoices' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'invoices' }">Invoices</router-link>
-              </li>
-              <li>
-                <router-link :to="{ name: 'payments' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'payments' }">Payments</router-link>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <router-link :to="{ name: 'reports' }" class="flex items-center px-3 py-2 text-gray-300 rounded-md hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'reports' }">
-              <i class="ri-bar-chart-fill mr-3"></i>
-              <span>Reports</span>
-            </router-link>
           </li>
         </ul>
       </li>
