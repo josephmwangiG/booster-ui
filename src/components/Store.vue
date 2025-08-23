@@ -1,41 +1,66 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen">
+  <div class="content p-6 bg-gray-50 min-h-screen">
     <!-- Header -->
-    <div class="mb-6 flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Stores</h1>
-        <p class="text-gray-600">Manage your stores</p>
+    <div class="top-section mb-6 animate-fade-in">
+      <div class="bread-crumb">
+        <h2 class="font-bold text-2xl text-gray-800">🏪 Stores</h2>
+        <span class="text-sm">
+          <span class="text-gray-400">Home ></span>
+          <span class="text-blue-600 font-medium"> Stores</span>
+        </span>
       </div>
-      <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md">
-        New Store
-      </button>
     </div>
 
-    <!-- Stores List -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-gray-500">
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center h-64">
+      <LoadingSpinner />
+    </div>
+
+    <!-- Stores Card -->
+    <div v-else class="shadow-lg rounded-2xl py-6 px-5 bg-white border border-gray-100 animate-slide-up">
+      <div class="flex justify-between items-center">
+        <div class="title">
+          <h4 class="font-semibold text-lg text-gray-800">All Stores</h4>
+          <span class="text-gray-500 text-sm">
+            You have
+            <span class="font-semibold text-gray-700">
+              {{ stores?.length?.toLocaleString() || 0 }}
+            </span>
+            stores
+          </span>
+        </div>
+        <button
+          class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-sm py-2 px-4 shadow hover:shadow-md transform hover:-translate-y-0.5 transition duration-300"
+        >
+          ➕ New Store
+        </button>
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- Table -->
+      <div class="overflow-x-auto w-full">
+        <table class="w-full border-collapse text-sm">
+          <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
             <tr>
-              <th scope="col" class="px-6 py-3">Name</th>
-              <th scope="col" class="px-6 py-3">Location</th>
-              <th scope="col" class="px-6 py-3 text-right">Actions</th>
+              <th class="t-th text-left">Name</th>
+              <th class="t-th text-left">Location</th>
+              <th class="t-th text-center w-32">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <!-- Placeholder Data -->
-            <tr class="bg-white border-b">
-              <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">Main Store</td>
-              <td class="px-6 py-4">New York, NY</td>
-              <td class="px-6 py-4 text-right">
-                <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
-              </td>
-            </tr>
-            <tr class="bg-white border-b">
-              <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">Warehouse</td>
-              <td class="px-6 py-4">Los Angeles, CA</td>
-              <td class="px-6 py-4 text-right">
-                <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
+          <tbody class="divide-y divide-gray-100">
+            <tr
+              v-for="(item, index) in stores"
+              :key="index"
+              :class="index % 2 != 0 ? 'bg-gray-50' : ''"
+              class="hover:bg-blue-50/40 transition-colors duration-300"
+            >
+              <td class="t-td font-medium text-gray-700">{{ item.name }}</td>
+              <td class="t-td">{{ item.location }}</td>
+              <td class="t-td text-center">
+                <button class="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-3 py-1 rounded-lg shadow-sm transition duration-300">
+                  Edit
+                </button>
               </td>
             </tr>
           </tbody>
@@ -45,12 +70,47 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import LoadingSpinner from "@/components/ui/LoadingSpinner.vue";
 
-export default defineComponent({
-  name: "Store",
+const loading = ref(true);
+const stores = ref([
+  { name: "Main Store", location: "New York, NY" },
+  { name: "Warehouse", location: "Los Angeles, CA" },
+]);
+
+onMounted(() => {
+  // Simulate API call
+  setTimeout(() => {
+    loading.value = false;
+  }, 1000);
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Modern table styles */
+.t-th {
+  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
+}
+.t-td {
+  @apply px-4 py-3 text-sm text-gray-700;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.7s ease-out;
+}
+</style>

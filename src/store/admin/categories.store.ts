@@ -32,6 +32,13 @@ export const useAdmCategoriesStore = defineStore("adm-categories", {
 
       return res;
     },
+    async deleteCategory(id: string) {
+      const res = await api.delete("/app/adm/categories/" + id);
+      if (res.status == 200 || res.status == 201 || res.status == 204) {
+        this.categories = this.categories.filter(c => c.id !== id);
+      }
+      return res;
+    },
     async uploadThumbnail(formData: any, id: string) {
       const res = await api.post(
         "/app/adm/categories/" + id + "/upload-thumbnail",

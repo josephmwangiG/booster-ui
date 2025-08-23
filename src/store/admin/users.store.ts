@@ -21,26 +21,52 @@ export const useAdmUsersStore = defineStore("adm-users", {
       this.users = res.data;
     },
  
-    async createCategory(data: CategoryForm) {
-      const res = await axios.post("/api/app/adm/categories", data, this.headers);
-
+    async createUser(data: any) {
+      const res = await axios.post("/api/app/adm/users", data, this.headers);
       this.users.unshift(res.data);
-
       return res;
     },
-    async getUser(id: string) {
-      const res = await axios.get("/api/app/adm/categories/" + id, this.headers);
-      this.user = res.data;
+
+    async updateUser(data: any) {
+      const res = await axios.put("/api/app/adm/users/" + data.id, data, this.headers);
+      if (res.status == 200 || res.status == 201) {
+        const index = this.users.findIndex(u => u.id === data.id);
+        if (index !== -1) {
+          this.users[index] = res.data;
+        }
+      }
+      return res;
     },
+
+    async deleteUser(id: string) {
+      const res = await axios.delete("/api/app/adm/users/" + id, this.headers);
+      if (res.status == 200 || res.status == 201) {
+        this.users = this.users.filter(u => u.id !== id);
+      }
+      return res;
+    },
+
+    async getUser(id: string) {
+      const res = await axios.get("/api/app/adm/users/" + id, this.headers);
+      this.user = res.data;
+      return res;
+    },
+
+    // Legacy category methods (keeping for backward compatibility)
+    async createCategory(data: CategoryForm) {
+      const res = await axios.post("/api/app/adm/categories", data, this.headers);
+      this.users.unshift(res.data);
+      return res;
+    },
+
     async updateCategory(data: CategoryForm) {
       const res = await axios.put("/api/app/adm/categories/" + data.id, data, this.headers);
-
       if (res.status == 200 || res.status == 201) {
         this.user = res.data;
       }
-
       return res;
     },
+
     async uploadThumbnail(formData: any, id: string) {
       const res = await axios.post(
         "/api/app/adm/categories/" + id + "/upload-thumbnail",

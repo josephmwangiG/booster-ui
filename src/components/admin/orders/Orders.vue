@@ -1,67 +1,93 @@
 <template>
-  <div class="content">
-    <div class="top-section">
-      <div class="bread-crumb">
-        <h2 class="font-semibold">Orders</h2>
+  <div class="content p-6 bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="top-section mb-6">
+      <div class="bread-crumb animate-fade-in">
+        <h2 class="font-bold text-2xl text-gray-800">📦 Orders</h2>
         <span class="text-sm">
-          <span class="text-gray-400">Home ></span> Orders
+          <span class="text-gray-400">Home ></span>
+          <span class="text-blue-600 font-medium"> Orders</span>
         </span>
       </div>
     </div>
-    <div class="mt-5">
-      <div class="shadow-md rounded py-5 px-3 bg-white">
-        <div class="justify-between space-x-2 items-center flex">
-          <div class="title">
-            <h4 class="font-semibold">Orders</h4>
-            <span class="text-gray-400 text-sm">
-              You have {{ orders?.length?.toLocaleString() || 0 }} orders
+
+    <!-- Orders Card -->
+    <div
+      class="shadow-lg rounded-2xl py-6 px-5 bg-white border border-gray-100 animate-slide-up"
+    >
+      <div class="flex justify-between items-center">
+        <div class="title">
+          <h4 class="font-semibold text-lg text-gray-800">All Orders</h4>
+          <span class="text-gray-500 text-sm">
+            You have
+            <span class="font-semibold text-gray-700">
+              {{ orders?.length?.toLocaleString() || 0 }}
             </span>
-          </div>
+            orders
+          </span>
         </div>
-        <hr class="my-3" />
-        <div class="overflow-x-auto w-full">
-          <table ref="dataTableRef" class="w-full d-table">
-            <thead class="t-head">
-              <tr>
-                <th class="t-th">Order ID</th>
-                <th class="t-th">Customer</th>
-                <th class="t-th">Total</th>
-                <th class="t-th">Status</th>
-                <th class="t-th">Created At</th>
-                <th class="w-32 t-th">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in orders" :key="index"
-                :class="index % 2 != 0 ? 'bg-gray-50' : ''">
-                <td class="t-td">
-                  #{{ item.id }}
-                </td>
-                <td class="t-td">
-                  {{ item.customer_name || 'Unknown' }}
-                </td>
-                <td class="t-td">
-                  {{ formatAmount(item.total) }}
-                </td>
-                <td class="t-td">
-                  <span :class="[
-                    'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- Table -->
+      <div class="overflow-x-auto w-full">
+        <table
+          ref="dataTableRef"
+          class="w-full border-collapse text-sm"
+        >
+          <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
+            <tr>
+              <th class="t-th text-left">Order ID</th>
+              <th class="t-th text-left">Customer</th>
+              <th class="t-th text-right">Total</th>
+              <th class="t-th text-center">Status</th>
+              <th class="t-th text-left">Created At</th>
+              <th class="t-th text-center w-40">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr
+              v-for="(item, index) in orders"
+              :key="index"
+              :class="index % 2 != 0 ? 'bg-gray-50' : ''"
+              class="hover:bg-blue-50/40 transition-colors duration-300"
+            >
+              <td class="t-td font-semibold text-gray-700">#{{ item.id }}</td>
+              <td class="t-td">{{ item.customer_name || 'Unknown' }}</td>
+              <td class="t-td text-right font-medium">
+                {{ formatAmount(item.total) }}
+              </td>
+              <td class="t-td text-center">
+                <span
+                  :class="[
+                    'px-3 py-1 text-xs font-semibold rounded-full shadow-sm transition-all duration-300',
                     getStatusColor(item.status)
-                  ]">
-                    {{ item.status }}
-                  </span>
-                </td>
-                <td class="t-td">
-                  {{ formatDate(item.created_at) }}
-                </td>
-                <td class="t-td">
-                  <button @click="viewOrder(item)" class="text-blue-600 hover:text-blue-800 mr-2">View</button>
-                  <button @click="updateOrder(item)" class="text-green-600 hover:text-green-800">Update</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                  ]"
+                >
+                  {{ item.status }}
+                </span>
+              </td>
+              <td class="t-td text-gray-600">
+                {{ formatDate(item.created_at) }}
+              </td>
+              <td class="t-td text-center space-x-2">
+                <button
+                  @click="viewOrder(item)"
+                  class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition duration-300 shadow-sm"
+                >
+                  View
+                </button>
+                <button
+                  @click="updateOrder(item)"
+                  class="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition duration-300 shadow-sm"
+                >
+                  Update
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -83,31 +109,33 @@ const loading = ref(true);
 const reportStore = useReportsStore();
 
 const orders = computed(() => {
-  // Get orders from the reports store
   return reportStore.dashboardReports?.orders || [];
 });
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'completed':
-      return 'bg-green-100 text-green-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
+    case "completed":
+      return "bg-green-100 text-green-800";
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 };
 
 const viewOrder = (order: any) => {
-  console.log('View order:', order);
-  // TODO: Navigate to order details page
+  console.log("View order:", order);
+  // Navigate to order details page
+  // For now, we'll show an alert with order details
+  alert(`Order #${order.id}\nCustomer: ${order.customer_name}\nTotal: ${formatAmount(order.total)}\nStatus: ${order.status}`);
 };
 
 const updateOrder = (order: any) => {
-  console.log('Update order:', order);
-  // TODO: Open update modal or navigate to edit page
+  console.log("Update order:", order);
+  // For now, we'll show an alert with order details
+  alert(`Update Order #${order.id}\nCustomer: ${order.customer_name}\nTotal: ${formatAmount(order.total)}\nStatus: ${order.status}\n\nThis would open an edit modal in a real implementation.`);
 };
 
 onMounted(async () => {
@@ -115,7 +143,7 @@ onMounted(async () => {
   try {
     await reportStore.getAdminDashboardReports();
   } catch (error) {
-    console.error('Failed to fetch orders data:', error);
+    console.error("Failed to fetch orders data:", error);
   } finally {
     loading.value = false;
   }
@@ -123,4 +151,29 @@ onMounted(async () => {
 });
 </script>
 
-<style></style>
+<style scoped>
+/* Modern table styles */
+.t-th {
+  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
+}
+.t-td {
+  @apply px-4 py-3 text-sm text-gray-700;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.7s ease-out;
+}
+</style>

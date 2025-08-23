@@ -21,7 +21,7 @@
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600">Total Users</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ dashboardData.total_users || 0 }}</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ formatLargeNumber(dashboardData.total_users) }}</p>
             </div>
           </div>
         </div>
@@ -35,7 +35,7 @@
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600">Total Orders</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ dashboardData.total_orders || 0 }}</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ formatLargeNumber(dashboardData.total_orders) }}</p>
             </div>
           </div>
         </div>
@@ -49,7 +49,7 @@
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600">Total Sales</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ formatAmount(dashboardData.total_sales) }}</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ formatAmountCompact(dashboardData.total_sales) }}</p>
             </div>
           </div>
         </div>
@@ -63,7 +63,7 @@
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600">Total Stores</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ dashboardData.total_stores || 0 }}</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ formatLargeNumber(dashboardData.total_stores) }}</p>
             </div>
           </div>
         </div>
@@ -74,12 +74,12 @@
         <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium text-gray-900">Organizations</h3>
-            <span class="text-2xl font-semibold text-blue-600">{{ dashboardData.total_organizations || 0 }}</span>
+            <span class="text-2xl font-semibold text-blue-600">{{ formatLargeNumber(dashboardData.total_organizations) }}</span>
           </div>
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
               <span class="text-gray-600">Active Organizations</span>
-              <span class="font-medium">{{ dashboardData.total_organizations || 0 }}</span>
+              <span class="font-medium">{{ formatLargeNumber(dashboardData.total_organizations) }}</span>
             </div>
           </div>
         </div>
@@ -87,16 +87,16 @@
         <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium text-gray-900">Orders Overview</h3>
-            <span class="text-2xl font-semibold text-green-600">{{ dashboardData.closed_orders || 0 }}</span>
+            <span class="text-2xl font-semibold text-green-600">{{ formatLargeNumber(dashboardData.closed_orders) }}</span>
           </div>
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
               <span class="text-gray-600">Closed Orders</span>
-              <span class="font-medium">{{ dashboardData.closed_orders || 0 }}</span>
+              <span class="font-medium">{{ formatLargeNumber(dashboardData.closed_orders) }}</span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-gray-600">Total Orders</span>
-              <span class="font-medium">{{ dashboardData.total_orders || 0 }}</span>
+              <span class="font-medium">{{ formatLargeNumber(dashboardData.total_orders) }}</span>
             </div>
           </div>
         </div>
@@ -123,14 +123,22 @@
               Try again
             </button>
           </div>
+          <div v-else-if="chartData.length > 0" class="h-80">
+            <apexchart 
+              type="bar" 
+              :options="chartOptions" 
+              :series="chartSeries"
+              height="100%"
+            ></apexchart>
+          </div>
           <div v-else class="text-center py-8">
             <div class="text-gray-600 mb-4">
               <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
               </svg>
             </div>
-            <p class="text-gray-600">Charts and detailed analytics will be displayed here</p>
-            <p class="text-sm text-gray-500 mt-2">Data loaded successfully</p>
+            <p class="text-gray-600">No chart data available</p>
+            <p class="text-sm text-gray-500 mt-2">Data will appear here once available</p>
           </div>
         </div>
       </div>
@@ -141,7 +149,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
 import { useReportsStore } from "@/store/report.store";
-import { formatAmount } from "@/composables/helper_functions";
+import { formatAmount, formatLargeNumber, formatAmountCompact } from "@/composables/helper_functions";
 
 const loading = ref(true);
 const error = ref(false);
@@ -149,11 +157,64 @@ const reportStore = useReportsStore();
 
 const dashboardData = computed(() => reportStore.dashboardReports);
 
+// Chart data
+const chartData = ref<number[]>([]);
+const chartSeries = ref([{
+  name: 'Metrics',
+  data: [] as number[]
+}]);
+
+const chartOptions = ref({
+  chart: {
+    type: 'bar',
+    height: 300,
+    toolbar: {
+      show: false
+    }
+  },
+  colors: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'],
+  xaxis: {
+    categories: ['Users', 'Organizations', 'Properties', 'Stores'],
+    labels: {
+      style: {
+        colors: '#6B7280'
+      }
+    }
+  },
+  yaxis: {
+    labels: {
+      style: {
+        colors: '#6B7280'
+      }
+    }
+  },
+  grid: {
+    borderColor: '#E5E7EB',
+    strokeDashArray: 5
+  }
+});
+
 const fetchReports = async () => {
   loading.value = true;
   error.value = false;
   try {
     await reportStore.getAdminDashboardReports();
+    
+    // Update chart data
+    const data = dashboardData.value;
+    if (data) {
+      chartData.value = [
+        data.total_users || 0,
+        data.total_organizations || 0,
+        data.total_properties || 0,
+        data.total_stores || 0
+      ];
+      
+      chartSeries.value = [{
+        name: 'Metrics',
+        data: chartData.value
+      }];
+    }
   } catch (err) {
     console.error('Failed to fetch reports data:', err);
     error.value = true;

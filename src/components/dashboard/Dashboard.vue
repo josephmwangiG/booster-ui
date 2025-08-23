@@ -4,9 +4,10 @@
     <div class="mb-6 flex justify-between items-center">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p class="text-gray-600">Select a dashboard to view</p>
+        <p v-if="subscriptions.length > 0" class="text-gray-600">Select a dashboard to view</p>
+        <p v-else class="text-gray-600">You have no active subscriptions. Please contact support.</p>
       </div>
-      <div v-if="subscriptions.length > 1" class="relative">
+      <div v-if="subscriptions.length > 0" class="relative">
         <select 
           v-model="activeDashboard" 
           @change="handleSelect($event.target.value)"
@@ -53,13 +54,17 @@ const subscriptions = computed(() => {
   return subs;
 });
 
-const activeDashboard = ref(subscriptions.value[0] || "");
+const activeDashboard = ref(subscriptions.value.includes("Properties") ? "Properties" : subscriptions.value[0] || "");
 
 const handleSelect = (dashboard: string) => {
   activeDashboard.value = dashboard;
 };
 
 onMounted(() => {
-  // You can add any initial logic here if needed
+  if (subscriptions.value.length === 1) {
+    // You can add a toast or a simple console log here to inform the user.
+    // For example:
+    // toast.info(`You have been directed to your default dashboard: ${activeDashboard.value}`);
+  }
 });
 </script>

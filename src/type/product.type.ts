@@ -5,6 +5,7 @@ export type ProductForm = {
   short_description: string;
   thumbnail?: string;
   SKU: string;
+  price: number;
   returnable: boolean;
   refundable: boolean;
   tags: string

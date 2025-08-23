@@ -12,6 +12,8 @@ export type DashboardReport = {
   total_users: number;
   total_organizations: number;
   total_stores: number;
+  total_products: number;
+  total_properties: number;
 };
 
 export const useReportsStore = defineStore("reports", {
@@ -44,7 +46,9 @@ export const useReportsStore = defineStore("reports", {
           orders: [],
           total_users: 0,
           total_organizations: 0,
-          total_stores: 0
+          total_stores: 0,
+          total_products: 0,
+          total_properties: 0
         };
         return error.response;
       }
@@ -67,7 +71,9 @@ export const useReportsStore = defineStore("reports", {
           orders: [],
           total_users: 0,
           total_organizations: 0,
-          total_stores: 0
+          total_stores: 0,
+          total_products: 0,
+          total_properties: 0
         };
         return error.response;
       }

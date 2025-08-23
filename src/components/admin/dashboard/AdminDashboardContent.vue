@@ -86,16 +86,20 @@
         <!-- Overview Chart -->
         <div class="bg-white rounded-lg shadow p-6">
           <h3 class="text-lg font-semibold text-gray-900 mb-4">System Overview</h3>
-          <div v-if="chartSeries.length > 0">
+          <div v-if="chartSeries.length > 0" class="h-80">
             <apexchart 
               type="donut" 
               :options="chartOptions" 
               :series="chartSeries"
-              height="300"
+              height="100%"
             ></apexchart>
           </div>
           <div v-else class="flex items-center justify-center h-64 text-gray-500">
-            No data available
+            <div class="text-center">
+              <i class="ri-bar-chart-line text-4xl text-gray-300 mb-2"></i>
+              <p>No data available for chart</p>
+              <p class="text-sm text-gray-400">Data will appear here once available</p>
+            </div>
           </div>
         </div>
 

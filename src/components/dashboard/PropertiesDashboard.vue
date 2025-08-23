@@ -1,7 +1,7 @@
 <template>
   <div v-if="!loading">
     <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
       <!-- Total Bills Card -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
@@ -64,7 +64,7 @@
     </div>
 
     <!-- Charts and Tables -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up">
       <!-- Collections Summary Chart -->
       <div class="bg-white rounded-lg shadow p-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Collections Summary</h3>
@@ -91,29 +91,28 @@
           </router-link>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+          <table class="w-full border-collapse text-sm">
+            <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
               <tr>
-                <th scope="col" class="px-6 py-3">Bill #</th>
-                <th scope="col" class="px-6 py-3">Tenant</th>
-                <th scope="col" class="px-6 py-3">Period</th>
-                <th scope="col" class="px-6 py-3">Amount</th>
-                <th scope="col" class="px-6 py-3 text-right">Balance</th>
+                <th class="t-th text-left">Bill #</th>
+                <th class="t-th text-left">Tenant</th>
+                <th class="t-th text-left">Period</th>
+                <th class="t-th text-right">Amount</th>
+                <th class="t-th text-right">Balance</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-100">
               <tr 
                 v-for="(item, index) in reportsStore.propertiesDashboardReports.bills" 
                 :key="index" 
-                class="bg-white border-b"
+                :class="index % 2 != 0 ? 'bg-gray-50' : ''"
+                class="hover:bg-blue-50/40 transition-colors duration-300"
               >
-                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                  {{ item.bill_number }}
-                </td>
-                <td class="px-6 py-4">{{ item.tenant_name }}</td>
-                <td class="px-6 py-4">{{ item.period }}</td>
-                <td class="px-6 py-4">{{ formatAmount(item.amount) }}</td>
-                <td class="px-6 py-4 text-right">{{ formatAmount(item.amount - item.amount_paid) }}</td>
+                <td class="t-td font-medium text-gray-700">{{ item.bill_number }}</td>
+                <td class="t-td">{{ item.tenant_name }}</td>
+                <td class="t-td">{{ item.period }}</td>
+                <td class="t-td text-right font-medium">{{ formatAmount(item.amount) }}</td>
+                <td class="t-td text-right font-medium">{{ formatAmount(item.amount - item.amount_paid) }}</td>
               </tr>
             </tbody>
           </table>
@@ -124,7 +123,7 @@
 
   <!-- Loading State -->
   <div v-else class="flex items-center justify-center h-screen">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+    <LoadingSpinner />
   </div>
 </template>
 
@@ -132,6 +131,7 @@
 import { formatAmount, formatNumber } from "@/composables/helper_functions";
 import { useReportsStore } from "@/store/report.store";
 import { onMounted, ref } from "vue";
+import LoadingSpinner from "@/components/ui/LoadingSpinner.vue";
 
 const loading = ref(true);
 const reportsStore = useReportsStore();
@@ -176,3 +176,30 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style scoped>
+/* Modern table styles */
+.t-th {
+  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
+}
+.t-td {
+  @apply px-4 py-3 text-sm text-gray-700;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.7s ease-out;
+}
+</style>

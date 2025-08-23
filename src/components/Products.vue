@@ -1,39 +1,66 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen">
+  <div class="content p-6 bg-gray-50 min-h-screen">
     <!-- Header -->
-    <div class="mb-6 flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Products</h1>
-        <p class="text-gray-600">Manage your inventory</p>
+    <div class="top-section mb-6 animate-fade-in">
+      <div class="bread-crumb">
+        <h2 class="font-bold text-2xl text-gray-800">🛍️ Products</h2>
+        <span class="text-sm">
+          <span class="text-gray-400">Home ></span>
+          <span class="text-blue-600 font-medium"> Products</span>
+        </span>
       </div>
-      <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md">
-        New Product
-      </button>
     </div>
 
-    <!-- Products Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-gray-500">
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center h-64">
+      <LoadingSpinner />
+    </div>
+
+    <!-- Products Card -->
+    <div v-else class="shadow-lg rounded-2xl py-6 px-5 bg-white border border-gray-100 animate-slide-up">
+      <div class="flex justify-between items-center">
+        <div class="title">
+          <h4 class="font-semibold text-lg text-gray-800">All Products</h4>
+          <span class="text-gray-500 text-sm">
+            You have
+            <span class="font-semibold text-gray-700">
+              {{ productsStore.products?.length?.toLocaleString() || 0 }}
+            </span>
+            products
+          </span>
+        </div>
+        <button
+          class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-sm py-2 px-4 shadow hover:shadow-md transform hover:-translate-y-0.5 transition duration-300"
+        >
+          ➕ New Product
+        </button>
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- Table -->
+      <div class="overflow-x-auto w-full">
+        <table class="w-full border-collapse text-sm">
+          <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
             <tr>
-              <th scope="col" class="px-6 py-3">Product</th>
-              <th scope="col" class="px-6 py-3">Price</th>
-              <th scope="col" class="px-6 py-3 text-right">Actions</th>
+              <th class="t-th text-left">Product</th>
+              <th class="t-th text-right">Price</th>
+              <th class="t-th text-center w-32">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr 
-              v-for="(item, index) in (toRaw(productsStore.products) || [])" 
-              :key="index" 
-              class="bg-white border-b"
+          <tbody class="divide-y divide-gray-100">
+            <tr
+              v-for="(item, index) in (toRaw(productsStore.products) || [])"
+              :key="index"
+              :class="index % 2 != 0 ? 'bg-gray-50' : ''"
+              class="hover:bg-blue-50/40 transition-colors duration-300"
             >
-              <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                {{ item.name || '-' }}
-              </td>
-              <td class="px-6 py-4">{{ formatAmount(item.price) }}</td>
-              <td class="px-6 py-4 text-right">
-                <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
+              <td class="t-td font-medium text-gray-700">{{ item.name || '-' }}</td>
+              <td class="t-td text-right font-medium">{{ formatAmount(item.price) }}</td>
+              <td class="t-td text-center">
+                <button class="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-3 py-1 rounded-lg shadow-sm transition duration-300">
+                  Edit
+                </button>
               </td>
             </tr>
           </tbody>
@@ -44,13 +71,49 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, toRaw } from "vue";
+import { onMounted, toRaw, ref } from "vue";
 import { useProductsStore } from "@/store/products.store";
 import { formatAmount } from "@/composables/helper_functions";
+import LoadingSpinner from "@/components/ui/LoadingSpinner.vue";
 
 const productsStore = useProductsStore();
+const loading = ref(true);
 
-onMounted(() => {
-  productsStore.getProducts();
+onMounted(async () => {
+  loading.value = true;
+  try {
+    await productsStore.getProducts();
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
+
+<style scoped>
+/* Modern table styles */
+.t-th {
+  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
+}
+.t-td {
+  @apply px-4 py-3 text-sm text-gray-700;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.7s ease-out;
+}
+</style>

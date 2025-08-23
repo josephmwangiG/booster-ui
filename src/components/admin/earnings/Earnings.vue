@@ -62,8 +62,16 @@
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-700 mx-auto"></div>
             <p class="mt-2 text-gray-600">Loading earnings data...</p>
           </div>
+          <div v-else-if="chartData.length > 0" class="h-80">
+            <apexchart 
+              type="line" 
+              :options="chartOptions" 
+              :series="chartSeries"
+              height="100%"
+            ></apexchart>
+          </div>
           <div v-else class="text-center py-8">
-            <p class="text-gray-600">Earnings chart will be displayed here</p>
+            <p class="text-gray-600">No earnings data available</p>
           </div>
         </div>
       </div>
@@ -83,10 +91,80 @@ const totalEarnings = computed(() => reportStore.dashboardReports?.total_sales |
 const totalOrders = computed(() => reportStore.dashboardReports?.total_orders || 0);
 const totalProducts = computed(() => reportStore.dashboardReports?.total_products || 0);
 
+// Chart data
+const chartData = ref<number[]>([]);
+const chartSeries = ref([{
+  name: 'Earnings',
+  data: [] as number[]
+}]);
+
+const chartOptions = ref({
+  chart: {
+    type: 'line',
+    height: 300,
+    toolbar: {
+      show: false
+    }
+  },
+  stroke: {
+    curve: 'smooth',
+    width: 3
+  },
+  colors: ['#10B981'],
+  xaxis: {
+    categories: [] as string[],
+    labels: {
+      style: {
+        colors: '#6B7280'
+      }
+    }
+  },
+  yaxis: {
+    labels: {
+      formatter: function(value: any) {
+        return formatAmount(value);
+      },
+      style: {
+        colors: '#6B7280'
+      }
+    }
+  },
+  grid: {
+    borderColor: '#E5E7EB',
+    strokeDashArray: 5
+  },
+  tooltip: {
+    y: {
+      formatter: function(value: any) {
+        return formatAmount(value);
+      }
+    }
+  }
+});
+
 onMounted(async () => {
   loading.value = true;
   try {
     await reportStore.getAdminDashboardReports();
+    
+    // Update chart data with sample data for now
+    // In a real app, you'd fetch earnings data over time
+    const data = reportStore.dashboardReports;
+    if (data && data.total_sales) {
+      // Create sample monthly data (you'd replace this with real API data)
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      const sampleEarnings = months.map((_, index) => {
+        return Math.floor(Math.random() * data.total_sales * 0.3) + (data.total_sales * 0.1);
+      });
+      
+      chartData.value = sampleEarnings;
+      chartSeries.value = [{
+        name: 'Earnings',
+        data: sampleEarnings
+      }];
+      
+      chartOptions.value.xaxis.categories = months;
+    }
   } catch (error) {
     console.error('Failed to fetch earnings data:', error);
   } finally {
