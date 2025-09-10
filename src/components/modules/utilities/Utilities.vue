@@ -24,12 +24,23 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Utilities</h4>
-            <span class="text-gray-400 text-sm"> {{ store.utilities.length }} items found </span>
+            <span class="text-gray-400 text-sm"> {{ filteredUtilities.length }} of {{ store.utilities.length }} items found </span>
           </div>
           <button @click="addItem" class="btn-primary my-auto">
             Add Utility
           </button>
         </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Utilities"
+          :enable-category-filter="true"
+          category-label="Payment Type"
+          :categories="paymentTypeOptions"
+          @search="handleSearch"
+          @category-filter="handleCategoryFilter"
+          @clear-filters="handleClearFilters"
+        />
         <div class="overflow-x-auto w-full">
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
@@ -39,11 +50,12 @@
                 </th>
                 <th class="t-th">Payment Type</th>
                 <th class="t-th">Rate</th>
+                <th class="t-th">Unit</th>
                 <th class="t-th text-end">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.utilities" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+              <tr v-for="(item, index) in filteredUtilities" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   {{ item.name }}
                 </td>
@@ -52,8 +64,8 @@
                     item.category
                   }}
                 </td>
-                <td class="t-td">KES {{ item.rate.toLocaleString() }} {{ item.category == "Meter Reading" ? "per unit" :
-                  ""}}</td>
+                <td class="t-td">KES {{ item.rate.toLocaleString() }}</td>
+                <td class="t-td">{{ item.unit || 'unit' }}</td>
 
                 <td class="t-td text-end">
                   <el-dropdown trigger="click">
@@ -100,15 +112,15 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { initDataTableWithSearch, handleSearch as dtHandleSearch, handleColumnSearch, clearAllFilters } from "@/composables/dataTables";
 import { useUtilitiesStore } from "@/store/utilities.store";
 
 const UtilityFormModal = defineAsyncComponent(
   () => import("@/components/modules/utilities/UtilityFormModal.vue")
 );
-
 
 const dialogVisible = ref(false);
 const loading = ref(true);
@@ -119,9 +131,48 @@ const store = useUtilitiesStore();
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
+// Search and filter state
+const searchQuery = ref('');
+const selectedCategory = ref('');
+
+// Payment type options for filtering
+const paymentTypeOptions = computed(() => {
+  const categories = [...new Set(store.utilities.map((utility: any) => utility.category))].filter(Boolean);
+  return categories.map(category => ({ value: category, label: category }));
+});
+
+// Filtered utilities
+const filteredUtilities = computed(() => {
+  let filtered = store.utilities;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((utility: any) => 
+      utility.name?.toLowerCase().includes(query) ||
+      utility.category?.toLowerCase().includes(query) ||
+      utility.rate?.toString().includes(query) ||
+      utility.unit?.toLowerCase().includes(query)
+    );
+  }
+
+  // Apply category filter
+  if (selectedCategory.value) {
+    filtered = filtered.filter((utility: any) => utility.category === selectedCategory.value);
+  }
+
+  return filtered;
+});
+
 const addItem = () => {
   action.value = "create";
-  formData.value = {};
+  formData.value = {
+    id: null,
+    name: '',
+    category: '',
+    rate: '',
+    unit: ''
+  };
   dialogVisible.value = true;
 };
 
@@ -131,12 +182,33 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleCategoryFilter = (category: string) => {
+  selectedCategory.value = category;
+  if (dataTableRef.value) {
+    handleColumnSearch(dataTableRef.value, 1, category); // Payment Type column is index 1
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  selectedCategory.value = '';
+  if (dataTableRef.value) {
+    clearAllFilters(dataTableRef.value);
+  }
+};
 
 onMounted(async () => {
   await store.getUtilities();
-  initDataTable(dataTableRef.value);
+  initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
-
 });
 </script>
 

@@ -31,12 +31,39 @@ export const useAuthStore = defineStore("auth", {
         const res = await axios.post("/login", data, {});
 
         localStorage.setItem("token", res.data.token);
+        axios.defaults.headers.common["Authorization"] = "Bearer " + res.data.token;
 
         this.user = res.data.user;
 
         return res;
       } catch (err: any) {
         return err.response;
+      }
+    },
+    async logout() {
+      try {
+        const res = await axios.post(
+          "/logout",
+          {},
+          {
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token"),
+            },
+          }
+        );
+
+        // Clear local state and headers
+        localStorage.clear();
+        delete axios.defaults.headers.common["Authorization"];
+        this.user = null;
+
+        return res;
+      } catch (err: any) {
+        // Even if API fails, ensure local logout
+        localStorage.clear();
+        delete axios.defaults.headers.common["Authorization"];
+        this.user = null;
+        return err?.response || { status: 200 };
       }
     },
     async forgotPassword(data: LoginFormData) {

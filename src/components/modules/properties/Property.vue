@@ -33,7 +33,7 @@
             <h4 class="font-semibold">Units</h4>
             <span class="text-gray-400 text-sm"> {{ store.property?.units.length }} units </span>
           </div>
-          <button @click="dialogVisible = true" class="btn-primary my-auto">
+          <button @click="addItem" class="btn-primary my-auto">
             Add Unit
           </button>
         </div>
@@ -55,7 +55,7 @@
             <tbody class="divide-y divide-gray-100">
               <tr v-for="(item, index) in store?.property?.units" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
-                  {{ item.unit_code }}
+                  {{ item?.unit_code || '-' }}
                 </td>
                 <td class="t-td">
                   {{ item?.tenancies?.length > 0 ? item?.tenancies[0]?.tenant?.tenant_name : "-" }}
@@ -84,7 +84,18 @@
                         <i class="ri-arrow-down-s-line"></i>
                       </el-icon>
                     </span>
-                    
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item @click="editItem(item)">
+                          <span class="font-semibold py-2"><i class="ri-edit-line text-orange-500"></i>
+                            Edit</span>
+                        </el-dropdown-item>
+                        <el-dropdown-item @click="deleteItem(item.id)">
+                          <span class="font-semibold py-2"><i class="ri-delete-bin-line text-red-500"></i>
+                            Delete</span>
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
                   </el-dropdown>
                 </td>
               </tr>
@@ -99,12 +110,12 @@
       <template #header>
         <div class="modal-header flex justify-between items-center">
           <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
-            Add Unit
+            {{action == 'create' ? 'Add' : 'Edit'}} Unit
           </h3>
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <UnitFormModal @close-modal="dialogVisible = false" :form="formData"></UnitFormModal>
+      <UnitFormModal @close-modal="dialogVisible = false" :form="formData" :action="action"></UnitFormModal>
     </el-dialog>
   </teleport>
 </template>
@@ -117,6 +128,7 @@ import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import { initDataTable } from "@/composables/dataTables";
 import { useRouter } from "vue-router";
 import { usePropertiesStore } from "@/store/properties.store";
+import { ElNotification } from "element-plus";
 
 const UnitFormModal = defineAsyncComponent(
   () => import("@/components/modules/properties/UnitFormModal.vue")
@@ -126,13 +138,46 @@ const dialogVisible = ref(false);
 const loading = ref(true);
 const router = useRouter();
 const store = usePropertiesStore();
+const action = ref("create");
 
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
-const formData = {
+const formData = ref({
   property_id: (router.currentRoute.value.params.id as string) || "",
+});
+
+const addItem = () => {
+  action.value = "create";
+  formData.value = {
+    property_id: (router.currentRoute.value.params.id as string) || "",
+  };
+  dialogVisible.value = true;
 };
+
+const editItem = (item: any) => {
+  action.value = "edit";
+  formData.value = item;
+  dialogVisible.value = true;
+};
+
+const deleteItem = async (id: string) => {
+  try {
+    await store.deleteUnit(id);
+    ElNotification({
+      title: "Success",
+      message: "Unit deleted successfully",
+      type: "success",
+    });
+  } catch (error) {
+    ElNotification({
+      title: "Error",
+      message: "An error occurred while deleting the unit",
+      type: "error",
+    });
+  }
+};
+
 
 onMounted(async () => {
   await store.getProperty((router.currentRoute.value.params.id as string) || "");

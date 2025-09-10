@@ -14,20 +14,17 @@
         <h4 class="font-semibold">Tenant  | {{ store.tenant?.tenant_name }}</h4>
         <div class="grid grid-cols-3 mt-3 gap-6">
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">{{ store.tenant?.bills?.length.toLocaleString() }}</h2>
+            <h2 class="font-semibold">{{ (store.tenant?.bills?.length || 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Bills</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ store.tenant?.bills.reduce((a: any, b: any) => Number(a) +
-              Number(b.amount_paid),
-              0).toLocaleString()
-              }}</h2>
+            <h2 class="font-semibold">KES {{ (store.tenant?.bills ?? []).reduce((a: number, b: any) => Number(a) +
+              Number(b.amount_paid), 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Paid</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ store.tenant?.bills.reduce((a: any, b: any) => Number(a) + (Number(b.amount)
-              -
-              Number(b.amount_paid)), 0).toLocaleString() }}</h2>
+            <h2 class="font-semibold">KES {{ (store.tenant?.bills ?? []).reduce((a: number, b: any) => Number(a) + (Number(b.amount)
+              - Number(b.amount_paid)), 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Pending</span>
           </div>
         </div>
@@ -46,7 +43,7 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Bills</h4>
-            <span class="text-gray-400 text-sm"> {{ store?.tenant?.bills?.length }} items found </span>
+            <span class="text-gray-400 text-sm"> {{ (store?.tenant?.bills?.length || 0) }} items found </span>
           </div>
         </div>
         <div class="overflow-x-auto w-full">
@@ -65,7 +62,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.tenant?.bills" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+              <tr v-for="(item, index) in (store.tenant?.bills ?? [])" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   <router-link class="font-semibold py-2" :to="{
                     name: 'tenant-bill',

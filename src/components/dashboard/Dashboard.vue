@@ -20,7 +20,8 @@
     </div>
     <PropertiesDashboard v-if="activeDashboard == 'Properties'" />
     <WMDashboard v-if="activeDashboard == 'Water Management'" />
-    <VendorDashboard v-if="activeDashboard == 'Inventory'" />
+    <!-- Commented out until VendorDashboard component is implemented -->
+    <!-- <VendorDashboard v-if="activeDashboard == 'Inventory'" /> -->
   </div>
 </template>
 
@@ -32,9 +33,12 @@ import { computed, defineAsyncComponent, onMounted, ref } from "vue";
 const PropertiesDashboard = defineAsyncComponent(
   () => import("@/components/dashboard/PropertiesDashboard.vue")
 );
-const VendorDashboard = defineAsyncComponent(
-  () => import("@/components/dashboard/VendorDashboard.vue")
-);
+
+// Commented out until VendorDashboard component is implemented
+// const VendorDashboard = defineAsyncComponent(
+//   () => import("@/components/dashboard/VendorDashboard.vue")
+// );
+
 const WMDashboard = defineAsyncComponent(
   () => import("@/components/dashboard/WMDashboard.vue")
 );
@@ -46,9 +50,7 @@ const subscriptions = computed(() => {
   return subscriptions ? subscriptions : []
 })
 
-console.log(subscriptions.value);
-
-const activeDashboard = ref(subscriptions.value[0] ? subscriptions.value[0] : "")
+const activeDashboard = ref(subscriptions.value[0] ? subscriptions.value[0] : "Properties")
 const handleSelect = (dashboard: string) => {
   activeDashboard.value = dashboard
 }

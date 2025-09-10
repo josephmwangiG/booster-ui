@@ -2,11 +2,17 @@
   <div class="mt-2">
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
-        <el-form-item prop="number_plate" class="flex-1" :label="'Number Plate'">
-          <el-input v-model="formData.number_plate" placeholder="Enter number plate" />
+        <el-form-item prop="plate_number" class="flex-1" :label="'Number Plate'">
+          <el-input v-model="formData.plate_number" placeholder="Enter number plate" />
         </el-form-item>
         <el-form-item prop="capacity" class="flex-1" :label="'Capacity in litres'">
           <el-input type="number" v-model="formData.capacity" placeholder="Enter capacity" />
+        </el-form-item>
+        <el-form-item prop="brand" class="flex-1" :label="'Brand'">
+          <el-input v-model="formData.brand" placeholder="Enter vehicle brand" />
+        </el-form-item>
+        <el-form-item prop="model" class="flex-1" :label="'Model'">
+          <el-input v-model="formData.model" placeholder="Enter vehicle model" />
         </el-form-item>
 
 
@@ -38,12 +44,17 @@ const itemFormRef = ref<FormInstance>();
 const formData = reactive<VehicleForm>(props.form as VehicleForm);
 
 const rules = reactive<FormRules<VehicleForm>>({
-  number_plate: [
+  plate_number: [
     { required: true, message: "Please enter number plate", trigger: "blur" },
   ],
-
   capacity: [
     { required: true, message: "Please enter capacity", trigger: "blur" },
+  ],
+  brand: [
+    { required: true, message: "Please enter vehicle brand", trigger: "blur" },
+  ],
+  model: [
+    { required: true, message: "Please enter vehicle model", trigger: "blur" },
   ],
 });
 

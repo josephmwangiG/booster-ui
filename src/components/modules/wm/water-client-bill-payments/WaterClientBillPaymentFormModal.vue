@@ -68,7 +68,7 @@ const rules = reactive<FormRules<WaterClientBillPaymentForm>>({
   ],
   amount: [
     { required: true, message: "Please enter amount", trigger: "blur" },
-    { min: 1, message: "Amount must be greater than 0", trigger: "blur" },
+    { min: 0.01, message: "Amount must be greater than 0", trigger: "blur" },
   ],
   payment_date: [
     { required: true, message: "Please enter payment date", trigger: "change" },
@@ -83,18 +83,41 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   formEl.validate(async (valid, _fields) => {
     if (!valid) {
       return;
-    } else {
-      const res = await store.createWaterClientBillPayment(formData);
-      if (res.status == 200 || res.status == 201) {
-        resetForm(itemFormRef.value as FormInstance);
-        ElNotification({
-          title: "Success",
-          message: "Client bill payment was created",
-          type: "success",
-        })
-        emits("close-modal");
+          } else {
+        try {
+          // Ensure the form data is properly formatted
+          const submissionData = {
+            id: formData.id,
+            water_client_bill_id: formData.water_client_bill_id,
+            amount: Number(formData.amount),
+            payment_date: formData.payment_date,
+            payment_method: formData.payment_method,
+            payment_ref: formData.payment_ref || ''
+          };
+          
+          console.log('Submitting form data:', submissionData);
+          console.log('Original form data:', formData);
+          
+          const res = await store.createWaterClientBillPayment(submissionData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            ElNotification({
+              title: "Success",
+              message: "Client bill payment was created",
+              type: "success",
+            })
+            emits("close-modal");
+          }
+        } catch (error: any) {
+          console.error('Form submission error:', error);
+          const errorMessage = error.response?.data?.message || error.message || 'An error occurred while creating the payment';
+          ElNotification({
+            title: "Error",
+            message: errorMessage,
+            type: "error",
+          });
+        }
       }
-    }
   });
 
 
@@ -103,6 +126,15 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   formEl.resetFields();
+  // Reset the reactive form data
+  Object.assign(formData, {
+    id: null,
+    water_client_bill_id: null,
+    amount: null,
+    payment_date: '',
+    payment_ref: '',
+    payment_method: ''
+  });
 };
 
 onMounted(() => {

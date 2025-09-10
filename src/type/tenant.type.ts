@@ -5,6 +5,7 @@ export type TenantForm = {
   phone: string;
   emergency_phone: string;
   unit_id: string;
+  property_id: string;
   id_number: string[]
 };
 
@@ -31,8 +32,8 @@ export type TenantBillItemForm = {
 export type TenantBillPaymentForm = {
   id: string | null;
   tenant_bill_id: string | null;
-  amount: number;
+  amount: number | null;
   payment_date: string;
   payment_ref: string;
-  payment_method: number;
+  payment_method: string;
 };

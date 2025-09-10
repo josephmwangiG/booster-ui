@@ -24,12 +24,19 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Vehicles</h4>
-            <span class="text-gray-400 text-sm"> {{ store.vehicles.length }} items found </span>
+            <span class="text-gray-400 text-sm"> {{ filteredVehicles.length }} of {{ store.vehicles.length }} items found </span>
           </div>
           <button @click="addItem" class="btn-primary my-auto">
             Add Vehicle
           </button>
         </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Vehicles"
+          @search="handleSearch"
+          @clear-filters="handleClearFilters"
+        />
         <div class="overflow-x-auto w-full">
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
@@ -38,15 +45,27 @@
                   Number Plate
                 </th>
                 <th class="t-th">
+                  Brand
+                </th>
+                <th class="t-th">
+                  Model
+                </th>
+                <th class="t-th">
                   Capacity
                 </th>
                 <th class="t-th text-end">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.vehicles" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+              <tr v-for="(item, index) in filteredVehicles" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
-                  {{ item.number_plate }}
+                  {{ item.plate_number }}
+                </td>
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.brand || 'N/A' }}
+                </td>
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.model || 'N/A' }}
                 </td>
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   {{ formatNumber(item.capacity) }} Litres
@@ -96,16 +115,16 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { initDataTableWithSearch, handleSearch as dtHandleSearch, clearAllFilters } from "@/composables/dataTables";
 import { useVehiclesStore } from "@/store/vehicle.store";
 import { formatNumber } from "@/composables/helper_functions";
 
 const VehicleFormModal = defineAsyncComponent(
   () => import("@/components/modules/wm/vehicles/VehicleFormModal.vue")
 );
-
 
 const dialogVisible = ref(false);
 const loading = ref(true);
@@ -115,6 +134,27 @@ const store = useVehiclesStore();
 
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
+
+// Search and filter state
+const searchQuery = ref('');
+
+// Filtered vehicles
+const filteredVehicles = computed(() => {
+  let filtered = store.vehicles;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((vehicle: any) => 
+      vehicle.plate_number?.toLowerCase().includes(query) ||
+      vehicle.brand?.toLowerCase().includes(query) ||
+      vehicle.model?.toLowerCase().includes(query) ||
+      vehicle.capacity?.toString().includes(query)
+    );
+  }
+
+  return filtered;
+});
 
 const addItem = () => {
   action.value = "create";
@@ -128,10 +168,24 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  if (dataTableRef.value) {
+    clearAllFilters(dataTableRef.value);
+  }
+};
 
 onMounted(async () => {
   await store.getVehicles();
-  initDataTable(dataTableRef.value);
+  initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
 });
 </script>

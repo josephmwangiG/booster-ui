@@ -139,7 +139,14 @@ const TenantBillPaymentFormModal = defineAsyncComponent(
 
 const dialogVisible = ref(false);
 const loading = ref(true);
-const formData = ref({});
+const formData = ref({
+  id: null,
+  tenant_bill_id: null,
+  amount: null,
+  payment_date: '',
+  payment_ref: '',
+  payment_method: ''
+});
 const action = ref("create");
 const store = useTenantBillsStore();
 

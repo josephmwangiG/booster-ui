@@ -17,9 +17,14 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item prop="rate" class="flex-1" :label="'Rate'">
-        <el-input v-model="formData.rate" placeholder="Enter amount charged" />
-      </el-form-item>
+      <div class="lg:flex gap-3">
+        <el-form-item prop="rate" class="flex-1" :label="'Rate'">
+          <el-input v-model="formData.rate" type="number" placeholder="Enter amount charged" />
+        </el-form-item>
+        <el-form-item prop="unit" class="flex-1" :label="'Unit'">
+          <el-input v-model="formData.unit" placeholder="e.g., unit, month, day" />
+        </el-form-item>
+      </div>
 
 
       <div class="mt-5 sm:mt-6 text-right">
@@ -47,7 +52,13 @@ const props = defineProps({
 const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useUtilitiesStore();
 const itemFormRef = ref<FormInstance>();
-const formData = reactive<UtilityForm>(props.form as UtilityForm);
+const formData = reactive<UtilityForm>({
+  id: props.form?.id || null,
+  name: props.form?.name || '',
+  category: props.form?.category || '',
+  rate: props.form?.rate || '',
+  unit: props.form?.unit || ''
+});
 
 
 
@@ -61,7 +72,9 @@ const rules = reactive<FormRules<UtilityForm>>({
   category: [
     { required: true, message: "Select category", trigger: "change" },
   ],
-
+  unit: [
+    { required: true, message: "Please enter unit", trigger: "blur" },
+  ],
 });
 
 

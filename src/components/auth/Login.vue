@@ -107,25 +107,34 @@ const router = useRouter();
 
 const login = async () => {
   loading.value = true;
-  const res = await store.login(formData.value);
-
-  loading.value = false;
-
-  if (res.status == 200) {
-    if (router.currentRoute.value.query.redirect) {
-      router.push({ path: router.currentRoute.value.query.redirect as string });
+  try {
+    const res = await store.login(formData.value);
+    if (res.status == 200) {
+      if (router.currentRoute.value.query.redirect) {
+        router.push({
+          path: router.currentRoute.value.query.redirect as string,
+        });
+      } else {
+        router.push({ name: "dashboard" });
+        errors.value = {};
+      }
+    } else if (res.status == 422 && res.data.errors) {
+      errors.value = res.data.errors;
     } else {
-      router.push({ name: "dashboard" });
-      errors.value = {};
+      ElNotification({
+        title: "Error",
+        type: "error",
+        message: res.data.message,
+      });
     }
-  } else if (res.status == 422 && res.data.errors) {
-    errors.value = res.data.errors;
-  } else {
+  } catch (error: any) {
     ElNotification({
       title: "Error",
       type: "error",
-      message: res.data.message,
+      message: error?.response?.data?.message || "An unexpected error occurred.",
     });
+  } finally {
+    loading.value = false;
   }
 };
 

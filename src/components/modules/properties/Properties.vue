@@ -24,12 +24,23 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Properties</h4>
-            <span class="text-gray-400 text-sm"> {{ store.properties.length }} items found  </span>
+            <span class="text-gray-400 text-sm"> {{ filteredProperties.length }} of {{ store.properties.length }} items found  </span>
           </div>
           <button @click="dialogVisible = true" class="btn-primary my-auto">
             Create Property
           </button>
         </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Properties"
+          :enable-category-filter="true"
+          category-label="Type"
+          :categories="propertyTypeOptions"
+          @search="handleSearch"
+          @category-filter="handleTypeFilter"
+          @clear-filters="handleClearFilters"
+        />
         <div class="overflow-x-auto w-full">
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
@@ -44,7 +55,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.properties" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+              <tr v-for="(item, index) in filteredProperties" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   <router-link :to="{ name: 'property', params: { id: item.id } }">
                     <span>{{
@@ -111,15 +122,15 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { initDataTableWithSearch, handleSearch as dtHandleSearch, handleColumnSearch, clearAllFilters } from "@/composables/dataTables";
 import { usePropertiesStore } from "@/store/properties.store";
 
 const PropertyFormModal = defineAsyncComponent(
   () => import("@/components/modules/properties/PropertyFormModal.vue")
 );
-
 
 const dialogVisible = ref(false);
 const loading = ref(true);
@@ -130,11 +141,65 @@ DataTable.use(DataTablesCore);
 
 const formData = {};
 
+// Search and filter state
+const searchQuery = ref('');
+const selectedType = ref('');
+
+// Property type options for filtering
+const propertyTypeOptions = computed(() => {
+  const types = [...new Set(store.properties.map((prop: any) => prop.type))].filter(Boolean);
+  return types.map(type => ({ value: type, label: type }));
+});
+
+// Filtered properties
+const filteredProperties = computed(() => {
+  let filtered = store.properties;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((property: any) => 
+      property.name?.toLowerCase().includes(query) ||
+      property.type?.toLowerCase().includes(query) ||
+      property.address?.toLowerCase().includes(query)
+    );
+  }
+
+  // Apply type filter
+  if (selectedType.value) {
+    filtered = filtered.filter((property: any) => property.type === selectedType.value);
+  }
+
+  return filtered;
+});
+
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleTypeFilter = (type: string) => {
+  selectedType.value = type;
+  if (dataTableRef.value) {
+    handleColumnSearch(dataTableRef.value, 1, type); // Type column is index 1
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  selectedType.value = '';
+  if (dataTableRef.value) {
+    clearAllFilters(dataTableRef.value);
+  }
+};
+
 onMounted(async () => {
   await store.getProperties();
-  initDataTable(dataTableRef.value);
+  initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
-
 });
 </script>
 

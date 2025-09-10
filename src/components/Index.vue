@@ -88,8 +88,8 @@ const logout = () => {
       type: "",
     }
   )
-    .then(() => {
-      localStorage.clear();
+    .then(async () => {
+      await store.logout();
       router.push({ name: "login" });
     })
     .catch(() => { });

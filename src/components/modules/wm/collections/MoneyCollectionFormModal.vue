@@ -3,79 +3,71 @@
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
       <div class="lg:flex gap-3">
-        <el-form-item prop="client_name" class="flex-1" :label="'Client Name'">
-          <el-input v-model="formData.client_name" placeholder="Enter client name" />
-        </el-form-item>
-        <el-form-item prop="address" class="flex-1" :label="'Address (Delivery Location)'">
-          <el-input v-model="formData.address" placeholder="Enter address" />
-        </el-form-item>
-      </div>
-      <div class="lg:flex gap-3">
-        <el-form-item prop="phone_number" class="flex-1" :label="'Phone Number'">
-          <el-input v-model="formData.phone_number" placeholder="Enter phone number" />
-        </el-form-item>
-        <el-form-item prop="email" class="flex-1" :label="'Email'">
-          <el-input v-model="formData.email" placeholder="Enter email" />
-        </el-form-item>
-      </div>
-      <div class="lg:flex gap-3">
-        <el-form-item prop="capacity" class="flex-1" :label="'Delivery Capacity'">
-          <el-input v-model="formData.capacity" placeholder="Enter capacity" />
-        </el-form-item>
-        <el-form-item prop="amount" class="flex-1" :label="'Total Cost'">
-          <el-input v-model="formData.amount" placeholder="Enter amount" />
-        </el-form-item>
-      </div>
-      <div class="lg:flex gap-3">
-        <el-form-item prop="vehicle_id" class="flex-1" :label="'Select Vehicle'">
-          <el-select v-model="formData.vehicle_id" placeholder="Vehicle" class="flex-1">
-            <el-option v-for="vehicle in store.vehicles" :key="vehicle.id" :label="vehicle.number_plate"
-              :value="vehicle.id" />
+        <el-form-item prop="water_client_id" class="flex-1" :label="'Select Client'">
+          <el-select v-model="formData.water_client_id" placeholder="Select Client" class="flex-1" :loading="loading" filterable>
+            <el-option v-for="client in store.properties" :key="client.id" 
+              :label="`${client.client_name} - ${client.phone}`"
+              :value="client.id" />
           </el-select>
         </el-form-item>
-        <el-form-item prop="driver_if" class="flex-1" :label="'Select Driver'">
-          <el-select v-model="formData.driver_id" placeholder="Driver" class="flex-1">
-            <el-option v-for="driver in store.drivers" :key="driver.id"
-              :label="driver.name" :value="driver.id" />
+        <el-form-item prop="water_meter_id" class="flex-1" :label="'Select Water Meter'">
+          <el-select v-model="formData.water_meter_id" placeholder="Select Water Meter" class="flex-1" :loading="loading" filterable>
+            <el-option v-for="meter in store.meters" :key="meter.id" 
+              :label="`${meter.code_number} - ${meter.name || 'N/A'}`"
+              :value="meter.id" />
           </el-select>
         </el-form-item>
-
       </div>
+      
       <div class="lg:flex gap-3">
-        <el-form-item prop="departure_time" label="Departure Time">
-          <el-date-picker format="MMM DD YYYY hh:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime"
-            v-model="formData.departure_time" aria-label="Pick a time" placeholder="Pick a time" style="width: 100%" />
+        <el-form-item prop="collection_date" class="flex-1" :label="'Collection Date'">
+          <el-date-picker format="MMM DD YYYY" value-format="YYYY-MM-DD" type="date"
+            v-model="formData.collection_date" aria-label="Pick a date" placeholder="Pick a date" style="width: 100%" />
         </el-form-item>
-        <el-form-item prop="return_time" label="Return Time">
-          <el-date-picker format="MMM DD YYYY hh:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime" v-model="formData.return_time"
-            aria-label="Pick a time" placeholder="Pick a time" style="width: 100%" />
+        <el-form-item prop="amount" class="flex-1" :label="'Amount'">
+          <el-input v-model="formData.amount" placeholder="Enter amount" type="number" step="0.01" />
         </el-form-item>
-
       </div>
 
-      <el-checkbox v-model="formData.record_payment" label="Record Payment" size="large" v-if="action === 'create'"/>
-
-      <div class="collections" v-if="formData.record_payment">
-        <el-form-item prop="payment_method" label="Payment Method">
-          <el-select v-model="formData.payment_method" placeholder="Payment Method" class="flex-1">
+      <div class="lg:flex gap-3">
+        <el-form-item prop="payment_method" class="flex-1" :label="'Payment Method'">
+          <el-select v-model="formData.payment_method" placeholder="Payment Method" class="flex-1" :loading="loading">
             <el-option v-for="payment_method in store.payment_methods" :key="payment_method.id"
               :label="payment_method.name" :value="payment_method.name" />
           </el-select>
         </el-form-item>
-        <el-form-item prop="amount_paid" label="Amount Paid">
-          <el-input v-model="formData.amount_paid" placeholder="Amount Paid" type="number" class="flex-1">
-          </el-input>
+        <el-form-item prop="phone_number" class="flex-1" :label="'Phone Number'">
+          <el-input v-model="formData.phone_number" placeholder="Enter phone number" />
         </el-form-item>
-        <div class="lg:flex gap-3">
-          <el-form-item prop="payment_reference" label="Payment Reference">
-            <el-input v-model="formData.payment_reference" placeholder="Enter payment reference" class="flex-1">
-            </el-input>
-          </el-form-item>
-          <el-form-item prop="payment_date" label="Payment date">
-            <el-date-picker format="MMM DD YYYY" value-format="YYYY-MM-DD" v-model="formData.payment_date"
-              aria-label="Pick a time" placeholder="Payment date" style="width: 100%" />
-          </el-form-item>
-        </div>
+      </div>
+
+      <div class="lg:flex gap-3">
+        <el-form-item prop="driver_id" class="flex-1" :label="'Select Driver (Optional)'">
+          <el-select v-model="formData.driver_id" placeholder="Driver" class="flex-1" :loading="loading">
+            <el-option v-for="driver in store.drivers" :key="driver.id"
+              :label="driver.user_name" :value="driver.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="vehicle_id" class="flex-1" :label="'Select Vehicle (Optional)'">
+          <el-select v-model="formData.vehicle_id" placeholder="Vehicle" class="flex-1" :loading="loading">
+            <el-option v-for="vehicle in store.vehicles" :key="vehicle.id" 
+              :label="`${vehicle.plate_number} - ${vehicle.brand || 'N/A'} ${vehicle.model || 'N/A'}`"
+              :value="vehicle.id" />
+          </el-select>
+        </el-form-item>
+      </div>
+
+      <div class="lg:flex gap-3">
+        <el-form-item prop="status" class="flex-1" :label="'Status'">
+          <el-select v-model="formData.status" placeholder="Status" class="flex-1">
+            <el-option label="Pending" value="pending" />
+            <el-option label="Completed" value="completed" />
+            <el-option label="Cancelled" value="cancelled" />
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="notes" class="flex-1" :label="'Notes (Optional)'">
+          <el-input v-model="formData.notes" placeholder="Enter notes" type="textarea" />
+        </el-form-item>
       </div>
 
       <div class="mt-5 sm:mt-6 text-right">
@@ -93,33 +85,47 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
-import { WaterDeliveryForm } from "@/type/water-delivery.type";
-import { useWaterDeliveriesStore } from "@/store/water-deliveries.store";
+import { useWaterCollectionsStore } from "@/store/water-collections.store";
+
+interface MoneyCollectionForm {
+  id?: string;
+  water_client_id?: string;
+  water_meter_id?: string;
+  collection_date?: string;
+  amount?: number;
+  payment_method?: string;
+  phone_number?: string;
+  driver_id?: string;
+  vehicle_id?: string;
+  status?: string;
+  notes?: string;
+}
 
 const props = defineProps({
   form: Object,
   action: String,
 });
 const emits = defineEmits(["close-modal", "submit-form"]);
-const store = useWaterDeliveriesStore();
+const store = useWaterCollectionsStore();
 const itemFormRef = ref<FormInstance>();
-const formData = reactive<WaterDeliveryForm>(props.form as WaterDeliveryForm);
+const formData = reactive<MoneyCollectionForm>(props.form as MoneyCollectionForm || {});
+const loading = ref(true);
 
-const rules = reactive<FormRules<WaterDeliveryForm>>({
-  client_name: [
-    { required: true, message: "Please enter name", trigger: "blur" },
+const rules = reactive<FormRules<MoneyCollectionForm>>({
+  water_client_id: [
+    { required: true, message: "Please select a client", trigger: "change" },
   ],
-  capacity: [
-    { required: true, message: "Please enter capacity", trigger: "blur" },
+  water_meter_id: [
+    { required: true, message: "Please select a water meter", trigger: "change" },
   ],
-  phone_number: [
-    { required: true, message: "Please enter phone", trigger: "blur" },
+  collection_date: [
+    { required: true, message: "Please select collection date", trigger: "change" },
   ],
-  driver_id: [
-    { required: true, message: "Please select option", trigger: "change" },
+  amount: [
+    { required: true, message: "Please enter amount", trigger: "blur" },
   ],
-  vehicle_id: [
-    { required: true, message: "Please select option", trigger: "change" },
+  status: [
+    { required: true, message: "Please select status", trigger: "change" },
   ],
 });
 
@@ -129,7 +135,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
-
   if (props.action === "create") {
     const res = await store.createWaterDelivery(formData);
     if (res.status == 200 || res.status == 201) {
@@ -138,7 +143,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       ElNotification({
         title: "Success",
         type: "success",
-        message: "Client was created",
+        message: "Money collection was created",
       })
     }
   } else {
@@ -149,7 +154,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       ElNotification({
         title: "Success",
         type: "success",
-        message: "Client was updated",
+        message: "Money collection was updated",
       })
     }
   }
@@ -161,7 +166,9 @@ const resetForm = (formEl: FormInstance | undefined) => {
 };
 
 onMounted(async() => {
-  await store.getDeliveryItems()
+  loading.value = true;
+  await store.getDeliveryItems();
+  loading.value = false;
 });
 </script>
 <style lang=""></style>

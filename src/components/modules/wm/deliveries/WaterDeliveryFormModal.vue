@@ -3,11 +3,19 @@
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
       <div class="lg:flex gap-3">
+        <el-form-item prop="delivery_number" class="flex-1" :label="'Delivery Number'">
+          <el-input v-model="formData.delivery_number" placeholder="Enter delivery number" />
+        </el-form-item>
         <el-form-item prop="client_name" class="flex-1" :label="'Client Name'">
           <el-input v-model="formData.client_name" placeholder="Enter client name" />
         </el-form-item>
+      </div>
+      <div class="lg:flex gap-3">
         <el-form-item prop="address" class="flex-1" :label="'Address (Delivery Location)'">
           <el-input v-model="formData.address" placeholder="Enter address" />
+        </el-form-item>
+        <el-form-item prop="notes" class="flex-1" :label="'Notes (Optional)'">
+          <el-input v-model="formData.notes" placeholder="Enter any additional notes" />
         </el-form-item>
       </div>
       <div class="lg:flex gap-3">
@@ -19,25 +27,86 @@
         </el-form-item>
       </div>
       <div class="lg:flex gap-3">
-        <el-form-item prop="capacity" class="flex-1" :label="'Delivery Capacity'">
-          <el-input v-model="formData.capacity" placeholder="Enter capacity" />
+        <el-form-item prop="capacity" class="flex-1" :label="'Delivery Capacity (Liters)'">
+          <el-input v-model="formData.capacity" type="number" placeholder="Enter capacity in liters" />
         </el-form-item>
-        <el-form-item prop="amount" class="flex-1" :label="'Total Cost'">
-          <el-input v-model="formData.amount" placeholder="Enter amount" />
+        <el-form-item prop="amount" class="flex-1" :label="'Transport Cost'">
+          <el-input v-model="formData.amount" type="number" placeholder="Enter amount" />
         </el-form-item>
       </div>
+
+      
+      <!-- Utility Consumption Tracking -->
+      <div class="lg:flex gap-3">
+        <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Meter Reading'">
+          <el-input 
+            v-model="formData.previous_meter_reading" 
+            type="number" 
+            placeholder="Enter previous reading"
+            @focusout="calculateUtilityCost" 
+          />
+        </el-form-item>
+        <el-form-item prop="current_meter_reading" class="flex-1" :label="'Current Meter Reading'">
+          <el-input 
+            v-model="formData.current_meter_reading" 
+            type="number" 
+            placeholder="Enter current reading"
+            @focusout="calculateUtilityCost" 
+          />
+        </el-form-item>
+      </div>
+      
+      <div class="lg:flex gap-3">
+        <el-form-item prop="consumption" class="flex-1" :label="'Consumption (Units)'">
+          <el-input 
+            v-model="consumption" 
+            placeholder="Consumption" 
+            :disabled="true"
+            class="bg-gray-50" 
+          />
+        </el-form-item>
+        <el-form-item prop="utility_rate" class="flex-1" :label="'Rate per Unit'">
+          <el-input 
+            v-model="formData.utility_rate" 
+            type="number" 
+            placeholder="Enter rate per unit"
+            @focusout="calculateUtilityCost" 
+          />
+        </el-form-item>
+      </div>
+      
+      <div class="lg:flex gap-3">
+        <el-form-item prop="utility_cost" class="flex-1" :label="'Utility Cost'">
+          <el-input 
+            v-model="formData.utility_cost" 
+            placeholder="Utility cost" 
+            :disabled="true"
+            class="bg-gray-50" 
+          />
+        </el-form-item>
+        <el-form-item prop="total_with_utility" class="flex-1" :label="'Total (Delivery + Utility)'">
+          <el-input 
+            v-model="totalWithUtility" 
+            placeholder="Total amount" 
+            :disabled="true"
+            class="bg-gray-50 font-semibold" 
+          />
+        </el-form-item>
+      </div>
+
       <div class="lg:flex gap-3">
         <el-form-item prop="vehicle_id" class="flex-1" :label="'Select Vehicle'">
-          <el-select v-model="formData.vehicle_id" placeholder="Vehicle" class="flex-1">
-            <el-option v-for="vehicle in store.vehicles" :key="vehicle.id" :label="vehicle.number_plate"
+          <el-select v-model="formData.vehicle_id" placeholder="Vehicle" class="flex-1" :loading="loading">
+            <el-option v-for="vehicle in store.vehicles" :key="vehicle.id" 
+              :label="`${vehicle.plate_number} - ${vehicle.brand || 'N/A'} ${vehicle.model || 'N/A'}`"
               :value="vehicle.id" />
           </el-select>
         </el-form-item>
-        <el-form-item prop="driver_if" class="flex-1" :label="'Select Driver'">
-          <el-select v-model="formData.driver_id" placeholder="Driver" class="flex-1">
-            <el-option v-for="driver in store.drivers" :key="driver.id"
-              :label="driver.name" :value="driver.id" />
-          </el-select>
+        <el-form-item prop="driver_id" class="flex-1" :label="'Select Driver'">          
+            <el-select v-model="formData.driver_id" placeholder="Driver" class="flex-1" :loading="loading">
+              <el-option v-for="driver in store.drivers" :key="driver.id"
+                :label="driver.user_name" :value="driver.id" />
+            </el-select>
         </el-form-item>
 
       </div>
@@ -57,10 +126,10 @@
 
       <div class="collections" v-if="formData.record_payment">
         <el-form-item prop="payment_method" label="Payment Method">
-          <el-select v-model="formData.payment_method" placeholder="Payment Method" class="flex-1">
-            <el-option v-for="payment_method in store.payment_methods" :key="payment_method.id"
-              :label="payment_method.name" :value="payment_method.name" />
-          </el-select>
+                      <el-select v-model="formData.payment_method" placeholder="Payment Method" class="flex-1" :loading="loading">
+              <el-option v-for="payment_method in store.payment_methods" :key="payment_method.id"
+                :label="payment_method.name" :value="payment_method.name" />
+            </el-select>
         </el-form-item>
         <el-form-item prop="amount_paid" label="Amount Paid">
           <el-input v-model="formData.amount_paid" placeholder="Amount Paid" type="number" class="flex-1">
@@ -89,12 +158,34 @@
       </div>
     </el-form>
   </div>
+
+  <!-- Driver Modal -->
+  <teleport to="body">
+    <el-dialog v-model="driverModalVisible" :show-close="false" style="min-width: 300px" width="40%">
+      <template #header>
+        <div class="modal-header flex justify-between items-center">
+          <h3 class="text-base font-semibold leading-6 text-gray-900">
+            Add Driver
+          </h3>
+          <button @click="driverModalVisible = false" class="text-gray-400 hover:text-gray-600">
+            <i class="ri-close-line text-xl"></i>
+          </button>
+        </div>
+      </template>
+      <DriverFormModal @close-modal="closeDriverModal" :form="{}" action="create" />
+    </el-dialog>
+  </teleport>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, defineAsyncComponent, computed } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
 import { WaterDeliveryForm } from "@/type/water-delivery.type";
 import { useWaterDeliveriesStore } from "@/store/water-deliveries.store";
+import { useAuthStore } from "@/store/auth.store";
+
+const DriverFormModal = defineAsyncComponent(
+  () => import("@/components/settings/drivers/DriverFormModal.vue")
+);
 
 const props = defineProps({
   form: Object,
@@ -102,15 +193,58 @@ const props = defineProps({
 });
 const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterDeliveriesStore();
+const authStore = useAuthStore();
 const itemFormRef = ref<FormInstance>();
-const formData = reactive<WaterDeliveryForm>(props.form as WaterDeliveryForm);
+const formData = reactive<WaterDeliveryForm>({
+  ...props.form as WaterDeliveryForm,
+  organization_id: authStore.user?.organization_id || 1, // Set organization_id from user data
+});
+const driverModalVisible = ref(false);
+const loading = ref(true);
+
+// Utility consumption tracking
+const consumption = computed(() => {
+  if (!formData.previous_meter_reading || !formData.current_meter_reading) return 0;
+  const current = Number(formData.current_meter_reading);
+  const previous = Number(formData.previous_meter_reading);
+  const consumptionValue = current - previous;
+  return consumptionValue >= 0 ? consumptionValue : 0;
+});
+
+const totalWithUtility = computed(() => {
+  const deliveryCost = Number(formData.amount) || 0;
+  const utilityCost = Number(formData.utility_cost) || 0;
+  return deliveryCost + utilityCost;
+});
+
+const calculateUtilityCost = () => {
+  if (formData.current_meter_reading && formData.previous_meter_reading && formData.utility_rate) {
+    const consumptionValue = Number(formData.current_meter_reading) - Number(formData.previous_meter_reading);
+    if (consumptionValue >= 0) {
+      formData.utility_cost = Number((consumptionValue * Number(formData.utility_rate)).toFixed(2));
+    } else {
+      formData.utility_cost = 0;
+    }
+  } else {
+    formData.utility_cost = 0;
+  }
+};
 
 const rules = reactive<FormRules<WaterDeliveryForm>>({
+  delivery_number: [
+    { required: true, message: "Please enter delivery number", trigger: "blur" },
+  ],
   client_name: [
     { required: true, message: "Please enter name", trigger: "blur" },
   ],
+  address: [
+    { required: true, message: "Please enter address", trigger: "blur" },
+  ],
   capacity: [
     { required: true, message: "Please enter capacity", trigger: "blur" },
+  ],
+  amount: [
+    { required: true, message: "Please enter amount", trigger: "blur" },
   ],
   phone_number: [
     { required: true, message: "Please enter phone", trigger: "blur" },
@@ -121,6 +255,45 @@ const rules = reactive<FormRules<WaterDeliveryForm>>({
   vehicle_id: [
     { required: true, message: "Please select option", trigger: "change" },
   ],
+  departure_time: [
+    { required: true, message: "Please select departure time", trigger: "change" },
+  ],
+  current_meter_reading: [
+    { 
+      validator: (_rule: any, value: any, callback: any) => {
+        if (formData.previous_meter_reading && value && Number(value) < Number(formData.previous_meter_reading)) {
+          callback(new Error('Current reading should be greater than previous reading'));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: "blur" 
+    },
+  ],
+  previous_meter_reading: [
+    { 
+      validator: (_rule: any, value: any, callback: any) => {
+        if (value && Number(value) < 0) {
+          callback(new Error('Previous reading cannot be negative'));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: "blur" 
+    },
+  ],
+  utility_rate: [
+    { 
+      validator: (_rule: any, value: any, callback: any) => {
+        if (value && Number(value) < 0) {
+          callback(new Error('Utility rate cannot be negative'));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: "blur" 
+    },
+  ],
 });
 
 const submitForm = async (formEl: FormInstance | undefined) => {
@@ -129,27 +302,59 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
+  // Recalculate utility cost before submission
+  calculateUtilityCost();
+
+  // Ensure numeric fields are properly converted
+  const submitData = {
+    ...formData,
+    capacity: Number(formData.capacity) || 0,
+    amount: Number(formData.amount) || 0,
+    previous_meter_reading: formData.previous_meter_reading ? Number(formData.previous_meter_reading) : null,
+    current_meter_reading: formData.current_meter_reading ? Number(formData.current_meter_reading) : null,
+    utility_rate: formData.utility_rate ? Number(formData.utility_rate) : null,
+    utility_cost: formData.utility_cost ? Number(formData.utility_cost) : null,
+    amount_paid: formData.amount_paid ? Number(formData.amount_paid) : null,
+  };
 
   if (props.action === "create") {
-    const res = await store.createWaterDelivery(formData);
+    const res = await store.createWaterDelivery(submitData);
     if (res.status == 200 || res.status == 201) {
+      // If payment recording is enabled, create the payment
+      if (formData.record_payment && formData.amount_paid) {
+        const paymentData = {
+          water_delivery_id: res.data.id,
+          amount: formData.amount_paid,
+          payment_date: formData.payment_date,
+          payment_method: formData.payment_method,
+          payment_reference: formData.payment_reference,
+          notes: formData.notes
+        };
+        
+        const paymentRes = await store.createWaterDeliveryItemPayment(paymentData);
+        if (paymentRes.status == 200 || paymentRes.status == 201) {
+          // Mark the delivery as completed since payment was recorded
+          await store.markWaterDeliveryComplete(res.data.id);
+        }
+      }
+      
       resetForm(itemFormRef.value as FormInstance);
       emits("close-modal");
       ElNotification({
         title: "Success",
         type: "success",
-        message: "Client was created",
+        message: "Water delivery was created successfully",
       })
     }
   } else {
-    const res = await store.updateWaterDelivery(formData);
+    const res = await store.updateWaterDelivery(submitData);
     if (res.status == 200 || res.status == 201) {
       resetForm(itemFormRef.value as FormInstance);
       emits("close-modal");
       ElNotification({
         title: "Success",
         type: "success",
-        message: "Client was updated",
+        message: "Water delivery was updated successfully",
       })
     }
   }
@@ -158,10 +363,51 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   formEl.resetFields();
+  // Reset utility consumption fields
+  formData.previous_meter_reading = null;
+  formData.current_meter_reading = null;
+  formData.utility_rate = null;
+  formData.utility_cost = null;
+  // Reset payment fields
+  formData.record_payment = false;
+  formData.amount_paid = undefined;
+  formData.payment_date = undefined;
+  formData.payment_method = undefined;
+  formData.payment_reference = undefined;
+  // Reset other fields
+  formData.notes = undefined;
+  // Regenerate delivery number
+  generateDeliveryNumber();
+};
+
+const closeDriverModal = async () => {
+  driverModalVisible.value = false;
+  // Refresh the drivers list after adding a new driver
+  await store.getDeliveryItems();
+};
+
+// Generate delivery number if not provided
+const generateDeliveryNumber = () => {
+  if (!formData.delivery_number) {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    formData.delivery_number = `WD-${timestamp}-${random}`;
+  }
 };
 
 onMounted(async() => {
-  await store.getDeliveryItems()
+  loading.value = true;
+  await store.getDeliveryItems();
+  
+  // Generate delivery number if not provided
+  generateDeliveryNumber();
+  
+  // Ensure organization_id is set
+  if (!formData.organization_id) {
+    formData.organization_id = authStore.user?.organization_id || 1;
+  }
+  
+  loading.value = false;
 });
 </script>
 <style lang=""></style>

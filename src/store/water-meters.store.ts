@@ -8,6 +8,7 @@ export const useWaterMetersStore = defineStore("water-meters", {
     meterReadings: [] as any[],
     units: [] as any[],
     meters: [] as any[],
+    clientItems: [] as any[],
     payment_methods: [] as any[],
     waterMeter: null as any,
     headers: {
@@ -23,11 +24,15 @@ export const useWaterMetersStore = defineStore("water-meters", {
     },
 
     async createWaterMeter(data: WaterMeterForm) {
-      const res = await axios.post("/water-meters", data, this.headers);
+      try {
+        const res = await axios.post("/water-meters", data, this.headers);
 
-      this.waterMeters.unshift(res.data);
+        this.waterMeters.unshift(res.data);
 
-      return res;
+        return res;
+      } catch (error) {
+        throw error;
+      }
     },
 
     async getWaterMeter(id: string) {
@@ -35,14 +40,18 @@ export const useWaterMetersStore = defineStore("water-meters", {
       this.waterMeter = res.data;
     },
     async updateWaterMeter(data: WaterMeterForm) {
-      const res = await axios.put("/water-meters/" + data.id, data, this.headers);
+      try {
+        const res = await axios.put("/water-meters/" + data.id, data, this.headers);
 
-      if (res.status == 200 || res.status == 201) {
-        this.waterMeters[this.waterMeters.findIndex((t: any) => t.id == data.id)] =
-          res.data;
+        if (res.status == 200 || res.status == 201) {
+          this.waterMeters[this.waterMeters.findIndex((t: any) => t.id == data.id)] =
+            res.data;
+        }
+
+        return res;
+      } catch (error) {
+        throw error;
       }
-
-      return res;
     },
 
     async getMeterReadings() {
@@ -50,9 +59,35 @@ export const useWaterMetersStore = defineStore("water-meters", {
       this.meterReadings = res.data;
     },
     async getMeters() {
-      const res = await axios.get("/water-meters/get/items", this.headers);
-      this.payment_methods = res.data.payment_methods;
-      this.meters = res.data.meters;
+      try {
+        console.log('Fetching meters with headers:', this.headers);
+        const res = await axios.get("/water-meters/get/items", this.headers);
+        console.log('Meters API response:', res.data);
+        // API returns an array of meters: [{ id, code_number }, ...]
+        this.meters = res.data;
+        return res;
+      } catch (error: any) {
+        console.error('Error fetching meters:', error.response || error);
+        this.meters = [];
+        return error.response;
+      }
+    },
+    async getClientItems() {
+      try {
+        console.log('Fetching client items with headers:', this.headers);
+        const res = await axios.get("/water-client-items", this.headers);
+        console.log('Client items API response:', res.data);
+        this.clientItems = res.data;
+        return res;
+      } catch (error: any) {
+        console.error('Error fetching client items:', error.response || error);
+        this.clientItems = [];
+        return error.response;
+      }
+    },
+    async getPaymentMethods() {
+      const res = await axios.get("/payment-methods", this.headers);
+      this.payment_methods = res.data;
     },
     async createMeterReading(data: MeterReadingForm) {
       const res = await axios.post("/meter-readings", data, this.headers);

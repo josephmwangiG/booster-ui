@@ -3,7 +3,7 @@
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
       <el-form-item prop="property_id" class="flex-1" :label="'Property'">
-        <el-select v-model="formData.property_id" placeholder="Select a property">
+        <el-select v-model="formData.property_id" placeholder="Select a property" :loading="loading">
           <el-option v-for="item in store.properties" :key="item.id" :label="item.name" :value="item.id"></el-option>
         </el-select>
       </el-form-item>
@@ -62,6 +62,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useTenantsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<TenancyForm>(props.form as TenancyForm);
+const loading = ref(true);
 
 const disabledDate = (time: Date) => {
   return time.getTime() < Date.now()
@@ -117,8 +118,10 @@ const resetForm = (formEl: FormInstance | undefined) => {
   formEl.resetFields();
 };
 
-onMounted(() => {
-  store.getProperties();
+onMounted(async () => {
+  loading.value = true;
+  await store.getProperties();
+  loading.value = false;
 });
 </script>
 <style lang=""></style>

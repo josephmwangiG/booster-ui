@@ -84,18 +84,19 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     } else {
       const res = await store.createWaterDeliveryItemPayment(formData);
       if (res.status == 200 || res.status == 201) {
+        // Mark the delivery as completed since payment was recorded
+        await store.markWaterDeliveryComplete(formData.water_delivery_id);
+        
         resetForm(itemFormRef.value as FormInstance);
         ElNotification({
           title: "Success",
-          message: "Payment was created",
+          message: "Payment was created and delivery marked as complete",
           type: "success",
         })
         emits("close-modal");
       }
     }
   });
-
-
 };
 
 const resetForm = (formEl: FormInstance | undefined) => {

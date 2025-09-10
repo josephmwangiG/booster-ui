@@ -23,12 +23,19 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Clients</h4>
-            <span class="text-gray-400 text-sm"> {{ store.waterClients.length }} items found </span>
+            <span class="text-gray-400 text-sm"> {{ filteredWaterClients.length }} of {{ store.waterClients.length }} items found </span>
           </div>
           <button @click="addItem" class="btn-primary my-auto">
             Add Client
           </button>
         </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Clients"
+          @search="handleSearch"
+          @clear-filters="handleClearFilters"
+        />
         <div class="overflow-x-auto w-full">
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
@@ -45,7 +52,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.waterClients" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+              <tr v-for="(item, index) in filteredWaterClients" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   <router-link :to="{ name: 'water-client', params: { id: item.id } }">
                     <span>{{
@@ -122,9 +129,10 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { initDataTableWithSearch, handleSearch as dtHandleSearch, clearAllFilters } from "@/composables/dataTables";
 import { useWaterClientsStore } from "@/store/water-clients.store";
 
 const WaterClientFormModal = defineAsyncComponent(
@@ -140,12 +148,34 @@ const formData = ref({});
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
+// Search and filter state
+const searchQuery = ref('');
+
+// Filtered water clients
+const filteredWaterClients = computed(() => {
+  let filtered = store.waterClients;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((client: any) => 
+      client.client_name?.toLowerCase().includes(query) ||
+      client.meter_number?.toLowerCase().includes(query) ||
+      client.email?.toLowerCase().includes(query) ||
+      client.phone?.toLowerCase().includes(query) ||
+      client.alternative_phone?.toLowerCase().includes(query) ||
+      client.id_number?.toLowerCase().includes(query)
+    );
+  }
+
+  return filtered;
+});
+
 const addItem = () => {
   action.value = "create";
   formData.value = {};
   dialogVisible.value = true;
 };
-
 
 const editItem = (item: any) => {
   action.value = "edit";
@@ -153,12 +183,25 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  if (dataTableRef.value) {
+    clearAllFilters(dataTableRef.value);
+  }
+};
 
 onMounted(async () => {
   await store.getWaterClients();
-  initDataTable(dataTableRef.value);
+  initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
-
 });
 </script>
 

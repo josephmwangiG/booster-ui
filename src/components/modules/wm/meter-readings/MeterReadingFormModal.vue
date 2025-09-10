@@ -4,7 +4,7 @@
 
       <el-form-item prop="water_meter_id" class="flex-1" :label="'Meter'">
         <el-select v-model="formData.water_meter_id" placeholder="Select meter">
-          <el-option v-for="meter in store.meters" :key="meter.id" :label="meter.code_number" :value="meter.id" />
+          <el-option v-for="meter in store.meters" :key="meter.id" :label="`${meter.name || 'N/A'} - ${meter.code_number}`" :value="meter.id" />
         </el-select>
       </el-form-item>
       <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">

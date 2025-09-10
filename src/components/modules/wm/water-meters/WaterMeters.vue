@@ -24,18 +24,35 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Water Meters</h4>
-            <span class="text-gray-400 text-sm"> {{ store.waterMeters.length }} items found </span>
+            <span class="text-gray-400 text-sm"> {{ filteredWaterMeters.length }} of {{ store.waterMeters.length }} items found </span>
           </div>
           <button @click="addItem" class="btn-primary my-auto">
             Add Meter
           </button>
         </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Water Meters"
+          :enable-category-filter="true"
+          category-label="Type"
+          :categories="meterTypeOptions"
+          :enable-status-filter="true"
+          :status-options="masterMeterOptions"
+          @search="handleSearch"
+          @category-filter="handleTypeFilter"
+          @status-filter="handleMasterFilter"
+          @clear-filters="handleClearFilters"
+        />
         <div class="overflow-x-auto w-full">
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
               <tr>
                 <th class="t-th">
-                  Meter/Code Number
+                  Meter Name
+                </th>
+                <th class="t-th">
+                  Code Number
                 </th>
                 <th class="t-th">Type</th>
                 <th class="t-th">Master Meter</th>
@@ -44,7 +61,10 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.waterMeters" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+              <tr v-for="(item, index) in filteredWaterMeters" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.name || 'N/A' }}
+                </td>
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   {{ item.code_number }}
                 </td>
@@ -113,15 +133,15 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { initDataTableWithSearch, handleSearch as dtHandleSearch, handleColumnSearch, clearAllFilters } from "@/composables/dataTables";
 import { useWaterMetersStore } from "@/store/water-meters.store";
 
 const WaterMeterFormModal = defineAsyncComponent(
   () => import("@/components/modules/wm/water-meters/WaterMeterFormModal.vue")
 );
-
 
 const dialogVisible = ref(false);
 const loading = ref(true);
@@ -131,6 +151,51 @@ const store = useWaterMetersStore();
 
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
+
+// Search and filter state
+const searchQuery = ref('');
+const selectedType = ref('');
+const selectedMasterStatus = ref('');
+
+// Filter options
+const meterTypeOptions = computed(() => {
+  const types = [...new Set(store.waterMeters.map((meter: any) => meter.category))].filter(Boolean);
+  return types.map(type => ({ value: type, label: type }));
+});
+
+const masterMeterOptions = [
+  { value: 'true', label: 'Master Meter' },
+  { value: 'false', label: 'Regular Meter' }
+];
+
+// Filtered water meters
+const filteredWaterMeters = computed(() => {
+  let filtered = store.waterMeters;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((meter: any) => 
+      meter.name?.toLowerCase().includes(query) ||
+      meter.code_number?.toLowerCase().includes(query) ||
+      meter.category?.toLowerCase().includes(query) ||
+      meter.read_frequency?.toLowerCase().includes(query)
+    );
+  }
+
+  // Apply type filter
+  if (selectedType.value) {
+    filtered = filtered.filter((meter: any) => meter.category === selectedType.value);
+  }
+
+  // Apply master meter filter
+  if (selectedMasterStatus.value) {
+    const isMaster = selectedMasterStatus.value === 'true';
+    filtered = filtered.filter((meter: any) => meter.is_master === isMaster);
+  }
+
+  return filtered;
+});
 
 const addItem = () => {
   action.value = "create";
@@ -144,12 +209,43 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleTypeFilter = (type: string) => {
+  selectedType.value = type;
+  if (dataTableRef.value) {
+    handleColumnSearch(dataTableRef.value, 2, type); // Type column is now index 2
+  }
+};
+
+const handleMasterFilter = (status: string) => {
+  selectedMasterStatus.value = status;
+  // Custom filtering for boolean master meter status
+  if (dataTableRef.value) {
+    const searchValue = status === 'true' ? 'True' : status === 'false' ? 'False' : '';
+    handleColumnSearch(dataTableRef.value, 3, searchValue); // Master column is now index 3
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  selectedType.value = '';
+  selectedMasterStatus.value = '';
+  if (dataTableRef.value) {
+    clearAllFilters(dataTableRef.value);
+  }
+};
 
 onMounted(async () => {
   await store.getWaterMeters();
-  initDataTable(dataTableRef.value);
+  initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
-
 });
 </script>
 

@@ -31,6 +31,16 @@ export const usePropertiesStore = defineStore("properties", {
 
       return res;
     },
+    async updateUnit(data: any) {
+      const res = await axios.post(`/properties/units/update/${data.id}`, data, this.headers);
+      this.property = res.data;
+      return res;
+    },
+    async deleteUnit(id: string) {
+      const res = await axios.delete(`/properties/units/delete/${id}`, this.headers);
+      this.property = res.data;
+      return res;
+    },
     async getProperty(id: string) {
       const res = await axios.get("/properties/" + id, this.headers);
       this.property = res.data;

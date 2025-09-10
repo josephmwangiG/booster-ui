@@ -216,7 +216,7 @@ const routes = [
       },
       {
         name: "water-meters",
-        path: "/water-meters",
+        path: "/settings/water-meters",
         component: () =>
           import("@/components/modules/wm/water-meters/WaterMeters.vue"),
         meta: {

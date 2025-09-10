@@ -30,10 +30,19 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
       this.clientBillItems = res.data;
     },
     async getClientItems() {
-      const res = await axios.get("/water-client-items", {
-        ...this.headers,
-      });
-      this.clientItems = res.data;
+      try {
+        console.log('Fetching client items with headers:', this.headers);
+        const res = await axios.get("/water-client-items", {
+          ...this.headers,
+        });
+        console.log('Client items API response:', res.data);
+        this.clientItems = res.data || [];
+        return res;
+      } catch (error: any) {
+        console.error('Error fetching client items:', error.response || error);
+        this.clientItems = [];
+        return error.response;
+      }
     },
     async getWaterClientBillPayments() {
       const res = await axios.get("/water-client-payments", {
@@ -73,12 +82,19 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     },
 
     async createWaterClientBillPayment(data: WaterClientBillPaymentForm) {
-      const res = await axios.post("/water-client-payments", data, {
-        ...this.headers,
-      });
-      this.clientBillPayments.unshift(res.data);
-
-      return res;
+      try {
+        console.log('Creating water client bill payment with data:', data);
+        const res = await axios.post("/water-client-payments", data, {
+          ...this.headers,
+        });
+        console.log('Water client bill payment created successfully:', res.data);
+        this.clientBillPayments.unshift(res.data);
+        return res;
+      } catch (error: any) {
+        console.error('Error creating water client bill payment:', error.response?.data || error.message);
+        console.error('Request data that failed:', data);
+        throw error;
+      }
     },
     async completeWaterClientBill(id: any) {
       const res = await axios.post(
@@ -95,6 +111,10 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     async getWaterClientBill(id: string) {
       const res = await axios.get("/water-client-bills/" + id, this.headers);
       this.tenantBill = res.data;
+    },
+    async getLastBill(client_id: string) {
+      const res = await axios.get(`/water-client-bills/last-bill/${client_id}`, this.headers);
+      return res.data;
     },
   },
 });

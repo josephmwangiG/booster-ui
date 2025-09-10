@@ -35,6 +35,12 @@
             <thead class="t-head">
               <tr>
                 <th class="t-th">
+                  Client Name
+                </th>
+                <th class="t-th">
+                  Meter Name
+                </th>
+                <th class="t-th">
                   Meter Code Number
                 </th>
                 <th class="t-th">Date</th>
@@ -47,6 +53,12 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
               <tr v-for="(item, index) in store.meterReadings" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.water_client?.client_name || 'N/A' }}
+                </td>
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.water_meter?.name || 'N/A' }}
+                </td>
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   {{ item.code_number }}
                 </td>

@@ -145,7 +145,7 @@ DataTable.use(DataTablesCore);
 const addItem = () => {
   dialogVisible.value = true;
   formData.value = {
-    client_id: (router.currentRoute.value.params.id as string) || "",
+    water_client_id: (router.currentRoute.value.params.id as string) || "",
   };
 
 }

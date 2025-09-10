@@ -70,16 +70,14 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 
 
   if (props.action === "create") {
-    const res = await store.createPendingCollection(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Client was created",
-      })
-    }
+    // Note: Creating pending collections is not supported as the API endpoint only allows GET and HEAD methods
+    ElNotification({
+      title: "Not Supported",
+      type: "warning",
+      message: "Creating pending collections is not currently supported. The API only allows viewing existing collections.",
+    });
+    emits("close-modal");
+    return;
   }
 };
 
