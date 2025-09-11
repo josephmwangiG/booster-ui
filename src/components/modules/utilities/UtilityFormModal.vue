@@ -32,8 +32,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -59,6 +59,7 @@ const formData = reactive<UtilityForm>({
   rate: props.form?.rate || '',
   unit: props.form?.unit || ''
 });
+const isSubmitting = ref(false);
 
 
 
@@ -85,30 +86,35 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
-  if (props.action === "create") {
-    const res = await store.createUtility(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Utility was created",
-      })
-    }
-  } else {
-    const res = await store.updateUtility(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Utility was updated",
-      })
-    }
-  }
+  isSubmitting.value = true;
 
+  try {
+    if (props.action === "create") {
+      const res = await store.createUtility(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Utility was created",
+        })
+      }
+    } else {
+      const res = await store.updateUtility(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Utility was updated",
+        })
+      }
+    }
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 
 const resetForm = (formEl: FormInstance | undefined) => {

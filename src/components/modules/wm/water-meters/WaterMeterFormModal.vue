@@ -37,8 +37,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -58,6 +58,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterMetersStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<WaterMeterForm>(props.form as WaterMeterForm);
+const isSubmitting = ref(false);
 
 const hasExistingMaster = computed(() => {
   return store.waterMeters.some((meter: any) => meter.is_master === true);
@@ -123,6 +124,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) {
       return
     } else {
+      isSubmitting.value = true;
+      
       try {
         if (props.action === "create") {
           const res = await store.createWaterMeter(formData);
@@ -181,6 +184,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
             message: "An error occurred while saving the meter",
           });
         }
+      } finally {
+        isSubmitting.value = false;
       }
     }
   });

@@ -21,8 +21,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -42,6 +42,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useVehiclesStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<VehicleForm>(props.form as VehicleForm);
+const isSubmitting = ref(false);
 
 const rules = reactive<FormRules<VehicleForm>>({
   plate_number: [
@@ -64,34 +65,37 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) {
       return
     } else {
-      if (props.action === "create") {
-        const res = await store.createVehicle(formData);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          emits("close-modal");
-          ElNotification({
-            title: "Success",
-            type: "success",
-            message: "Vehicle was created",
-          })
+      isSubmitting.value = true;
+      
+      try {
+        if (props.action === "create") {
+          const res = await store.createVehicle(formData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            emits("close-modal");
+            ElNotification({
+              title: "Success",
+              type: "success",
+              message: "Vehicle was created",
+            })
+          }
+        } else {
+          const res = await store.updateVehicle(formData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            emits("close-modal");
+            ElNotification({
+              title: "Success",
+              type: "success",
+              message: "Vehicle was updated",
+            })
+          }
         }
-      } else {
-        const res = await store.updateVehicle(formData);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          emits("close-modal");
-          ElNotification({
-            title: "Success",
-            type: "success",
-            message: "Vehicle was updated",
-          })
-        }
+      } finally {
+        isSubmitting.value = false;
       }
     }
   });
-
-
-
 };
 
 const resetForm = (formEl: FormInstance | undefined) => {

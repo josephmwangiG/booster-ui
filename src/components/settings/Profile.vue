@@ -26,12 +26,6 @@
             </tr>
             <tr>
               <td class="w-[160px] lg:w-1/3 text-gray-400 text-[13px] py-2">
-                Organization
-              </td>
-              <td>{{store.user.organization?.name}}</td>
-            </tr>
-            <tr>
-              <td class="w-[160px] lg:w-1/3 text-gray-400 text-[13px] py-2">
                 Contact Phone
               </td>
               <td >{{store.user.phone_number}} | <span class="text-green-500">Verified</span></td>

@@ -42,8 +42,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
@@ -63,6 +63,7 @@ const store = useTenantsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<TenancyForm>(props.form as TenancyForm);
 const loading = ref(true);
+const isSubmitting = ref(false);
 
 const disabledDate = (time: Date) => {
   return time.getTime() < Date.now()
@@ -100,16 +101,21 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
+  isSubmitting.value = true;
 
-  const res = await store.createTenancy(formData);
-  if (res.status == 200 || res.status == 201) {
-    resetForm(itemFormRef.value as FormInstance);
-    ElNotification({
-      title: "Success",
-      message: "Tenancy was created",
-      type: "success",
-    })
-    emits("close-modal");
+  try {
+    const res = await store.createTenancy(formData);
+    if (res.status == 200 || res.status == 201) {
+      resetForm(itemFormRef.value as FormInstance);
+      ElNotification({
+        title: "Success",
+        message: "Tenancy was created",
+        type: "success",
+      })
+      emits("close-modal");
+    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

@@ -55,7 +55,7 @@
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
               <tr>
-                <th class="t-th">Delivery Number</th>
+                <th class="t-th">Delivery ID</th>
                 <th class="t-th">Client</th>
                 <th class="t-th">Contacts</th>
                 <th class="t-th">Address</th>
@@ -73,8 +73,8 @@
               <tr v-for="(item, index) in filteredWaterDeliveries" :key="index"
                 :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
-                  <span>{{
-                    item.delivery_number
+                  <span>#{{
+                    item.id
                   }}</span>
                 </td>
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
@@ -137,7 +137,7 @@
                           <span class="font-semibold py-2"><i class="ri-check-line text-green-500"></i>
                             Mark Complete</span>
                         </el-dropdown-item>
-                        <el-dropdown-item @click="recordPayment(item)">
+                        <el-dropdown-item v-if="item.status !== 'completed'" @click="recordPayment(item)">
                           <span class="font-semibold py-2"><i class="ri-money-dollar-circle-line text-blue-500"></i>
                             Record Payment</span>
                         </el-dropdown-item>
@@ -214,7 +214,7 @@ const filteredWaterDeliveries = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter((delivery: any) => 
-      delivery.delivery_number?.toLowerCase().includes(query) ||
+      delivery.id?.toString().includes(query) ||
       delivery.water_client?.client_name?.toLowerCase().includes(query) ||
       delivery.water_client?.phone?.toLowerCase().includes(query) ||
       delivery.water_client?.address?.toLowerCase().includes(query) ||

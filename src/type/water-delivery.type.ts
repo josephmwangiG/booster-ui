@@ -3,7 +3,6 @@ export type WaterDeliveryForm = {
   organization_id: number;
   driver_id: number;
   vehicle_id: number;
-  delivery_number: string | null;
   departure_time: string; 
   return_time?: string | null; 
   capacity: number;
@@ -20,11 +19,6 @@ export type WaterDeliveryForm = {
   payment_code?: string | null; 
   payment_reference?: string | null; 
   notes?: string | null;
-  // Utility consumption tracking
-  previous_meter_reading?: number | null;
-  current_meter_reading?: number | null;
-  utility_rate?: number | null;
-  utility_cost?: number | null;
 };
 
 export type WaterDeliveryPaymentForm = {

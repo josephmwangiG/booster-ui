@@ -44,8 +44,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -68,6 +68,7 @@ const store = useTenantsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<TenantForm>(props.form as TenantForm);
 const loading = ref(true);
+const isSubmitting = ref(false);
 
 const rules = reactive<FormRules<TenantForm>>({
   tenant_name: [
@@ -101,51 +102,57 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
-  if (props.action === "create") {
-    const res = await store.createTenantWithTenancy(formData);
-    
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      router.push({ name: "tenancies", params: { id: res.data.tenant.id } });
+  isSubmitting.value = true;
+
+  try {
+    if (props.action === "create") {
+      const res = await store.createTenantWithTenancy(formData);
       
-      if (res.data.isExistingTenant) {
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        router.push({ name: "tenancies", params: { id: res.data.tenant.id } });
+        
+        if (res.data.isExistingTenant) {
+          ElNotification({
+            title: "Success",
+            type: "success",
+            message: "Existing tenant found and assigned to new unit",
+          });
+        } else {
+          ElNotification({
+            title: "Success",
+            type: "success",
+            message: "New tenant created and assigned to unit",
+          });
+        }
+      } else if (res.status == 400 && res.data.error === 'DUPLICATE_ACTIVE_TENANT') {
         ElNotification({
-          title: "Success",
-          type: "success",
-          message: "Existing tenant found and assigned to new unit",
+          title: "Duplicate Tenant",
+          type: "error",
+          message: res.data.message,
+          duration: 5000,
         });
       } else {
         ElNotification({
-          title: "Success",
-          type: "success",
-          message: "New tenant created and assigned to unit",
+          title: "Error",
+          type: "error",
+          message: "Failed to create tenant. Please try again.",
         });
       }
-    } else if (res.status == 400 && res.data.error === 'DUPLICATE_ACTIVE_TENANT') {
-      ElNotification({
-        title: "Duplicate Tenant",
-        type: "error",
-        message: res.data.message,
-        duration: 5000,
-      });
     } else {
-      ElNotification({
-        title: "Error",
-        type: "error",
-        message: "Failed to create tenant. Please try again.",
-      });
+      const res = await store.updateTenant(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Tenant was updated",
+        })
+      }
     }
-  } else {
-    const res = await store.updateTenant(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Tenant was updated",
-      })
-    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

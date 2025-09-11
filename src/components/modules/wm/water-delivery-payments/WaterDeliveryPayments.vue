@@ -130,7 +130,7 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <WaterDeliveryPaymentFormModal @close-modal="dialogVisible = false" :form="formData" :action="action">
+      <WaterDeliveryPaymentFormModal @close-modal="closeModal" :form="formData" :action="action">
       </WaterDeliveryPaymentFormModal>
     </el-dialog>
   </teleport>
@@ -140,6 +140,7 @@
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
 import { defineAsyncComponent, onMounted, ref, computed } from "vue";
+import { ElNotification } from "element-plus";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
 import { formatDate, initDataTable, handleSearch as dtHandleSearch, clearAllFilters } from "@/composables/dataTables";
@@ -215,6 +216,14 @@ const addItem = (prefilledData: any = {}) => {
   dialogVisible.value = true;
 };
 
+const closeModal = () => {
+  dialogVisible.value = false;
+  // Clear URL parameters to prevent reopening
+  const url = new URL(window.location.href);
+  url.searchParams.delete('delivery_id');
+  window.history.replaceState({}, '', url);
+};
+
 // Helper function to get client name from nested water_delivery object
 const getClientName = (item: any) => {
   // Check if water_delivery exists and has water_client information
@@ -275,6 +284,36 @@ onMounted(async () => {
     // Find the delivery data and pre-fill the form
     const delivery = store.waterDeliveries.find((d: any) => d.id == deliveryId);
     if (delivery) {
+      // Check if payment already exists for this delivery
+      const existingPayment = store.waterDeliveriesPayments.find((p: any) => p.water_delivery_id == deliveryId);
+      
+      if (existingPayment) {
+        ElNotification({
+          title: "Payment Already Exists",
+          message: `A payment has already been recorded for delivery #${delivery.id}`,
+          type: "warning",
+        });
+        // Clear URL parameters
+        const url = new URL(window.location.href);
+        url.searchParams.delete('delivery_id');
+        window.history.replaceState({}, '', url);
+        return;
+      }
+      
+      // Check if delivery is already completed
+      if (delivery.status === 'completed') {
+        ElNotification({
+          title: "Delivery Already Completed",
+          message: `Delivery #${delivery.id} has already been completed and paid for`,
+          type: "warning",
+        });
+        // Clear URL parameters
+        const url = new URL(window.location.href);
+        url.searchParams.delete('delivery_id');
+        window.history.replaceState({}, '', url);
+        return;
+      }
+      
       const prefilledData = {
         water_delivery_id: delivery.id,
         amount: delivery.total_amount,

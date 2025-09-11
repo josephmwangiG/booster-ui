@@ -75,8 +75,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -110,6 +110,7 @@ const store = useWaterCollectionsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<MoneyCollectionForm>(props.form as MoneyCollectionForm || {});
 const loading = ref(true);
+const isSubmitting = ref(false);
 
 const rules = reactive<FormRules<MoneyCollectionForm>>({
   water_client_id: [
@@ -135,28 +136,34 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
-  if (props.action === "create") {
-    const res = await store.createWaterDelivery(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Money collection was created",
-      })
+  isSubmitting.value = true;
+
+  try {
+    if (props.action === "create") {
+      const res = await store.createWaterDelivery(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Money collection was created",
+        })
+      }
+    } else {
+      const res = await store.updateWaterDelivery(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Money collection was updated",
+        })
+      }
     }
-  } else {
-    const res = await store.updateWaterDelivery(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Money collection was updated",
-      })
-    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
