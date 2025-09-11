@@ -45,5 +45,17 @@ export type CollectionPaymentForm = {
   amount: number;
   phone_number: string;
   client_name: string;
+  water_meter_id: string | null;
+  status?: string;
+};
+
+export type MoneyCollectionForm = {
+  id?: string;
+  water_meter_id?: string;
+  collection_date?: string;
+  amount?: number;
+  payment_method?: string;
+  driver_id?: string;
+  vehicle_id?: string;
 };
 

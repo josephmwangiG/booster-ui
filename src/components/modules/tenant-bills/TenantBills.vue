@@ -48,10 +48,6 @@
             <span class="text-gray-400 text-sm"> {{ (filteredTenantBills || []).length }} of {{ (store.tenantBills || []).length }} items found </span>
           </div>
           <div class="actions flex gap-2 my-auto justify-end">
-            <button @click="refreshData" :disabled="loading" class="btn-secondary my-auto mt-1 h-[35px] px-3">
-              <i :class="loading ? 'ri-loader-4-line animate-spin' : 'ri-refresh-line'" class="mr-1"></i> 
-              {{ loading ? 'Refreshing...' : 'Refresh' }}
-            </button>
             <el-select @change="filterBills" placeholder="Year" v-model="params.year" clearable
               class="!w-[110px] !py-1 h-[42px]">
               <el-option v-for="item in years" :key="item" :label="item" :value="item" />
@@ -557,38 +553,11 @@ const showUtilityDetails = (bill: any) => {
   utilityDetailsVisible.value = true;
 };
 
-// Function to refresh all data
-const refreshData = async () => {
-  console.log('Refreshing data...');
-  loading.value = true;
-  try {
-    await Promise.all([
-      store.getTenantBills(params.value),
-      store.getBillItems(),
-      store.getTenantBillPayments()
-    ]);
-    console.log('Data refreshed successfully:', {
-      bills: store.tenantBills.length,
-      billItems: store.tenantBillItems.length,
-      payments: store.tenantBillPayments.length,
-      totalAmount: totalAmount.value,
-      totalPaid: totalPaidAmount.value,
-      totalPending: totalPendingAmount.value
-    });
-    if (dataTableRef.value && filteredTenantBills.value && filteredTenantBills.value.length > 0) {
-      initDataTableWithSearch(dataTableRef.value);
-    }
-  } catch (error) {
-    console.error('Error refreshing data:', error);
-  } finally {
-    loading.value = false;
-  }
-};
+
 
 // Function to handle bill generation completion
 const handleBillGenerated = async () => {
-  console.log('Bills generated, refreshing data...');
-  await refreshData();
+  console.log('Bills generated');
 };
 
 onMounted(async () => {

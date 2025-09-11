@@ -92,7 +92,17 @@ export const useWaterMetersStore = defineStore("water-meters", {
     async createMeterReading(data: MeterReadingForm) {
       const res = await axios.post("/meter-readings", data, this.headers);
 
-      this.meterReadings.unshift(res.data);
+      // Refresh meter readings to get complete data with relationships
+      await this.getMeterReadings();
+
+      // If collections were created, refresh the collections data
+      if (data.collections && data.collections.length > 0) {
+        // Import the collections store to refresh data
+        const { useWaterCollectionsStore } = await import('./water-collections.store');
+        const collectionsStore = useWaterCollectionsStore();
+        await collectionsStore.getWaterCollections();
+        await collectionsStore.getPayments();
+      }
 
       return res;
     },
@@ -100,8 +110,8 @@ export const useWaterMetersStore = defineStore("water-meters", {
       const res = await axios.put("/meter-readings/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
-        this.meterReadings[this.meterReadings.findIndex((t: any) => t.id == data.id)] =
-          res.data;
+        // Refresh meter readings to get complete data with relationships
+        await this.getMeterReadings();
       }
 
       return res;

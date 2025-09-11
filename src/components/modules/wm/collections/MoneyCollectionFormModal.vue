@@ -3,13 +3,6 @@
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
       <div class="lg:flex gap-3">
-        <el-form-item prop="water_client_id" class="flex-1" :label="'Select Client'">
-          <el-select v-model="formData.water_client_id" placeholder="Select Client" class="flex-1" :loading="loading" filterable>
-            <el-option v-for="client in store.properties" :key="client.id" 
-              :label="`${client.client_name} - ${client.phone}`"
-              :value="client.id" />
-          </el-select>
-        </el-form-item>
         <el-form-item prop="water_meter_id" class="flex-1" :label="'Select Water Meter'">
           <el-select v-model="formData.water_meter_id" placeholder="Select Water Meter" class="flex-1" :loading="loading" filterable>
             <el-option v-for="meter in store.meters" :key="meter.id" 
@@ -36,39 +29,8 @@
               :label="payment_method.name" :value="payment_method.name" />
           </el-select>
         </el-form-item>
-        <el-form-item prop="phone_number" class="flex-1" :label="'Phone Number'">
-          <el-input v-model="formData.phone_number" placeholder="Enter phone number" />
-        </el-form-item>
       </div>
 
-      <div class="lg:flex gap-3">
-        <el-form-item prop="driver_id" class="flex-1" :label="'Select Driver (Optional)'">
-          <el-select v-model="formData.driver_id" placeholder="Driver" class="flex-1" :loading="loading">
-            <el-option v-for="driver in store.drivers" :key="driver.id"
-              :label="driver.user_name" :value="driver.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="vehicle_id" class="flex-1" :label="'Select Vehicle (Optional)'">
-          <el-select v-model="formData.vehicle_id" placeholder="Vehicle" class="flex-1" :loading="loading">
-            <el-option v-for="vehicle in store.vehicles" :key="vehicle.id" 
-              :label="`${vehicle.plate_number} - ${vehicle.brand || 'N/A'} ${vehicle.model || 'N/A'}`"
-              :value="vehicle.id" />
-          </el-select>
-        </el-form-item>
-      </div>
-
-      <div class="lg:flex gap-3">
-        <el-form-item prop="status" class="flex-1" :label="'Status'">
-          <el-select v-model="formData.status" placeholder="Status" class="flex-1">
-            <el-option label="Pending" value="pending" />
-            <el-option label="Completed" value="completed" />
-            <el-option label="Cancelled" value="cancelled" />
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="notes" class="flex-1" :label="'Notes (Optional)'">
-          <el-input v-model="formData.notes" placeholder="Enter notes" type="textarea" />
-        </el-form-item>
-      </div>
 
       <div class="mt-5 sm:mt-6 text-right">
         <button @click="emits('close-modal')" type="button" class="btn-primary-outline">
@@ -86,20 +48,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
 import { useWaterCollectionsStore } from "@/store/water-collections.store";
-
-interface MoneyCollectionForm {
-  id?: string;
-  water_client_id?: string;
-  water_meter_id?: string;
-  collection_date?: string;
-  amount?: number;
-  payment_method?: string;
-  phone_number?: string;
-  driver_id?: string;
-  vehicle_id?: string;
-  status?: string;
-  notes?: string;
-}
+import { MoneyCollectionForm } from "@/type/water-delivery.type";
 
 const props = defineProps({
   form: Object,
@@ -113,9 +62,6 @@ const loading = ref(true);
 const isSubmitting = ref(false);
 
 const rules = reactive<FormRules<MoneyCollectionForm>>({
-  water_client_id: [
-    { required: true, message: "Please select a client", trigger: "change" },
-  ],
   water_meter_id: [
     { required: true, message: "Please select a water meter", trigger: "change" },
   ],
@@ -124,9 +70,6 @@ const rules = reactive<FormRules<MoneyCollectionForm>>({
   ],
   amount: [
     { required: true, message: "Please enter amount", trigger: "blur" },
-  ],
-  status: [
-    { required: true, message: "Please select status", trigger: "change" },
   ],
 });
 
@@ -139,29 +82,63 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   isSubmitting.value = true;
 
   try {
+    // Convert form data to match API expectations
+    const apiData = {
+      ...formData,
+      water_client_id: null,
+      phone_number: null,
+      status: 'completed', // Default status since we removed the field
+      notes: null
+    };
+
+    console.log('Submitting API data:', apiData);
+
     if (props.action === "create") {
-      const res = await store.createWaterDelivery(formData);
+      const res = await store.createWaterDelivery(apiData as any);
+      console.log('Create response:', res);
       if (res.status == 200 || res.status == 201) {
         resetForm(itemFormRef.value as FormInstance);
         emits("close-modal");
+        emits("submit-form", res.data);
         ElNotification({
           title: "Success",
           type: "success",
           message: "Money collection was created",
         })
+      } else {
+        ElNotification({
+          title: "Error",
+          type: "error",
+          message: "Failed to create money collection",
+        })
       }
     } else {
-      const res = await store.updateWaterDelivery(formData);
+      const res = await store.updateWaterDelivery(apiData as any);
+      console.log('Update response:', res);
       if (res.status == 200 || res.status == 201) {
         resetForm(itemFormRef.value as FormInstance);
         emits("close-modal");
+        emits("submit-form", res.data);
         ElNotification({
           title: "Success",
           type: "success",
           message: "Money collection was updated",
         })
+      } else {
+        ElNotification({
+          title: "Error",
+          type: "error",
+          message: "Failed to update money collection",
+        })
       }
     }
+  } catch (error) {
+    console.error('Form submission error:', error);
+    ElNotification({
+      title: "Error",
+      type: "error",
+      message: "An error occurred while submitting the form",
+    })
   } finally {
     isSubmitting.value = false;
   }

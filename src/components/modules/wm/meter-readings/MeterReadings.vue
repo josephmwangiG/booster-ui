@@ -35,9 +35,6 @@
             <thead class="t-head">
               <tr>
                 <th class="t-th">
-                  Client Name
-                </th>
-                <th class="t-th">
                   Meter Name
                 </th>
                 <th class="t-th">
@@ -54,10 +51,7 @@
             <tbody class="divide-y divide-gray-100">
               <tr v-for="(item, index) in store.meterReadings" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
-                  {{ item.water_client?.client_name || 'N/A' }}
-                </td>
-                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
-                  {{ item.water_meter?.name || 'N/A' }}
+                  {{ item.name || 'N/A' }}
                 </td>
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   {{ item.code_number }}
@@ -123,7 +117,7 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <MeterReadingFormModal @close-modal="dialogVisible = false" :form="formData" :action="action"></MeterReadingFormModal>
+      <MeterReadingFormModal @close-modal="dialogVisible = false" @submit-form="handleFormSubmit" :form="formData" :action="action"></MeterReadingFormModal>
     </el-dialog>
   </teleport>
 </template>
@@ -163,6 +157,16 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
+const handleFormSubmit = async () => {
+  // Refresh the data table after form submission
+  loading.value = true;
+  await store.getMeterReadings();
+  // Reinitialize the data table
+  if (dataTableRef.value) {
+    initDataTable(dataTableRef.value);
+  }
+  loading.value = false;
+};
 
 onMounted(async () => {
   await store.getMeterReadings();

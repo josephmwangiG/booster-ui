@@ -17,12 +17,12 @@
             <span class="text-gray-400 text-sm">Records</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ (store.waterCollectionsPayments || []).reduce((a, b) => b.status == "Complete" ?
+            <h2 class="font-semibold">KES {{ (store.waterCollectionsPayments || []).reduce((a, b) => b.status == "Complete" || b.status == "completed" ?
               Number(a) + Number(b.amount) : a, 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Complete</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ (store.waterCollectionsPayments || []).reduce((a, b) => b.status != "Complete" ?
+            <h2 class="font-semibold">KES {{ (store.waterCollectionsPayments || []).reduce((a, b) => b.status != "Complete" && b.status != "completed" ?
               Number(a) + Number(b.amount) : a, 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Pending</span>
           </div>
@@ -35,9 +35,6 @@
             <h4 class="font-semibold">Records</h4>
             <span class="text-gray-400 text-sm"> {{ filteredCollectionPayments?.length || 0 }} of {{ store.waterCollectionsPayments?.length || 0 }} items found </span>
           </div>
-          <button @click="addItem" class="btn-primary my-auto">
-            Add Payment
-          </button>
         </div>
         
         <!-- Search and Filter Component -->
@@ -55,8 +52,6 @@
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
               <tr>
-                <th class="t-th">Client</th>
-                <th class="t-th">Phone</th>
                 <th class="t-th">Meter</th>
                 <th class="t-th">Date</th>
                 <th class="t-th">Payment Method</th>
@@ -67,25 +62,19 @@
             <tbody class="divide-y divide-gray-100">
               <template v-if="loading">
                 <tr class="text-center">
-                  <td colspan="7" class="t-td">Loading...</td>
+                  <td colspan="5" class="t-td">Loading...</td>
                 </tr>
               </template>
               <template v-else-if="!filteredCollectionPayments || filteredCollectionPayments.length === 0">
                 <tr class="text-center">
-                  <td colspan="7" class="t-td text-gray-500">No collection payments found</td>
+                  <td colspan="5" class="t-td text-gray-500">No collection payments found</td>
                 </tr>
               </template>
               <template v-else>
                 <tr v-for="(item, index) in filteredCollectionPayments" :key="item.id || index"
                   :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                   <td class="t-td font-semibold">
-                    {{ item.water_collection?.water_client?.client_name || item.client_name || 'N/A' }}
-                  </td>
-                  <td class="t-td font-semibold">
-                    {{ item.water_collection?.phone_number || item.water_collection?.water_client?.phone || item.phone_number || 'N/A' }}
-                  </td>
-                  <td class="t-td font-semibold">
-                    {{ item.water_collection?.water_meter?.code_number || 'N/A' }}
+                    {{ item.meterCode || item.water_meter?.code_number || 'N/A' }}
                   </td>
                   <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                     {{ formatDate(item.payment_date) }}
@@ -100,8 +89,8 @@
                     <span v-if="item.status === 'Complete' || item.status === 'completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
                       Complete
                     </span>
-                    <span v-else class="p-1 rounded bg-red-100 text-red-500 text-xs">
-                      Pending
+                    <span v-else class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                      Complete
                     </span>
                   </td>
                 </tr>
@@ -132,7 +121,7 @@
 // CollectionPayments Component - Fixed imports and filtering
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, onUnmounted, ref, computed, nextTick, watch } from "vue";
+import { defineAsyncComponent, onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import { formatDate, initDataTable } from "@/composables/dataTables";
 import $ from "jquery";
@@ -162,23 +151,41 @@ const selectedStatus = ref('');
 // Payment status options (assuming based on template)
 const paymentStatusOptions = [
   { value: 'Complete', label: 'Complete' },
+  { value: 'completed', label: 'Completed' },
   { value: 'Pending', label: 'Pending' }
 ];
 
-// Computed property for filtered payments
+// Helper function to get meter code by ID
+const getMeterCode = (meterId: string) => {
+  if (!meterId || !store.meters) {
+    console.log('No meterId or meters:', { meterId, metersLength: store.meters?.length });
+    return 'N/A';
+  }
+  const meter = store.meters.find(m => m.id === meterId);
+  console.log('Meter lookup:', { meterId, foundMeter: meter });
+  return meter?.code_number || 'N/A';
+};
+
+// Computed property for filtered payments with meter information
 const filteredCollectionPayments = computed(() => {
   let filtered = [...(store.waterCollectionsPayments || [])];
+
+  // Add meter information to each payment
+  filtered = filtered.map(item => ({
+    ...item,
+    meterCode: getMeterCode(item.water_collection?.water_meter_id || item.water_meter_id)
+  }));
 
   // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(item => 
-      item.water_collection?.water_client?.client_name?.toLowerCase().includes(query) ||
-      item.client_name?.toLowerCase().includes(query) ||
-      item.water_collection?.phone_number?.toLowerCase().includes(query) ||
-      item.water_collection?.water_client?.phone?.toLowerCase().includes(query) ||
-      item.phone_number?.toLowerCase().includes(query) ||
-      item.water_collection?.water_meter?.code_number?.toLowerCase().includes(query)
+      item.meterCode?.toLowerCase().includes(query) ||
+      item.water_collection?.water_meter_id?.toLowerCase().includes(query) ||
+      item.water_meter_id?.toLowerCase().includes(query) ||
+      item.payment_method?.name?.toLowerCase().includes(query) ||
+      item.payment_method?.toLowerCase().includes(query) ||
+      item.amount?.toString().includes(query)
     );
   }
 
@@ -230,10 +237,33 @@ const addItem = () => {
   dialogVisible.value = true;
 };
 
+const refreshData = async () => {
+  loading.value = true;
+  try {
+    await Promise.all([
+      store.getPayments(),
+      store.getMeters()
+    ]);
+    console.log('Collection payments refreshed:', store.waterCollectionsPayments);
+    console.log('Meters refreshed:', store.meters);
+  } catch (error) {
+    console.error('Error refreshing collection payments:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
 
 onMounted(async () => {
   try {
-    await store.getPayments();
+    console.log('Loading collection payments and meters...');
+    // Load both payments and meters in parallel
+    await Promise.all([
+      store.getPayments(),
+      store.getMeters()
+    ]);
+    console.log('Collection payments loaded:', store.waterCollectionsPayments);
+    console.log('Meters loaded:', store.meters);
     loading.value = false;
     // Initialize DataTable after data is loaded
     await nextTick();

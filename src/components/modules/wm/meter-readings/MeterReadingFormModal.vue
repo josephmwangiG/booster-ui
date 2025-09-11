@@ -11,12 +11,12 @@
         <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading">
         </el-input>
       </el-form-item>
-      <el-form-item type="number" prop="current_meter_reading" class="flex-1" :label="'Current Reading'">
-        <el-input v-model="formData.current_meter_reading" placeholder="Enter current meter reading">
+      <el-form-item prop="current_meter_reading" class="flex-1" :label="'Current Reading'">
+        <el-input type="number" v-model="formData.current_meter_reading" placeholder="Enter current meter reading">
         </el-input>
       </el-form-item>
-      <el-form-item type="number" prop="consumption" class="flex-1" :label="'Consumption'">
-        <el-input v-model="consumption" placeholder="Consumption" :disabled="true">
+      <el-form-item prop="consumption" class="flex-1" :label="'Consumption'">
+        <el-input v-model="consumption" placeholder="Consumption" :disabled="true" type="number">
         </el-input>
       </el-form-item>
       <el-checkbox v-model="record_collections" label="Record Collections" size="large" />
@@ -30,12 +30,23 @@
         </div>
 
         <div class="flex gap-3 my-3" v-for="(collection, index) in collections" :key="index">
+          <el-date-picker 
+            v-model="collection.collection_date" 
+            type="date" 
+            placeholder="Collection Date" 
+            format="MMM DD YYYY" 
+            value-format="YYYY-MM-DD"
+            class="flex-1" 
+          />
           <el-select v-model="collection.payment_method" placeholder="Payment Method" class="flex-1">
             <el-option v-for="payment_method in store.payment_methods" :key="payment_method.id"
               :label="payment_method.name" :value="payment_method.name" />
           </el-select>
-          <el-input v-model="collection.amount" placeholder="Amount" type="number" class="flex-1">
+          <el-input v-model="collection.amount" placeholder="Amount" type="number" class="flex-1" :min="0" step="0.01">
           </el-input>
+          <button type="button" @click="removeCollection(index)" class="btn-danger-outline" v-if="collections.length > 1">
+            Remove
+          </button>
         </div>
 
       </div>
@@ -71,16 +82,22 @@ const formData = reactive<MeterReadingForm>(props.form as MeterReadingForm);
 const record_collections = ref(false)
 const collections = ref([
   {
+    collection_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
     payment_method: "",
-    amount: ""
+    amount: 0
   }
 ])
 
 const addCollection = () => {
   collections.value.push({
+    collection_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
     payment_method: "",
-    amount: ""
+    amount: 0
   })
+}
+
+const removeCollection = (index: number) => {
+  collections.value.splice(index, 1);
 }
 
 const consumption = computed(() => {
@@ -89,7 +106,15 @@ const consumption = computed(() => {
 })
 
 const validateCurrentMeterReading = (_rule: any, _value: any, callback: any) => {
-  if (formData.current_meter_reading < formData.previous_meter_reading) {
+  const current = Number(formData.current_meter_reading);
+  const previous = Number(formData.previous_meter_reading);
+  
+  if (isNaN(current) || isNaN(previous)) {
+    callback();
+    return;
+  }
+  
+  if (current < previous) {
     callback(new Error('Current reading should be greater than previous reading'))
   } else {
     callback()
@@ -120,19 +145,26 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         }
 
         if (record_collections.value) {
+          // Ensure collection amounts are properly formatted as numbers
+          const formattedCollections = collections.value.map(collection => ({
+            ...collection,
+            amount: Number(collection.amount) || 0
+          }));
+          
           data = {
             ...formData,
-            collections: collections.value
+            collections: formattedCollections
           }
         }
         const res = await store.createMeterReading(data);
         if (res.status == 200 || res.status == 201) {
           resetForm(itemFormRef.value as FormInstance);
           emits("close-modal");
+          emits("submit-form"); // Emit to parent to refresh data
           ElNotification({
             title: "Success",
             type: "success",
-            message: "Meter was created",
+            message: "Meter reading was created successfully",
           })
         }
       } else {
@@ -140,10 +172,11 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         if (res.status == 200 || res.status == 201) {
           resetForm(itemFormRef.value as FormInstance);
           emits("close-modal");
+          emits("submit-form"); // Emit to parent to refresh data
           ElNotification({
             title: "Success",
             type: "success",
-            message: "Meter was updated",
+            message: "Meter reading was updated successfully",
           })
         }
       }
@@ -157,17 +190,28 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   formEl.resetFields();
+  
+  // Reset collections to default state
+  record_collections.value = false;
+  collections.value = [{
+    collection_date: new Date().toISOString().split('T')[0],
+    payment_method: "",
+    amount: 0
+  }];
 };
 
 onMounted(async () => {
-  await store.getMeters();
+  await Promise.all([
+    store.getMeters(),
+    store.getPaymentMethods()
+  ]);
 
   console.log(props.form);
 
   if (props.action == 'edit') {
-    record_collections.value = props.form?.collections.length > 0
+    record_collections.value = props.form?.collections?.length > 0
 
-    if (props.form?.collections.length > 0) {
+    if (props.form?.collections?.length > 0) {
       collections.value = props.form?.collections
     }
   }

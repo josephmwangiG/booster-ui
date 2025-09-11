@@ -11,6 +11,15 @@
         </el-form-item>
       </div>
       <div class="lg:flex gap-3">
+        <el-form-item prop="water_meter_id" class="flex-1" :label="'Select Water Meter'">
+          <el-select v-model="formData.water_meter_id" placeholder="Select Water Meter" class="flex-1" filterable>
+            <el-option v-for="meter in store.meters" :key="meter.id" 
+              :label="`${meter.code_number} - ${meter.name || 'N/A'}`"
+              :value="meter.id" />
+          </el-select>
+        </el-form-item>
+      </div>
+      <div class="lg:flex gap-3">
         <el-form-item prop="payment_method" class="flex-1" :label="'Payment Method'">
           <el-select v-model="formData.payment_method" placeholder="Select option" class="flex-1">
             <el-option v-for="payment_method in store.payment_methods" :key="payment_method.id"
@@ -69,6 +78,9 @@ const rules = reactive<FormRules<CollectionPaymentForm>>({
   phone_number: [
     { required: true, message: "Please enter phone", trigger: "blur" },
   ],
+  water_meter_id: [
+    { required: true, message: "Please select meter", trigger: "change" },
+  ],
   payment_method: [
     { required: true, message: "Please select option", trigger: "change" },
   ],
@@ -88,7 +100,11 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 
 
   if (props.action === "create") {
+    // Set status to completed for new payments (matching API response format)
+    formData.status = "completed";
+    console.log('Creating payment with data:', formData);
     const res = await store.createPayment(formData);
+    console.log('Payment creation response:', res.data);
     if (res.status == 200 || res.status == 201) {
       resetForm(itemFormRef.value as FormInstance);
       emits("close-modal");

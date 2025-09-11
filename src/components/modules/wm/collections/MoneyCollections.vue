@@ -52,27 +52,22 @@
             <thead class="t-head">
               <tr>
                 <th class="t-th">Date</th>
-                <th class="t-th">Client</th>
                 <th class="t-th">Meter</th>
                 <th class="t-th">Payment Method</th>
                 <th class="t-th">Amount</th>
-                <th class="t-th">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
               <tr v-if="loading" class="text-center">
-                <td colspan="6" class="t-td">Loading...</td>
+                <td colspan="4" class="t-td">Loading...</td>
               </tr>
               <tr v-else-if="!filteredWaterCollections || filteredWaterCollections.length === 0" class="text-center">
-                <td colspan="6" class="t-td text-gray-500">No money collections found</td>
+                <td colspan="4" class="t-td text-gray-500">No money collections found</td>
               </tr>
               <tr v-else v-for="(item, index) in filteredWaterCollections" :key="index"
                 :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   {{ formatDate(item.created_at) }}
-                </td>
-                <td class="t-td font-semibold">
-                  {{ item.water_client?.client_name || 'N/A' }}
                 </td>
                 <td class="t-td font-semibold">
                   {{ item.water_meter?.code_number || 'N/A' }}
@@ -82,17 +77,6 @@
                 </td>
                 <td class="t-td font-semibold">
                   {{ formatAmount(item.amount) }}
-                </td>
-                <td class="t-td">
-                  <span v-if="item.status === 'completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
-                    Completed
-                  </span>
-                  <span v-else-if="item.status === 'pending'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
-                    Pending
-                  </span>
-                  <span v-else class="p-1 rounded bg-red-100 text-red-500 text-xs">
-                    {{ item.status || 'Unknown' }}
-                  </span>
                 </td>
               </tr>
             </tbody>
@@ -111,7 +95,7 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <MoneyCollectionFormModal @close-modal="dialogVisible = false" :form="formData" :action="action">
+      <MoneyCollectionFormModal @close-modal="dialogVisible = false" @submit-form="handleFormSubmit" :form="formData" :action="action">
       </MoneyCollectionFormModal>
     </el-dialog>
   </teleport>
@@ -124,7 +108,7 @@ import { defineAsyncComponent, onMounted, ref, computed, nextTick } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
 import { formatDate, initDataTableWithSearch, handleSearch as dtHandleSearch, handleDateRangeFilter, handleColumnSearch, clearDateRangeFilter, clearAllFilters } from "@/composables/dataTables";
-import { formatAmount, formatNumber } from "@/composables/helper_functions";
+import { formatAmount } from "@/composables/helper_functions";
 import { useWaterCollectionsStore } from "@/store/water-collections.store";
 import moment from "moment";
 
@@ -161,7 +145,6 @@ const filteredWaterCollections = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter((collection: any) => 
-      collection.water_client?.client_name?.toLowerCase().includes(query) ||
       collection.water_meter?.code_number?.toLowerCase().includes(query) ||
       collection.payment_method?.toLowerCase().includes(query) ||
       collection.amount?.toString().includes(query)
@@ -203,11 +186,18 @@ const addItem = () => {
   dialogVisible.value = true;
 };
 
-const editItem = (item: any) => {
-  action.value = "edit";
-  formData.value = item;
-  dialogVisible.value = true;
+const handleFormSubmit = async () => {
+  // Refresh the collections data after successful form submission
+  try {
+    await store.getWaterCollections();
+    // Also refresh payments data since a new payment record is created
+    await store.getPayments();
+    console.log('Collections and payments refreshed after form submission');
+  } catch (error) {
+    console.error('Error refreshing collections:', error);
+  }
 };
+
 
 // Search and filter handlers
 const handleSearch = (query: string) => {
@@ -247,7 +237,10 @@ const handleClearFilters = () => {
 
 onMounted(async () => {
   try {
+    console.log('Loading water collections...');
     await store.getWaterCollections();
+    console.log('Water collections loaded:', store.waterCollections);
+    console.log('Filtered collections:', filteredWaterCollections.value);
     loading.value = false;
     
     // Wait for DOM to be fully updated

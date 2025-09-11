@@ -57,9 +57,12 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
       this.meters = res.data;
     },
     async createWaterDelivery(data: WaterDeliveryForm) {
+      console.log('Creating water delivery with data:', data);
       const res = await axios.post("/water-collections", data, this.headers);
+      console.log('API response:', res.data);
 
       this.waterCollections.unshift(res.data);
+      console.log('Updated waterCollections array:', this.waterCollections);
 
       return res;
     },
