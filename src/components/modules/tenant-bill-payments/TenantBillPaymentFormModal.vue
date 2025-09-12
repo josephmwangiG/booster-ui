@@ -4,7 +4,7 @@
 
       <el-form-item prop="tenant_bill_id" class="flex-1" :label="'Select Bill'">
         <el-select v-model="formData.tenant_bill_id" filterable placeholder="Select bill" :loading="loading" @change="onBillChange">
-          <el-option v-for="item in (store.tenantBillItems ?? [])" :key="item.tenant_bill_id" :label="`${item.tenant_name} - ${item.bill_number || item.period} (${item.amount})`" :value="item.tenant_bill_id" />
+          <el-option v-for="item in unpaidBills" :key="item.tenant_bill_id" :label="`${item.tenant_name} - ${item.bill_number || item.period} (Balance: KES ${item.balance})`" :value="item.tenant_bill_id" />
         </el-select>
       </el-form-item>
               <div class="lg:flex gap-3">
@@ -46,7 +46,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, computed } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
 import { TenantBillPaymentForm } from "@/type/tenant.type";
 import { useTenantBillsStore } from "@/store/tenant-bills.store";
@@ -61,6 +61,35 @@ const loading = ref(true);
 const formData = reactive<TenantBillPaymentForm>(props.form as TenantBillPaymentForm);
 const selectedBillDetails = ref<any>(null);
 
+// Computed property to filter out paid bills and calculate balance
+const unpaidBills = computed(() => {
+  if (!store.tenantBills) return [];
+  
+  return store.tenantBills
+    .filter(bill => {
+      // Filter out bills that are fully paid
+      const amount = Number(bill.amount) || 0;
+      const amountPaid = Number(bill.amount_paid) || 0;
+      return amount > amountPaid;
+    })
+    .map(bill => {
+      const amount = Number(bill.amount) || 0;
+      const amountPaid = Number(bill.amount_paid) || 0;
+      const balance = amount - amountPaid;
+      
+      return {
+        tenant_bill_id: bill.id,
+        tenant_name: bill.tenant_name,
+        bill_number: bill.bill_number,
+        period: bill.period,
+        amount: bill.amount,
+        amount_paid: bill.amount_paid,
+        payment_status: bill.payment_status,
+        balance: balance.toFixed(2)
+      };
+    });
+});
+
 const disabledDate = (time: Date) => {
   return time.getTime() > Date.now()
 }
@@ -71,7 +100,17 @@ const rules = reactive<FormRules<TenantBillPaymentForm>>({
   ],
   amount: [
     { required: true, message: "Please enter amount", trigger: "blur" },
-    { min: 0.01, message: "Amount must be greater than 0", trigger: "blur" },
+    { 
+      validator: (_, value, callback) => {
+        const numValue = Number(value);
+        if (isNaN(numValue) || numValue <= 0) {
+          callback(new Error("Amount must be greater than 0"));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: "blur" 
+    },
   ],
   payment_date: [
     { required: true, message: "Please enter payment date", trigger: "change" },
@@ -92,7 +131,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
           const submissionData = {
             id: formData.id,
             tenant_bill_id: formData.tenant_bill_id,
-            amount: Number(formData.amount),
+            amount: Number(formData.amount) || 0,
             payment_date: formData.payment_date,
             payment_method: formData.payment_method,
             payment_ref: formData.payment_ref || ''
@@ -157,36 +196,66 @@ const resetForm = (formEl: FormInstance | undefined) => {
 const onBillChange = async (value: string) => {
   if (!value) {
     selectedBillDetails.value = null;
+    formData.amount = null;
     return;
   }
   
   try {
-    // Find the selected bill from the store
-    const selectedBill = store.tenantBills.find(bill => bill.id === value);
+    // Find the selected bill from the unpaid bills
+    const selectedBill = unpaidBills.value.find(bill => bill.tenant_bill_id === value);
     if (selectedBill) {
+      // Autofill the amount with the remaining balance
+      const balance = Number(selectedBill.balance);
+      formData.amount = balance > 0 ? balance : null;
+      
       selectedBillDetails.value = {
         totalAmount: selectedBill.amount,
         amountPaid: selectedBill.amount_paid || 0,
-        balance: (selectedBill.amount || 0) - (selectedBill.amount_paid || 0),
+        balance: selectedBill.balance,
         status: selectedBill.payment_status,
         utilities: store.tenantBillItems.filter(item => item.tenant_bill_id === value)
       };
     } else {
-      // If not found in store, try to fetch it
-      await store.getTenantBill(value);
-      if (store.tenantBill) {
+      // If not found in unpaid bills, try to fetch it from store
+      const storeBill = store.tenantBills.find(bill => bill.id === value);
+      if (storeBill) {
+        const amount = Number(storeBill.amount) || 0;
+        const amountPaid = Number(storeBill.amount_paid) || 0;
+        const balance = amount - amountPaid;
+        
+        formData.amount = balance > 0 ? balance : null;
+        
         selectedBillDetails.value = {
-          totalAmount: store.tenantBill.amount,
-          amountPaid: store.tenantBill.amount_paid || 0,
-          balance: (store.tenantBill.amount || 0) - (store.tenantBill.amount_paid || 0),
-          status: store.tenantBill.payment_status,
-          utilities: store.tenantBill.bill_items || []
+          totalAmount: storeBill.amount,
+          amountPaid: storeBill.amount_paid || 0,
+          balance: balance,
+          status: storeBill.payment_status,
+          utilities: store.tenantBillItems.filter(item => item.tenant_bill_id === value)
         };
+      } else {
+        // If not found in store, try to fetch it
+        await store.getTenantBill(value);
+        if (store.tenantBill) {
+          const amount = Number(store.tenantBill.amount) || 0;
+          const amountPaid = Number(store.tenantBill.amount_paid) || 0;
+          const balance = amount - amountPaid;
+          
+          formData.amount = balance > 0 ? balance : null;
+          
+          selectedBillDetails.value = {
+            totalAmount: store.tenantBill.amount,
+            amountPaid: store.tenantBill.amount_paid || 0,
+            balance: balance,
+            status: store.tenantBill.payment_status,
+            utilities: store.tenantBill.bill_items || []
+          };
+        }
       }
     }
   } catch (error) {
     console.error('Error fetching bill details:', error);
     selectedBillDetails.value = null;
+    formData.amount = null;
   }
 };
 
@@ -194,7 +263,7 @@ const onBillChange = async (value: string) => {
 
 onMounted(async () => {
   await Promise.all([
-    store.getBillItems(),
+    store.getTenantBillsForPayment(),
     store.getTenantBills({})
   ]);
   loading.value = false;

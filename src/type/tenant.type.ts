@@ -32,7 +32,7 @@ export type TenantBillItemForm = {
 export type TenantBillPaymentForm = {
   id: string | null;
   tenant_bill_id: string | null;
-  amount: number | null;
+  amount: number | string | null;
   payment_date: string;
   payment_ref: string;
   payment_method: string;

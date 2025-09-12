@@ -27,25 +27,38 @@
         </div>
 
         <!-- Tenant Bills Section -->
-        <div v-if="tenantsWithUnits.length > 0" class="space-y-6">
-          <div v-for="tenant in tenantsWithUnits" :key="tenant.id" class="rounded-xl bg-neutral-50 shadow-sm">
+        <div v-if="allTenants.length > 0" class="space-y-6">
+          <div v-for="tenant in allTenants" :key="tenant.id" class="rounded-xl shadow-sm" :class="getTenantCardClass(tenant)">
             <div class="p-4">
               <div class="flex items-start justify-between gap-4">
                 <div class="flex flex-col gap-1">
-                  <p class="text-lg font-bold text-neutral-800">
-                    {{ tenant.tenant_name }}
-                  </p>
+                  <div class="flex items-center gap-2">
+                    <p class="text-lg font-bold" :class="isTenantExcluded(tenant) ? 'text-red-600' : 'text-neutral-800'">
+                      {{ tenant.tenant_name }}
+                    </p>
+                    <div v-if="isTenantExcluded(tenant)" class="flex items-center gap-1 text-red-500">
+                      <i class="ri-close-circle-fill text-lg"></i>
+                      <span class="text-xs font-medium">EXCLUDED</span>
+                    </div>
+                  </div>
                   <div v-for="tenancy in tenant.tenancies.filter((t: any) => t.active)" :key="tenancy.id">
-                    <p class="text-sm text-neutral-500">
+                    <p class="text-sm" :class="isTenantExcluded(tenant) ? 'text-red-400' : 'text-neutral-500'">
                       Unit: {{ tenancy.unit?.unit_code || 'N/A' }} | Rent:
-                      <span class="font-medium text-neutral-600">KES {{ Number(tenancy.rent_amount || 0).toLocaleString() }}</span>
+                      <span class="font-medium" :class="isTenantExcluded(tenant) ? 'text-red-500' : 'text-neutral-600'">KES {{ Number(tenancy.rent_amount || 0).toLocaleString() }}</span>
+                    </p>
+                  </div>
+                  <!-- Exclusion reason -->
+                  <div v-if="isTenantExcluded(tenant)" class="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                    <p class="text-sm text-red-700 font-medium">
+                      <i class="ri-information-line mr-1"></i>
+                      {{ getExclusionReason(tenant) }}
                     </p>
                   </div>
                 </div>
               </div>
               
               <!-- Utility Checkboxes -->
-              <div class="mt-4 flex items-center space-x-4">
+              <div v-if="!isTenantExcluded(tenant)" class="mt-4 flex items-center space-x-4">
                 <div v-for="utility in utilities" :key="utility.id" class="flex items-center gap-2">
                   <input
                     :checked="isUtilitySelected(tenant.id, utility.id)"
@@ -61,10 +74,26 @@
                   >{{ utility.name }}</label>
                 </div>
               </div>
+              
+              <!-- Disabled utilities for excluded tenants -->
+              <div v-else class="mt-4 flex items-center space-x-4 opacity-50">
+                <div v-for="utility in utilities" :key="utility.id" class="flex items-center gap-2">
+                  <input
+                    disabled
+                    class="h-4 w-4 rounded border-gray-300 text-gray-400"
+                    :id="`${utility.name.toLowerCase()}-${tenant.id}`"
+                    type="checkbox"
+                  />
+                  <label
+                    class="text-sm font-medium text-gray-400"
+                    :for="`${utility.name.toLowerCase()}-${tenant.id}`"
+                  >{{ utility.name }}</label>
+                </div>
+              </div>
             </div>
                     
             <!-- Utility Inputs -->
-            <div v-if="utilities.length > 0" class="border-t border-neutral-200 px-4 py-3">
+            <div v-if="utilities.length > 0 && !isTenantExcluded(tenant)" class="border-t border-neutral-200 px-4 py-3">
               <div class="space-y-4">
                 <div v-for="utility in utilities" :key="utility.id" v-show="isUtilitySelected(tenant.id, utility.id)">
                   <div class="flex items-center justify-between">
@@ -110,9 +139,12 @@
             </div>
           
             <!-- Individual Tenant Summary -->
-            <div class="flex items-center justify-between rounded-b-xl bg-neutral-100 px-4 py-3">
-              <p class="font-semibold text-neutral-800">Bill Summary</p>
-              <p class="font-bold text-lg text-neutral-900">KES {{ getTenantTotal(tenant.id).toLocaleString() }}</p>
+            <div class="flex items-center justify-between rounded-b-xl px-4 py-3" :class="isTenantExcluded(tenant) ? 'bg-red-50' : 'bg-neutral-100'">
+              <p class="font-semibold" :class="isTenantExcluded(tenant) ? 'text-red-700' : 'text-neutral-800'">
+                {{ isTenantExcluded(tenant) ? 'Excluded from Billing' : 'Bill Summary' }}
+              </p>
+              <p v-if="!isTenantExcluded(tenant)" class="font-bold text-lg text-neutral-900">KES {{ getTenantTotal(tenant.id).toLocaleString() }}</p>
+              <p v-else class="font-bold text-lg text-red-600">N/A</p>
             </div>
           </div>
         </div>
@@ -204,12 +236,17 @@ const years = computed(() => {
 const tenants = computed(() => tenantsStore.tenants || []);
 const utilities = computed(() => utilitiesStore.utilities || []);
 
-// Filter tenants to only show those with active tenancies and assigned units
-const tenantsWithUnits = computed(() => {
+// Get all tenants with their exclusion status
+const allTenants = computed(() => {
   return tenants.value.filter(tenant => 
     tenant.tenancies && tenant.tenancies.length > 0 && 
     tenant.tenancies.some((tenancy: any) => tenancy.unit_id && tenancy.active)
   );
+});
+
+// Filter tenants to only show those with active tenancies and assigned units
+const tenantsWithUnits = computed(() => {
+  return allTenants.value.filter(tenant => !isTenantExcluded(tenant));
 });
 
 const totalRentAmount = computed(() => {
@@ -316,6 +353,62 @@ const getTenantTotal = (tenantId: number) => {
   return total;
 };
 
+// Check if a tenant is excluded from billing
+const isTenantExcluded = (tenant: any) => {
+  if (!formData.month || !formData.year) return false;
+  
+  const monthNumber = new Date(`${formData.month} 1, ${formData.year}`).getMonth() + 1;
+  const endOfMonth = new Date(Number(formData.year), monthNumber, 0);
+  
+  // Check if tenant has no active tenancies
+  const hasActiveTenancies = tenant.tenancies && tenant.tenancies.some((tenancy: any) => tenancy.active);
+  if (!hasActiveTenancies) return true;
+  
+  // Check if tenant joined after billing period
+  const tenantCreatedAt = new Date(tenant.created_at);
+  if (tenantCreatedAt > endOfMonth) return true;
+  
+  // Note: We can't check for existing bills or monthly limits here without API calls
+  // This would need to be handled by the backend and passed to the frontend
+  
+  return false;
+};
+
+// Get the reason why a tenant is excluded
+const getExclusionReason = (tenant: any) => {
+  if (!formData.month || !formData.year) return '';
+  
+  const monthNumber = new Date(`${formData.month} 1, ${formData.year}`).getMonth() + 1;
+  const endOfMonth = new Date(Number(formData.year), monthNumber, 0);
+  
+  // Check if tenant has no active tenancies
+  const hasActiveTenancies = tenant.tenancies && tenant.tenancies.some((tenancy: any) => tenancy.active);
+  if (!hasActiveTenancies) {
+    return 'No active tenancies';
+  }
+  
+  // Check if tenant joined after billing period
+  const tenantCreatedAt = new Date(tenant.created_at);
+  if (tenantCreatedAt > endOfMonth) {
+    const joinDate = tenantCreatedAt.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+    return `Joined on ${joinDate} which is after ${formData.month} ${formData.year}`;
+  }
+  
+  return 'Unknown reason';
+};
+
+// Get CSS class for tenant card based on exclusion status
+const getTenantCardClass = (tenant: any) => {
+  if (isTenantExcluded(tenant)) {
+    return 'bg-red-50 border border-red-200';
+  }
+  return 'bg-neutral-50';
+};
+
 const rules = reactive<FormRules>({
   month: [
     { required: true, message: "Please select month", trigger: "change" },
@@ -340,22 +433,24 @@ const submitForm = async () => {
     // Prepare data for submission - convert to the format expected by backend
     const utilityInputsForBackend: any = {};
     
-    // Process utility inputs for each tenant
+    // Process utility inputs for each eligible tenant only
     tenantsWithUnits.value.forEach(tenant => {
-      tenant.tenancies?.filter((tenancy: any) => tenancy.active).forEach((tenancy: any) => {
-        utilities.value.forEach((utility: any) => {
-          if (isUtilitySelected(tenant.id, utility.id)) {
-            const key = `${tenant.id}_${tenancy.id}_${utility.id}`;
-            const utilityInput = formData.utility_inputs[`${tenant.id}_${utility.id}`];
-            if (utilityInput) {
-              const prevReading = parseFloat(utilityInput.prev_reading) || 0;
-              const currentReading = parseFloat(utilityInput.current_reading) || 0;
-              const consumption = Math.max(0, currentReading - prevReading);
-              utilityInputsForBackend[key] = consumption;
+      if (!isTenantExcluded(tenant)) {
+        tenant.tenancies?.filter((tenancy: any) => tenancy.active).forEach((tenancy: any) => {
+          utilities.value.forEach((utility: any) => {
+            if (isUtilitySelected(tenant.id, utility.id)) {
+              const key = `${tenant.id}_${tenancy.id}_${utility.id}`;
+              const utilityInput = formData.utility_inputs[`${tenant.id}_${utility.id}`];
+              if (utilityInput) {
+                const prevReading = parseFloat(utilityInput.prev_reading) || 0;
+                const currentReading = parseFloat(utilityInput.current_reading) || 0;
+                const consumption = Math.max(0, currentReading - prevReading);
+                utilityInputsForBackend[key] = consumption;
+              }
             }
-          }
+          });
         });
-      });
+      }
     });
     
     const dataToSend = {

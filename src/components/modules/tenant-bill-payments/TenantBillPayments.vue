@@ -11,20 +11,22 @@
     <div class="">
       <div class="w-full bg-white p-3 lg:p-6 mt-3 lg:mt-6">
         <h4 class="font-semibold">Tenant Payments </h4>
-        <div class="grid grid-cols-3 mt-3 gap-6">
+        <div class="grid grid-cols-4 mt-3 gap-6">
           <div class="border border-dashed p-3 px-4 rounded">
             <h2 class="font-semibold">{{ store.tenantBillPayments.length.toLocaleString() }}</h2>
-            <span class="text-gray-400 text-sm">Tenant Bills</span>
+            <span class="text-gray-400 text-sm">Total Payments</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ store.tenantBillPayments.reduce((a, b) => b.status == "Complete" ?
-              Number(a) + Number(b.amount) : a, 0).toLocaleString() }}</h2>
-            <span class="text-gray-400 text-sm">Complete</span>
+            <h2 class="font-semibold">KES {{ totalAmount.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total Bills</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ store.tenantBillPayments.reduce((a, b) => b.status != "Complete" ?
-              Number(a) + Number(b.amount) : a, 0).toLocaleString() }}</h2>
-            <span class="text-gray-400 text-sm">Pending</span>
+            <h2 class="font-semibold">KES {{ totalPaidAmount.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total Paid</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ totalPendingAmount.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total Pending</span>
           </div>
         </div>
       </div>
@@ -128,7 +130,7 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import { formatDate, initDataTable } from "@/composables/dataTables";
 import { useTenantBillsStore } from "@/store/tenant-bills.store";
@@ -153,8 +155,48 @@ const store = useTenantBillsStore();
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
+// Computed properties for totals
+const totalAmount = computed(() => {
+  let total = 0;
+  
+  if (store.tenantBills && store.tenantBills.length > 0) {
+    store.tenantBills.forEach(bill => {
+      total += Number(bill.amount) || 0;
+    });
+  }
+  
+  return total;
+});
+
+const totalPaidAmount = computed(() => {
+  let total = 0;
+  
+  if (store.tenantBillPayments && store.tenantBillPayments.length > 0) {
+    store.tenantBillPayments.forEach(payment => {
+      total += Number(payment.amount) || 0;
+    });
+  }
+  
+  return total;
+});
+
+const totalPendingAmount = computed(() => {
+  let total = 0;
+  
+  // Calculate pending amount as total amount minus total paid
+  const totalBillAmount = totalAmount.value;
+  const totalPaid = totalPaidAmount.value;
+  
+  total = Math.max(0, totalBillAmount - totalPaid);
+  
+  return total;
+});
+
 onMounted(async () => {
-  await store.getTenantBillPayments();
+  await Promise.all([
+    store.getTenantBillPayments(),
+    store.getTenantBills({})
+  ]);
   initDataTable(dataTableRef.value);
   loading.value = false;
 });

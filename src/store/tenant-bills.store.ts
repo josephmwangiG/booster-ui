@@ -39,6 +39,21 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
         return error.response;
       }
     },
+    async getTenantBillsForPayment() {
+      try {
+        console.log('Fetching tenant bills for payment with headers:', this.headers);
+        const res = await axios.get("/tenant-bills-for-payment", {
+          ...this.headers,
+        });
+        console.log('Tenant bills for payment API response:', res.data);
+        this.tenantBillItems = res.data || [];
+        return res;
+      } catch (error: any) {
+        console.error('Error fetching tenant bills for payment:', error.response || error);
+        this.tenantBillItems = [];
+        return error.response;
+      }
+    },
     async getTenantBillPayments() {
       try {
         console.log('Fetching tenant bill payments with headers:', this.headers);
@@ -58,7 +73,12 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     async generateTenantBills(data: any) {
       const res = await axios.post("/tenant-bills", data, this.headers);
 
-      this.tenantBills = res.data;
+      // Handle the new response format with bills array
+      if (res.data?.bills) {
+        this.tenantBills = res.data.bills;
+      } else {
+        this.tenantBills = res.data;
+      }
 
       // Refresh bill items to include utilities after bill generation
       await this.getBillItems();

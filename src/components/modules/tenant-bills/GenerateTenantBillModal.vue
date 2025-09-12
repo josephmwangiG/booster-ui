@@ -259,15 +259,55 @@ const submitForm = async () => {
     console.log("Form data being sent:", dataToSend);
     
     const res = await store.generateTenantBills(dataToSend);
+    
+    // Handle success case (200/201 status with actual bills created)
     if (res.status == 200 || res.status == 201) {
-      // Emit event to refresh parent component data
-      emits("submit-form");
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Bills generated successfully",
-      });
+      const success = res.data?.success !== false;
+      const billsCreated = res.data?.bills_created_count || 0;
+      const isError = res.data?.error === true;
+      
+      if (isError || (success === false && billsCreated === 0)) {
+        // Error case - no bills can be generated, don't close modal
+        let message = res.data?.message || "Cannot generate bills.";
+        
+        // If we have excluded tenants info, show them in a detailed notification
+        if (res.data?.excluded_tenants && res.data.excluded_tenants.length > 0) {
+          message += `\n\n${res.data.excluded_tenants.length} tenant(s) were excluded:\n\n`;
+          res.data.excluded_tenants.forEach((reason: string, index: number) => {
+            message += `${index + 1}. ${reason}\n`;
+          });
+        }
+        
+        ElNotification({
+          title: "Cannot Generate Bills",
+          type: "error",
+          message: message,
+          duration: 15000,
+          dangerouslyUseHTMLString: false
+        });
+        
+        // Don't close modal or emit submit-form for errors
+        return;
+      } else if (success && billsCreated > 0) {
+        // Success with bills created - close modal and refresh
+        emits("submit-form");
+        emits("close-modal");
+        
+        let message = res.data?.message || `${billsCreated} bills generated successfully`;
+        if (res.data?.excluded_tenants && res.data.excluded_tenants.length > 0) {
+          message += `\n\n${res.data.excluded_tenants.length} tenant(s) were excluded:\n\n`;
+          res.data.excluded_tenants.forEach((reason: string, index: number) => {
+            message += `${index + 1}. ${reason}\n`;
+          });
+        }
+        
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: message,
+          duration: 10000
+        });
+      }
     }
   } catch (error: any) {
     console.error("Error generating bills:", error);
