@@ -7,29 +7,6 @@
           <el-option v-for="item in (store.tenantBillItems ?? [])" :key="item.tenant_bill_id" :label="`${item.tenant_name} - ${item.bill_number || item.period} (${item.amount})`" :value="item.tenant_bill_id" />
         </el-select>
       </el-form-item>
-      
-      <!-- Bill Details and Utility Breakdown -->
-      <div v-if="selectedBillDetails" class="mt-4 p-4 bg-gray-50 rounded-lg">
-        <h4 class="font-medium text-gray-900 mb-3">Bill Details</h4>
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span class="font-medium text-gray-600">Total Amount:</span>
-            <span class="ml-2 font-semibold">KES {{ selectedBillDetails.totalAmount?.toLocaleString() }}</span>
-          </div>
-          <div>
-            <span class="font-medium text-gray-600">Amount Paid:</span>
-            <span class="ml-2 font-semibold">KES {{ selectedBillDetails.amountPaid?.toLocaleString() }}</span>
-          </div>
-
-          <div>
-            <span class="font-medium text-gray-600">Status:</span>
-            <span class="ml-2" :class="selectedBillDetails.status === 'Paid' ? 'text-green-600' : 'text-orange-600'">
-              {{ selectedBillDetails.status }}
-            </span>
-          </div>
-        </div>
-        
-      </div>
               <div class="lg:flex gap-3">
           <el-form-item type="number" prop="amount" class="flex-1" :label="'Amount Paid'">
             <el-input v-model="formData.amount" type="number" placeholder="Enter amount">

@@ -56,8 +56,7 @@
               class="!w-[110px] !py-1 h-[42px]">
               <el-option v-for="item in months" :key="item" :label="item" :value="item" />
             </el-select>
-            <button @click="dialogVisible = true" class="btn-primary my-auto mt-1 h-[35px]"
-              v-if="(store.tenantBills || []).length == 0 && params.year && params.month">
+            <button @click="navigateToGenerateBills" class="btn-primary my-auto mt-1 h-[35px]">
               Generate Bills
             </button>
           </div>
@@ -188,27 +187,6 @@
     </div>
   </div>
   <teleport to="body">
-    <el-dialog 
-      v-model="dialogVisible" 
-      :show-close="false" 
-      :width="getModalWidth()"
-      :top="getModalTop()"
-      class="generate-bills-modal"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-    >
-      <template #header>
-        <div class="modal-header flex justify-between items-center">
-          <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title">
-            Generate Tenant Bills
-          </h3>
-          <CloseBtnComponent @click="dialogVisible = false" />
-        </div>
-      </template>
-      <GenerateTenantBillModal @close-modal="dialogVisible = false" @submit-form="handleBillGenerated" :form="params" :action="action">
-      </GenerateTenantBillModal>
-    </el-dialog>
-    
     <!-- Utility Details Modal -->
     <el-dialog v-model="utilityDetailsVisible" :show-close="false" width="50%" class="utility-details-modal">
       <template #header>
@@ -281,16 +259,14 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { computed, defineAsyncComponent, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
 import { formatDate, initDataTableWithSearch, handleSearch as dtHandleSearch, handleDateRangeFilter, handleColumnSearch, clearDateRangeFilter, clearAllFilters } from "@/composables/dataTables";
 import { useTenantBillsStore } from "@/store/tenant-bills.store";
 import moment from "moment";
 
-const GenerateTenantBillModal = defineAsyncComponent(
-  () => import("@/components/modules/tenant-bills/GenerateTenantBillModal.vue")
-);
 
 const params = ref({
   year: "",
@@ -322,12 +298,11 @@ const years = computed(() => {
 });
 
 
-const dialogVisible = ref(false);
 const utilityDetailsVisible = ref(false);
 const selectedUtilityBill = ref<any>(null);
 const loading = ref(true);
-const action = ref("create");
 const store = useTenantBillsStore();
+const router = useRouter();
 
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
@@ -416,19 +391,6 @@ const totalPendingAmount = computed(() => {
   return total;
 });
 
-// Responsive modal methods
-const getModalWidth = () => {
-  if (window.innerWidth < 640) return '95%'; // Mobile
-  if (window.innerWidth < 1024) return '90%'; // Tablet
-  if (window.innerWidth < 1280) return '80%'; // Small desktop
-  return '75%'; // Large desktop
-};
-
-const getModalTop = () => {
-  if (window.innerWidth < 640) return '5vh'; // Mobile
-  if (window.innerWidth < 1024) return '8vh'; // Tablet
-  return '10vh'; // Desktop
-};
 
 // Search and filter state
 const searchQuery = ref('');
@@ -547,18 +509,14 @@ const getBillUtilities = (billId: string) => {
   return utilities;
 };
 
-// Function to show utility details modal
-const showUtilityDetails = (bill: any) => {
-  selectedUtilityBill.value = bill;
-  utilityDetailsVisible.value = true;
+
+
+
+// Function to navigate to generate bills page
+const navigateToGenerateBills = () => {
+  router.push({ name: 'generate-tenant-bills' });
 };
 
-
-
-// Function to handle bill generation completion
-const handleBillGenerated = async () => {
-  console.log('Bills generated');
-};
 
 onMounted(async () => {
   // Load tenant bills, bill items, and payments to get complete totals
@@ -587,102 +545,10 @@ onMounted(async () => {
     loading.value = false;
   }
   
-  // Add window resize listener for responsive modal
-  window.addEventListener('resize', () => {
-    // Force modal to recalculate dimensions
-    if (dialogVisible.value) {
-      // Small delay to ensure DOM updates
-      setTimeout(() => {
-        const modal = document.querySelector('.generate-bills-modal');
-        if (modal) {
-          modal.classList.add('resize-trigger');
-          setTimeout(() => modal.classList.remove('resize-trigger'), 100);
-        }
-      }, 100);
-    }
-  });
 });
 </script>
 
 <style>
-/* Custom modal styles */
-.generate-bills-modal .el-dialog {
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.generate-bills-modal .el-dialog__header {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 20px 24px;
-  margin: 0;
-}
-
-.generate-bills-modal .el-dialog__body {
-  padding: 24px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.generate-bills-modal .el-dialog__header .modal-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .generate-bills-modal .el-dialog {
-    margin: 10px;
-    width: calc(100% - 20px) !important;
-  }
-  
-  .generate-bills-modal .el-dialog__body {
-    padding: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .generate-bills-modal .el-dialog__header {
-    padding: 16px 20px;
-  }
-  
-  .generate-bills-modal .el-dialog__body {
-    padding: 20px;
-  }
-}
-
-/* Smooth transitions */
-.generate-bills-modal .el-dialog {
-  transition: all 0.3s ease-in-out;
-}
-
-.resize-trigger {
-  animation: modal-resize 0.1s ease-in-out;
-}
-
-@keyframes modal-resize {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-/* Scrollbar styling */
-.generate-bills-modal .el-dialog__body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.generate-bills-modal .el-dialog__body::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.generate-bills-modal .el-dialog__body::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.generate-bills-modal .el-dialog__body::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
 
 /* Utility Details Modal Styles */
 .utility-details-modal .el-dialog {

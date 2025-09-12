@@ -203,6 +203,15 @@ const routes = [
         },
       },
       {
+        name: "generate-tenant-bills",
+        path: "/generate-tenant-bills",
+        component: () => import("@/components/modules/tenant-bills/GenerateTenantBillsPage.vue"),
+        meta: {
+          require_auth: true,
+          title: "Generate Tenant Bills",
+        },
+      },
+      {
         name: "tenant-bill-payments",
         path: "/tenant-bill-payments",
         component: () =>

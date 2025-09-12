@@ -41,7 +41,6 @@
           : 'sidebar-menu'
           "><i class="ri-wallet-3-line mr-2"></i> Tenant Payments</router-link>
       </li>
-
       <li class="">
         <router-link :to="{ name: 'utilities' }" :class="router.currentRoute.value.path.startsWith('/utilities')
           ? 'sidebar-menu-active'
