@@ -3,9 +3,13 @@
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
       <el-form-item prop="water_meter_id" class="flex-1" :label="'Meter'">
-        <el-select v-model="formData.water_meter_id" placeholder="Select meter">
+        <el-select v-model="formData.water_meter_id" placeholder="Select meter" @change="fetchLatestReading">
           <el-option v-for="meter in store.meters" :key="meter.id" :label="`${meter.name || 'N/A'} - ${meter.code_number}`" :value="meter.id" />
         </el-select>
+      </el-form-item>
+      <el-form-item class="flex-1" :label="'Latest Meter Reading'">
+        <el-input v-model="latestReading" placeholder="Latest reading will appear here" :disabled="true" type="number">
+        </el-input>
       </el-form-item>
       <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">
         <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading">
@@ -80,6 +84,7 @@ const itemFormRef = ref<FormInstance>();
 const formData = reactive<MeterReadingForm>(props.form as MeterReadingForm);
 
 const record_collections = ref(false)
+const latestReading = ref(0)
 const collections = ref([
   {
     collection_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
@@ -98,6 +103,30 @@ const addCollection = () => {
 
 const removeCollection = (index: number) => {
   collections.value.splice(index, 1);
+}
+
+const fetchLatestReading = async () => {
+  if (!formData.water_meter_id) {
+    latestReading.value = 0;
+    return;
+  }
+  
+  try {
+    // Find the latest reading for the selected meter from the store
+    const latestMeterReading = store.meterReadings
+      .filter(reading => reading.water_meter_id === formData.water_meter_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    
+    if (latestMeterReading) {
+      latestReading.value = latestMeterReading.current_meter_reading || 0;
+      // Don't auto-populate - let user enter manually
+    } else {
+      latestReading.value = 0;
+    }
+  } catch (error) {
+    console.error('Error fetching latest reading:', error);
+    latestReading.value = 0;
+  }
 }
 
 const consumption = computed(() => {
@@ -193,6 +222,7 @@ const resetForm = (formEl: FormInstance | undefined) => {
   
   // Reset collections to default state
   record_collections.value = false;
+  latestReading.value = 0;
   collections.value = [{
     collection_date: new Date().toISOString().split('T')[0],
     payment_method: "",
@@ -203,7 +233,8 @@ const resetForm = (formEl: FormInstance | undefined) => {
 onMounted(async () => {
   await Promise.all([
     store.getMeters(),
-    store.getPaymentMethods()
+    store.getPaymentMethods(),
+    store.getMeterReadings()
   ]);
 
   console.log(props.form);

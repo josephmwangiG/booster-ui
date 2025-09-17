@@ -44,7 +44,7 @@
                 <th class="t-th">Previous Reading</th>
                 <th class="t-th">Current Reading</th>
                 <th class="t-th">Consumption</th>
-                <th class="t-th">Collections</th>
+                <th class="t-th">Collection</th>
                 <th class="t-th text-end">Actions</th>
               </tr>
             </thead>
@@ -77,9 +77,17 @@
                   }} Units
                 </td>
                 <td class="t-td">
-                  {{
-                    formatAmount(item.collections_sum_amount)
-                  }} 
+                  <div v-if="item.collection_amount">
+                    <div class="text-sm">
+                      {{ formatAmount(item.collection_amount) }}
+                      <span v-if="item.collection_payment_method" class="text-gray-500 text-xs ml-1">
+                        ({{ item.collection_payment_method }})
+                      </span>
+                    </div>
+                  </div>
+                  <div v-else class="text-gray-400 text-sm">
+                    No collection
+                  </div>
                 </td>
                 <td class="t-td text-end">
                   <el-dropdown trigger="click">
