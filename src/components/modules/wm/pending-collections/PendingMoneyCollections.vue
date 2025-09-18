@@ -1,99 +1,115 @@
 <template>
-  <div class="content p-6 bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="top-section mb-6 animate-fade-in">
+  <div class="content">
+    <div class="top-section">
       <div class="bread-crumb">
-        <h2 class="font-bold text-2xl text-gray-800">Pending Money Collection</h2>
+        <h2 class="font-semibold">Pending Money Collection</h2>
         <span class="text-sm">
-          <span class="text-gray-400">Home ></span>
-          <span class="text-blue-600 font-medium"> Pending Money Collection</span>
+          <span class="text-gray-400">Home ></span> Pending Money Collection
         </span>
       </div>
     </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center h-64">
-      <LoadingSpinner />
-    </div>
-
-    <!-- Pending Money Collection Card -->
-    <div v-else class="shadow-lg rounded-2xl py-6 px-5 bg-white border border-gray-100 animate-slide-up">
-      <div class="flex justify-between items-center">
-        <div class="title">
-          <h4 class="font-semibold text-lg text-gray-800">All Pending Money Collections</h4>
-          <span class="text-gray-500 text-sm">
-            You have
-            <span class="font-semibold text-gray-700">
-              {{ store.pendingWaterCollections?.length?.toLocaleString() || 0 }}
-            </span>
-            records
-          </span>
+    <div class="">
+      <div class="w-full bg-white p-3 lg:p-6 mt-3 lg:mt-6">
+        <h4 class="font-semibold">Pending Money Collection </h4>
+        <div class="grid grid-cols-3 mt-3 gap-6">
+          <div class="border border-dashed p-3 px-4 rounded col-span-1">
+            <h2 class="font-semibold">{{ (store.pendingWaterCollections?.length || 0).toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Records</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ (store.pendingWaterCollections || []).reduce((a, b) =>
+              Number(a) + Number(b.amount), 0).toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ (store.pendingWaterCollections || []).reduce((a, b) =>
+              Number(a) + Number(b.paid_amount), 0).toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Paid</span>
+          </div>
         </div>
-        <button
-          @click="addItem"
-          class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-sm py-2 px-4 shadow hover:shadow-md transform hover:-translate-y-0.5 transition duration-300"
-        >
-          ➕ Add Pending Collection
-        </button>
       </div>
 
-      <hr class="my-4" />
-
-      <!-- Table -->
-      <div class="overflow-x-auto w-full">
-        <table class="w-full border-collapse text-sm" ref="dataTableRef">
-          <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
-            <tr>
-              <th class="t-th text-left">Client</th>
-              <th class="t-th text-left">Phone</th>
-              <th class="t-th text-left">Meter</th>
-              <th class="t-th text-left">Date</th>
-              <th class="t-th text-right">Amount</th>
-              <th class="t-th text-right">Amount Paid</th>
-              <th class="t-th text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr
-              v-for="(item, index) in store.pendingWaterCollections"
-              :key="index"
-              :class="index % 2 != 0 ? 'bg-gray-50' : ''"
-              class="hover:bg-blue-50/40 transition-colors duration-300"
-            >
-              <td class="t-td font-semibold text-gray-700">{{ item.client_name }}</td>
-              <td class="t-td">{{ item.phone_number }}</td>
-              <td class="t-td">{{ item.code_number }}</td>
-              <td class="t-td">{{ formatDate(item.created_at) }}</td>
-              <td class="t-td text-right font-medium">{{ formatAmount(item.amount) }}</td>
-              <td class="t-td text-right font-medium">{{ formatAmount(item.paid_amount) }}</td>
-              <td class="t-td text-center">
-                <span
-                  v-if="item.status == 'Paid'"
-                  class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm bg-green-100 text-green-800"
+      <div class="space-y-6 p-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-3">
+        <div class="flex justify-between align-center">
+          <div class="">
+            <h4 class="font-semibold">Records</h4>
+            <span class="text-gray-400 text-sm"> {{ filteredPendingCollections?.length || 0 }} of {{ store.pendingWaterCollections?.length || 0 }} items found </span>
+          </div>
+          <!-- Add Pending Collection button disabled as API only supports GET and HEAD methods -->
+          <!-- <button @click="addItem" class="btn-primary my-auto">
+            Add Pending Collection
+          </button> -->
+        </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Pending Collections"
+          :enable-date-filter="true"
+          @search="handleSearch"
+          @date-filter="handleDateRange"
+          @clear-filters="handleClearFilters"
+        />
+        <div class="overflow-x-auto w-full">
+          <table class="w-full" ref="dataTableRef">
+            <thead class="t-head">
+              <tr>
+                <th class="t-th">Client</th>
+                <th class="t-th">Phone</th>
+                <th class="t-th">Meter</th>
+                <th class="t-th">Date</th>
+                <th class="t-th">Amount</th>
+                <th class="t-th">Payment Method</th>
+                <th class="t-th">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-if="loading" class="text-center">
+                <td colspan="7" class="t-td">Loading...</td>
+              </tr>
+              <tr v-else-if="!filteredPendingCollections || filteredPendingCollections.length === 0" class="text-center">
+                <td colspan="7" class="t-td text-gray-500">No pending collections found</td>
+              </tr>
+              <tr v-else v-for="(item, index) in filteredPendingCollections" :key="index"
+                :class="index % 2 != 0 ? 'bg-gray-50' : ''"
                 >
-                  Paid
-                </span>
-                <span
-                  v-else
-                  class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm bg-red-100 text-red-800"
-                >
-                  Pending
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <td class="t-td font-semibold">
+                  {{ item.water_client?.client_name || 'N/A' }}
+                </td>
+                <td class="t-td font-semibold">
+                  {{ item.phone_number || item.water_client?.phone || 'N/A' }}
+                </td>
+                <td class="t-td font-semibold">
+                  {{ item.water_meter?.code_number || 'N/A' }}
+                </td>
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ formatDate(item.created_at) }}
+                </td>
+                <td class="t-td font-semibold">
+                  {{ formatAmount(item.amount) }}
+                </td>
+                <td class="t-td font-semibold">
+                  {{ item.payment_method || 'N/A' }}
+                </td>
+                <td class="t-td">
+                  <span v-if="item.status === 'completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                    Completed
+                  </span>
+                  <span v-else-if="item.status === 'pending'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
+                    Pending
+                  </span>
+                  <span v-else class="p-1 rounded bg-red-100 text-red-500 text-xs">
+                    {{ item.status || 'Unknown' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
   <teleport to="body">
-    <el-dialog
-      v-model="dialogVisible"
-      :show-close="false"
-      style="min-width: 300px"
-      width="40%"
-      :key="dialogVisible"
-    >
+    <el-dialog v-model="dialogVisible" :show-close="false" style="min-width: 300px" width="40%" :key="dialogVisible">
       <template #header>
         <div class="modal-header flex justify-between items-center">
           <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
@@ -102,31 +118,25 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <PendingMoneyCollectionFormModal
-        @close-modal="dialogVisible = false"
-        :form="formData"
-        :action="action"
-      >
+      <PendingMoneyCollectionFormModal @close-modal="dialogVisible = false" :form="formData" :action="action">
       </PendingMoneyCollectionFormModal>
     </el-dialog>
   </teleport>
 </template>
 
 <script setup lang="ts">
+// PendingMoneyCollections Component - Fixed imports and filtering
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed, nextTick } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
 import { formatDate, initDataTable } from "@/composables/dataTables";
 import { formatAmount } from "@/composables/helper_functions";
 import { useWaterCollectionsStore } from "@/store/water-collections.store";
-import LoadingSpinner from "@/components/ui/LoadingSpinner.vue";
 
 const PendingMoneyCollectionFormModal = defineAsyncComponent(
-  () =>
-    import(
-      "@/components/modules/wm/pending-collections/PendingMoneyCollectionFormModal.vue"
-    )
+  () => import("@/components/modules/wm/pending-collections/PendingMoneyCollectionFormModal.vue")
 );
 
 const dialogVisible = ref(false);
@@ -135,51 +145,105 @@ const action = ref("create");
 const store = useWaterCollectionsStore();
 const formData = ref({});
 
+// Search and filter state
+const searchQuery = ref('');
+const dateFrom = ref('');
+const dateTo = ref('');
+
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
-const addItem = () => {
-  action.value = "create";
-  formData.value = {};
-  dialogVisible.value = true;
+// Computed property for filtered collections
+const filteredPendingCollections = computed(() => {
+  let filtered = [...(store.pendingWaterCollections || [])];
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(item => 
+      item.water_client?.client_name?.toLowerCase().includes(query) ||
+      item.phone_number?.toLowerCase().includes(query) ||
+      item.water_client?.phone?.toLowerCase().includes(query) ||
+      item.water_meter?.code_number?.toLowerCase().includes(query)
+    );
+  }
+
+  // Apply date filter
+  if (dateFrom.value || dateTo.value) {
+    filtered = filtered.filter(item => {
+      const itemDate = new Date(item.created_at);
+      const fromDate = dateFrom.value ? new Date(dateFrom.value) : null;
+      const toDate = dateTo.value ? new Date(dateTo.value) : null;
+
+      if (fromDate && itemDate < fromDate) return false;
+      if (toDate && itemDate > toDate) return false;
+      return true;
+    });
+  }
+
+  return filtered;
+});
+
+// Event handlers for SearchAndFilter component
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  reinitializeDataTable();
 };
 
+const handleDateRange = (from: string, to: string) => {
+  dateFrom.value = from;
+  dateTo.value = to;
+  reinitializeDataTable();
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  dateFrom.value = '';
+  dateTo.value = '';
+  reinitializeDataTable();
+};
+
+const reinitializeDataTable = async () => {
+  // Destroy existing DataTable if it exists
+  try {
+    const $ = (window as any).$;
+    if ($ && $.fn.DataTable.isDataTable(dataTableRef.value)) {
+      $(dataTableRef.value).DataTable().destroy();
+    }
+  } catch (error) {
+    console.warn('Error destroying existing DataTable:', error);
+  }
+  
+  // Wait for next tick and reinitialize
+  await nextTick();
+  if (filteredPendingCollections.value && filteredPendingCollections.value.length > 0 && dataTableRef.value) {
+    initDataTable(dataTableRef.value);
+  }
+};
+
+// const addItem = () => {
+//   action.value = "create";
+//   formData.value = {};
+//   dialogVisible.value = true;
+// };
+
 onMounted(async () => {
-  loading.value = true;
   try {
     await store.getPendingWaterCollections();
+    loading.value = false;
+    
+    // Wait for next tick to ensure DOM is fully rendered
+    await nextTick();
+    
+    // Initialize DataTable after data is loaded
+    if (dataTableRef.value) {
+      initDataTable(dataTableRef.value);
+    }
   } catch (error) {
-    console.error("Failed to fetch pending money collections:", error);
-  } finally {
+    console.error('Error loading pending water collections:', error);
     loading.value = false;
   }
-  initDataTable(dataTableRef.value);
 });
 </script>
 
-<style scoped>
-/* Modern table styles */
-.t-th {
-  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
-}
-.t-td {
-  @apply px-4 py-3 text-sm text-gray-700;
-}
-
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out;
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slide-up {
-  animation: slide-up 0.7s ease-out;
-}
-</style>
+<style></style>

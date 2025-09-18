@@ -1,4 +1,7 @@
-<InvoiceDetails />
+<template>
+  <div class="content pb-12" v-if="!loading">
+    <InvoiceDetails />
+    <!-- Commented out until OrderItems component is implemented -->
     <!-- <OrderItems /> -->
   </div>
 </template>
@@ -15,6 +18,8 @@ const store = useFinanceStore();
 const InvoiceDetails = defineAsyncComponent(
   () => import("@/components/finance/InvoiceDetails.vue")
 );
+
+// Commented out until OrderItems component is implemented
 // const OrderItems = defineAsyncComponent(
 //   () => import("@/components/finance/OrderItems.vue")
 // );

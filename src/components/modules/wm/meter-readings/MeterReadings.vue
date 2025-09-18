@@ -1,92 +1,122 @@
 <template>
-  <div class="content p-6 bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="top-section mb-6 animate-fade-in">
+  <div class="content">
+    <div class="top-section">
       <div class="bread-crumb">
-        <h2 class="font-bold text-2xl text-gray-800">Meter Readings</h2>
+        <h2 class="font-semibold">Meter Readings</h2>
         <span class="text-sm">
-          <span class="text-gray-400">Home ></span>
-          <span class="text-blue-600 font-medium"> Meter Readings</span>
+          <span class="text-gray-400">Home ></span> Meter Readings
         </span>
       </div>
     </div>
+    <div class="">
+      <div class="w-full bg-white p-3 lg:p-6 mt-3 lg:mt-6">
+        <h4 class="font-semibold">Meter Readings </h4>
+        <div class="grid grid-cols-3 mt-3 gap-6">
+          <div class="border border-dashed p-3 px-4 rounded col-span-1">
+            <h2 class="font-semibold">{{ store.meterReadings.length.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Meter Readings</span>
+          </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center h-64">
-      <LoadingSpinner />
-    </div>
-
-    <!-- Meter Readings Card -->
-    <div v-else class="shadow-lg rounded-2xl py-6 px-5 bg-white border border-gray-100 animate-slide-up">
-      <div class="flex justify-between items-center">
-        <div class="title">
-          <h4 class="font-semibold text-lg text-gray-800">All Meter Readings</h4>
-          <span class="text-gray-500 text-sm">
-            You have
-            <span class="font-semibold text-gray-700">
-              {{ store.meterReadings?.length?.toLocaleString() || 0 }}
-            </span>
-            readings
-          </span>
         </div>
-        <button
-          @click="addItem"
-          class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-sm py-2 px-4 shadow hover:shadow-md transform hover:-translate-y-0.5 transition duration-300"
-        >
-          ➕ Add Reading
-        </button>
       </div>
 
-      <hr class="my-4" />
-
-      <!-- Table -->
-      <div class="overflow-x-auto w-full">
-        <table class="w-full border-collapse text-sm" ref="dataTableRef">
-          <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
-            <tr>
-              <th class="t-th text-left">Meter Code Number</th>
-              <th class="t-th text-left">Date</th>
-              <th class="t-th text-right">Previous Reading</th>
-              <th class="t-th text-right">Current Reading</th>
-              <th class="t-th text-right">Consumption</th>
-              <th class="t-th text-right">Collections</th>
-              <th class="t-th text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr
-              v-for="(item, index) in store.meterReadings"
-              :key="index"
-              :class="index % 2 != 0 ? 'bg-gray-50' : ''"
-              class="hover:bg-blue-50/40 transition-colors duration-300"
-            >
-              <td class="t-td font-semibold text-gray-700">{{ item.code_number }}</td>
-              <td class="t-td">{{ formatDate(item.created_at, true) }}</td>
-              <td class="t-td text-right font-medium">{{ item.previous_meter_reading?.toLocaleString() }}</td>
-              <td class="t-td text-right font-medium">{{ item.current_meter_reading?.toLocaleString() }}</td>
-              <td class="t-td text-right font-medium">
-                {{ (item.current_meter_reading - item.previous_meter_reading)?.toLocaleString() }} Units
-              </td>
-              <td class="t-td text-right font-medium">{{ formatAmount(item.collections_sum_amount) }}</td>
-              <td class="t-td text-center">
-                <button @click="editItem(item)" class="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-3 py-1 rounded-lg shadow-sm transition duration-300">
-                  Edit
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="space-y-6 p-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-3">
+        <div class="flex justify-between align-center">
+          <div class="">
+            <h4 class="font-semibold">Meter Readings</h4>
+            <span class="text-gray-400 text-sm"> {{ store.meterReadings.length }} items found </span>
+          </div>
+          <button @click="addItem" class="btn-primary my-auto">
+            Add Reading
+          </button>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full" ref="dataTableRef">
+            <thead class="t-head">
+              <tr>
+                <th class="t-th">
+                  Meter Name
+                </th>
+                <th class="t-th">
+                  Meter Code Number
+                </th>
+                <th class="t-th">Date</th>
+                <th class="t-th">Previous Reading</th>
+                <th class="t-th">Current Reading</th>
+                <th class="t-th">Consumption</th>
+                <th class="t-th">Collection</th>
+                <th class="t-th text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-for="(item, index) in store.meterReadings" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.name || 'N/A' }}
+                </td>
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.code_number }}
+                </td>
+                <td class="t-td">
+                  {{
+                    formatDate(item.created_at, true)
+                  }}
+                </td>
+                <td class="t-td">
+                  {{
+                    item.previous_meter_reading?.toLocaleString()
+                  }}
+                </td>
+                <td class="t-td">
+                  {{
+                    item.current_meter_reading?.toLocaleString()
+                  }}
+                </td>
+                <td class="t-td">
+                  {{
+                    (item.current_meter_reading - item.previous_meter_reading)?.toLocaleString()
+                  }} Units
+                </td>
+                <td class="t-td">
+                  <div v-if="item.collections && item.collections.length > 0">
+                    <div v-for="(collection, collectionIndex) in item.collections" :key="collectionIndex" class="text-sm">
+                      {{ formatAmount(collection.amount) }}
+                      <span v-if="collection.payment_method" class="text-gray-500 text-xs ml-1">
+                        ({{ collection.payment_method }})
+                      </span>
+                    </div>
+                  </div>
+                  <div v-else class="text-gray-400 text-sm">
+                    No collection
+                  </div>
+                </td>
+                <td class="t-td text-end">
+                  <el-dropdown trigger="click">
+                    <span
+                      class="el-dropdown-link inline-flex w-full justify-center gap-x-1.5 rounded-md bg-gray-100 px-2 py-1 lg:px-3 lg:py-2 text-sm text-gray-900 ring-inset ring-gray-300 hover:bg-gray-50">
+                      Action
+                      <el-icon class="el-icon--right">
+                        <i class="ri-arrow-down-s-line"></i>
+                      </el-icon>
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item @click="editItem(item)">
+                          <span class="font-semibold py-2"><i class="ri-edit-line text-orange-500"></i>
+                            Edit</span>
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
   <teleport to="body">
-    <el-dialog
-      v-model="dialogVisible"
-      :show-close="false"
-      style="min-width: 300px"
-      width="40%"
-      :key="dialogVisible"
-    >
+    <el-dialog v-model="dialogVisible" :show-close="false" style="min-width: 300px" width="40%" :key="dialogVisible">
       <template #header>
         <div class="modal-header flex justify-between items-center">
           <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
@@ -95,11 +125,7 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <MeterReadingFormModal
-        @close-modal="dialogVisible = false"
-        :form="formData"
-        :action="action"
-      ></MeterReadingFormModal>
+      <MeterReadingFormModal @close-modal="dialogVisible = false" @submit-form="handleFormSubmit" :form="formData" :action="action"></MeterReadingFormModal>
     </el-dialog>
   </teleport>
 </template>
@@ -112,11 +138,11 @@ import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import { formatDate, initDataTable } from "@/composables/dataTables";
 import { useWaterMetersStore } from "@/store/water-meters.store";
 import { formatAmount } from "@/composables/helper_functions";
-import LoadingSpinner from "@/components/ui/LoadingSpinner.vue";
 
 const MeterReadingFormModal = defineAsyncComponent(
   () => import("@/components/modules/wm/meter-readings/MeterReadingFormModal.vue")
 );
+
 
 const dialogVisible = ref(false);
 const loading = ref(true);
@@ -139,42 +165,29 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
-onMounted(async () => {
+const handleFormSubmit = async () => {
+  // Refresh the data table after form submission
   loading.value = true;
-  try {
+  
+  // For edit operations, refresh data from store
+  if (action.value === "edit") {
     await store.getMeterReadings();
-  } catch (error) {
-    console.error("Failed to fetch meter readings:", error);
-  } finally {
-    loading.value = false;
   }
+  // For create operations, the store handles data refresh based on whether collections were involved
+  // Just reinitialize the data table to reflect the updated data
+  if (dataTableRef.value) {
+    initDataTable(dataTableRef.value);
+  }
+  
+  loading.value = false;
+};
+
+onMounted(async () => {
+  await store.getMeterReadings();
   initDataTable(dataTableRef.value);
+  loading.value = false;
+
 });
 </script>
 
-<style scoped>
-/* Modern table styles */
-.t-th {
-  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
-}
-.t-td {
-  @apply px-4 py-3 text-sm text-gray-700;
-}
-
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out;
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slide-up {
-  animation: slide-up 0.7s ease-out;
-}
-</style>
+<style></style>

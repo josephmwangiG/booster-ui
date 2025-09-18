@@ -29,14 +29,15 @@ export type WaterClientBillForm = {
   rate: number;
   from: string;
   to: string;
+  due_date: string;
   payment_status: string;
 };
 
 export type WaterClientBillPaymentForm = {
   id: string | null;
   water_client_bill_id: string | null;
-  amount: number;
+  amount: number | null;
   payment_date: string;
   payment_ref: string;
-  payment_method: number;
+  payment_method: string;
 };

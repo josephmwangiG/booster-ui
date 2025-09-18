@@ -42,13 +42,22 @@
 
           <div class="form-group mt-3">
             <label for="password" class="w-full text-sm">Password</label>
-            <input
-              type="password"
-              v-model="formData.password"
-              class="w-full border border-gray-400 py-2 px-3 my-2 rounded"
-              id="password"
-              placeholder="Enter your password"
-            />
+            <div class="relative">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                v-model="formData.password"
+                class="w-full border border-gray-400 py-2 px-3 my-2 rounded pr-10"
+                id="password"
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                @click="togglePasswordVisibility"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <i :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'" class="text-lg"></i>
+              </button>
+            </div>
             <span class="text-[12px] text-red-400" v-if="errors.password">
               {{ errors.password[0] }}
             </span>
@@ -96,6 +105,7 @@ import { useRouter } from "vue-router";
 
 const errors = ref<any>({});
 const loading = ref(false);
+const showPassword = ref(false);
 const store = useAuthStore();
 const formData = ref({
   email: "",
@@ -105,37 +115,46 @@ const formData = ref({
 
 const router = useRouter();
 
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
+
 const login = async () => {
   loading.value = true;
-  const res = await store.login(formData.value);
-
-  loading.value = false;
-
-  if (res.status == 200) {
-    if (router.currentRoute.value.query.redirect) {
-      router.push({ path: router.currentRoute.value.query.redirect as string });
+  try {
+    const res = await store.login(formData.value);
+    if (res.status == 200) {
+      if (router.currentRoute.value.query.redirect) {
+        router.push({
+          path: router.currentRoute.value.query.redirect as string,
+        });
+      } else {
+        router.push({ name: "dashboard" });
+        errors.value = {};
+      }
+    } else if (res.status == 422 && res.data.errors) {
+      errors.value = res.data.errors;
     } else {
-      const userStr = localStorage.getItem("user");
-      const user = userStr ? JSON.parse(userStr) : null;
-      router.push({ name: user?.type === 'admin' ? 'admin-dashboard' : 'dashboard' });
-      errors.value = {};
+      ElNotification({
+        title: "Error",
+        type: "error",
+        message: res.data.message,
+      });
     }
-  } else if (res.status == 422 && res.data.errors) {
-    errors.value = res.data.errors;
-  } else {
+  } catch (error: any) {
     ElNotification({
       title: "Error",
       type: "error",
-      message: res.data.message,
+      message: error?.response?.data?.message || "An unexpected error occurred.",
     });
+  } finally {
+    loading.value = false;
   }
 };
 
 onMounted(() => {
   if (localStorage.getItem("token")) {
-    const userStr = localStorage.getItem("user");
-    const user = userStr ? JSON.parse(userStr) : null;
-    router.push({ name: user?.type === 'admin' ? 'admin-dashboard' : 'dashboard' });
+    router.push({ name: "dashboard" });
   }
 });
 </script>

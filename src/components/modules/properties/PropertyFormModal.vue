@@ -30,8 +30,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
@@ -52,6 +52,7 @@ const router = useRouter();
 const store = usePropertiesStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<PropertyForm>(props.form as PropertyForm);
+const isSubmitting = ref(false);
 
 
 
@@ -73,11 +74,16 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
+  isSubmitting.value = true;
 
-  const res = await store.createProperty(formData);
-  if (res.status == 200 || res.status == 201) {
-    resetForm(itemFormRef.value as FormInstance);
-    router.push({ name: "property", params: { id: res.data.id } });
+  try {
+    const res = await store.createProperty(formData);
+    if (res.status == 200 || res.status == 201) {
+      resetForm(itemFormRef.value as FormInstance);
+      router.push({ name: "property", params: { id: res.data.id } });
+    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

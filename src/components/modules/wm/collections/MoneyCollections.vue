@@ -28,9 +28,25 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Records</h4>
-            <span class="text-gray-400 text-sm"> {{ store.waterCollections.length }} items found </span>
+            <span class="text-gray-400 text-sm"> {{ filteredWaterCollections.length }} of {{ store.waterCollections.length }} items found </span>
           </div>
+          <button @click="addItem" class="btn-primary my-auto">
+            Add Collection
+          </button>
         </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Money Collections"
+          :enable-date-filter="true"
+          :enable-category-filter="true"
+          category-label="Payment Method"
+          :categories="paymentMethodOptions"
+          @search="handleSearch"
+          @date-filter="handleDateFilter"
+          @category-filter="handlePaymentMethodFilter"
+          @clear-filters="handleClearFilters"
+        />
         <div class="overflow-x-auto w-full">
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
@@ -42,18 +58,22 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.waterCollections" :key="index"
+              <tr v-if="loading" class="text-center">
+                <td colspan="4" class="t-td">Loading...</td>
+              </tr>
+              <tr v-else-if="!filteredWaterCollections || filteredWaterCollections.length === 0" class="text-center">
+                <td colspan="4" class="t-td text-gray-500">No money collections found</td>
+              </tr>
+              <tr v-else v-for="(item, index) in filteredWaterCollections" :key="index"
                 :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   {{ formatDate(item.created_at) }}
                 </td>
                 <td class="t-td font-semibold">
-                  {{
-                    item.code_number
-                    }}
+                  {{ item.water_meter?.code_number || 'N/A' }}
                 </td>
                 <td class="t-td font-semibold">
-                  {{ item.payment_method }}
+                  {{ item.payment_method || 'N/A' }}
                 </td>
                 <td class="t-td font-semibold">
                   {{ formatAmount(item.amount) }}
@@ -70,13 +90,13 @@
       <template #header>
         <div class="modal-header flex justify-between items-center">
           <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
-            {{ action === "create" ? "Add" : "Edit" }} Water Delivery
+            {{ action === "create" ? "Add" : "Edit" }} Money Collection
           </h3>
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <WaterDeliveryFormModal @close-modal="dialogVisible = false" :form="formData" :action="action">
-      </WaterDeliveryFormModal>
+      <MoneyCollectionFormModal @close-modal="dialogVisible = false" @submit-form="handleFormSubmit" :form="formData" :action="action">
+      </MoneyCollectionFormModal>
     </el-dialog>
   </teleport>
 </template>
@@ -84,14 +104,16 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed, nextTick } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { formatDate, initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { formatDate, initDataTableWithSearch, handleSearch as dtHandleSearch, handleDateRangeFilter, handleColumnSearch, clearDateRangeFilter, clearAllFilters } from "@/composables/dataTables";
 import { formatAmount } from "@/composables/helper_functions";
 import { useWaterCollectionsStore } from "@/store/water-collections.store";
+import moment from "moment";
 
-const WaterDeliveryFormModal = defineAsyncComponent(
-  () => import("@/components/modules/wm/deliveries/WaterDeliveryFormModal.vue")
+const MoneyCollectionFormModal = defineAsyncComponent(
+  () => import("@/components/modules/wm/collections/MoneyCollectionFormModal.vue")
 );
 
 const dialogVisible = ref(false);
@@ -103,14 +125,139 @@ const formData = ref({});
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
+// Search and filter state
+const searchQuery = ref('');
+const dateFrom = ref('');
+const dateTo = ref('');
+const selectedPaymentMethod = ref('');
+
+// Payment method options for filtering
+const paymentMethodOptions = computed(() => {
+  const methods = [...new Set(store.waterCollections.map((collection: any) => collection.payment_method))].filter(Boolean);
+  return methods.map(method => ({ value: method, label: method }));
+});
+
+// Filtered water collections
+const filteredWaterCollections = computed(() => {
+  let filtered = store.waterCollections;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((collection: any) => 
+      collection.water_meter?.code_number?.toLowerCase().includes(query) ||
+      collection.payment_method?.toLowerCase().includes(query) ||
+      collection.amount?.toString().includes(query)
+    );
+  }
+
+  // Apply date range filter
+  if (dateFrom.value || dateTo.value) {
+    filtered = filtered.filter((collection: any) => {
+      if (!collection.created_at) return true;
+      
+      const collectionDate = moment(collection.created_at);
+      const fromDate = dateFrom.value ? moment(dateFrom.value) : null;
+      const toDate = dateTo.value ? moment(dateTo.value) : null;
+      
+      if (fromDate && collectionDate.isBefore(fromDate, 'day')) {
+        return false;
+      }
+      
+      if (toDate && collectionDate.isAfter(toDate, 'day')) {
+        return false;
+      }
+      
+      return true;
+    });
+  }
+
+  // Apply payment method filter
+  if (selectedPaymentMethod.value) {
+    filtered = filtered.filter((collection: any) => collection.payment_method === selectedPaymentMethod.value);
+  }
+
+  return filtered;
+});
+
+const addItem = () => {
+  action.value = "create";
+  formData.value = {};
+  dialogVisible.value = true;
+};
+
+const handleFormSubmit = async () => {
+  // Refresh the collections data after successful form submission
+  try {
+    await store.getWaterCollections();
+    // Also refresh payments data since a new payment record is created
+    await store.getPayments();
+    console.log('Collections and payments refreshed after form submission');
+  } catch (error) {
+    console.error('Error refreshing collections:', error);
+  }
+};
 
 
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleDateFilter = (fromDate: string, toDate: string) => {
+  dateFrom.value = fromDate;
+  dateTo.value = toDate;
+  if (dataTableRef.value) {
+    clearDateRangeFilter(dataTableRef.value);
+    if (fromDate || toDate) {
+      handleDateRangeFilter(dataTableRef.value, 0, fromDate, toDate); // Date column is index 0
+    }
+  }
+};
+
+const handlePaymentMethodFilter = (method: string) => {
+  selectedPaymentMethod.value = method;
+  if (dataTableRef.value) {
+    handleColumnSearch(dataTableRef.value, 2, method); // Payment Method column is index 2
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  dateFrom.value = '';
+  dateTo.value = '';
+  selectedPaymentMethod.value = '';
+  if (dataTableRef.value) {
+    clearAllFilters(dataTableRef.value);
+  }
+};
 
 onMounted(async () => {
-  await store.getWaterCollections();
-  initDataTable(dataTableRef.value);
-  loading.value = false;
-
+  try {
+    console.log('Loading water collections...');
+    await store.getWaterCollections();
+    console.log('Water collections loaded:', store.waterCollections);
+    console.log('Filtered collections:', filteredWaterCollections.value);
+    loading.value = false;
+    
+    // Wait for DOM to be fully updated
+    await nextTick();
+    
+    // Additional wait to ensure Vue has rendered all data
+    setTimeout(() => {
+      if (dataTableRef.value) {
+        console.log('Initializing DataTable for Money Collections');
+        console.log('Data count:', filteredWaterCollections.value.length);
+        initDataTableWithSearch(dataTableRef.value);
+      }
+    }, 100);
+  } catch (error) {
+    console.error('Error loading water collections:', error);
+    loading.value = false;
+  }
 });
 </script>
 

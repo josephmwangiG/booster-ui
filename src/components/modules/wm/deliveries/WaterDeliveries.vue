@@ -1,100 +1,159 @@
 <template>
-  <div class="content p-6 bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="top-section mb-6 animate-fade-in">
+  <div class="content">
+    <div class="top-section">
       <div class="bread-crumb">
-        <h2 class="font-bold text-2xl text-gray-800">Water Deliveries</h2>
+        <h2 class="font-semibold">Water Deliveries</h2>
         <span class="text-sm">
-          <span class="text-gray-400">Home ></span>
-          <span class="text-blue-600 font-medium"> Water Deliveries</span>
+          <span class="text-gray-400">Home ></span> Water Deliveries
         </span>
       </div>
     </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center h-64">
-      <LoadingSpinner />
-    </div>
-
-    <!-- Water Deliveries Card -->
-    <div v-else class="shadow-lg rounded-2xl py-6 px-5 bg-white border border-gray-100 animate-slide-up">
-      <div class="flex justify-between items-center">
-        <div class="title">
-          <h4 class="font-semibold text-lg text-gray-800">All Water Deliveries</h4>
-          <span class="text-gray-500 text-sm">
-            You have
-            <span class="font-semibold text-gray-700">
-              {{ store.waterDeliveries?.length?.toLocaleString() || 0 }}
-            </span>
-            deliveries
-          </span>
+    <div class="">
+      <div class="w-full bg-white p-3 lg:p-6 mt-3 lg:mt-6">
+        <h4 class="font-semibold">Water Deliveries </h4>
+        <div class="grid grid-cols-3 mt-3 gap-6">
+          <div class="border border-dashed p-3 px-4 rounded col-span-1">
+            <h2 class="font-semibold">{{ store.waterDeliveries.length.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Deliveries</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ store.waterDeliveries.reduce((a, b) =>
+              Number(a) + Number(b.total_amount), 0).toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ store.waterDeliveries.reduce((a, b) =>
+              b.status === 'completed' ? Number(a) + Number(b.total_amount) : a, 0).toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Paid</span>
+          </div>
         </div>
-        <button
-          @click="addItem"
-          class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-sm py-2 px-4 shadow hover:shadow-md transform hover:-translate-y-0.5 transition duration-300"
-        >
-          ➕ Add Water Delivery
-        </button>
       </div>
 
-      <hr class="my-4" />
+      <div class="space-y-6 p-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-3">
+        <div class="flex justify-between align-center">
+          <div class="">
+            <h4 class="font-semibold">Deliveries</h4>
+            <span class="text-gray-400 text-sm"> {{ filteredWaterDeliveries.length }} of {{ store.waterDeliveries.length }} items found </span>
+          </div>
+          <button @click="addItem" class="btn-primary my-auto">
+            Add Water Delivery
+          </button>
+        </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Water Deliveries"
+          :enable-date-range="true"
+          :enable-status-filter="true"
+          :status-options="paymentStatusOptions"
+          @search="handleSearch"
+          @date-range="handleDateRange"
+          @status-filter="handleStatusFilter"
+          @clear-filters="handleClearFilters"
+        />
+        <div class="overflow-x-auto w-full">
+          <table class="w-full" ref="dataTableRef">
+            <thead class="t-head">
+              <tr>
+                <th class="t-th">Delivery ID</th>
+                <th class="t-th">Client</th>
+                <th class="t-th">Contacts</th>
+                <th class="t-th">Address</th>
+                <th class="t-th">Vehicle</th>
+                <th class="t-th">Driver</th>
+                <th class="t-th">Delivery Date</th>
+                <th class="t-th">Status</th>
+                <th class="t-th">Capacity</th>
+                <th class="t-th">Amount</th>
+                <th class="t-th">Amount Paid</th>
+                <th class="t-th text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-for="(item, index) in filteredWaterDeliveries" :key="index"
+                :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  <span>#{{
+                    item.id
+                  }}</span>
+                </td>
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  <span>{{
+                    item.water_client?.client_name || 'N/A'
+                  }}</span>
+                </td>
+                <td class="t-td">
+                  {{
+                    item.water_client?.phone || 'N/A'
+                  }}
+                </td>
+                <td class="t-td">
+                  {{
+                    item.water_client?.address || 'N/A'
+                  }}
+                </td>
+                <td class="t-td">{{ item.vehicle ? `${item.vehicle.plate_number} (${item.vehicle.brand || 'N/A'} ${item.vehicle.model || 'N/A'})` : 'N/A' }}</td>
+                <td class="t-td">{{ item.driver?.user_name || 'N/A' }}</td>
+                <td class="t-td font-semibold">
+                  {{ formatDate(item.delivery_date, true) }}
+                </td>
+                <td class="t-td font-semibold">
+                  <span v-if="item.status === 'completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                    Completed
+                  </span>
+                  <span v-else-if="item.status === 'partial'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
+                    Partial
+                  </span>
+                  <span v-else class="p-1 rounded bg-red-100 text-red-500 text-xs">
+                    Pending
+                  </span>
+                </td>
+                <td class="t-td font-semibold">
+                  {{ formatNumber(item.quantity_liters) }} Litres
+                </td>
+                <td class="t-td font-semibold">
+                  {{ formatAmount(item.total_amount) }}
+                </td>
+                <td class="t-td font-semibold">
+                  {{ item.status === 'completed' ? formatAmount(item.total_amount) : 'KES 0.00' }}
+                </td>
 
-      <!-- Table -->
-      <div class="overflow-x-auto w-full">
-        <table class="w-full border-collapse text-sm" ref="dataTableRef">
-          <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
-            <tr>
-              <th class="t-th text-left">Delivery Number</th>
-              <th class="t-th text-left">Client</th>
-              <th class="t-th text-left">Contacts</th>
-              <th class="t-th text-left">Address</th>
-              <th class="t-th text-left">Vehicle</th>
-              <th class="t-th text-left">Driver</th>
-              <th class="t-th text-left">Departure</th>
-              <th class="t-th text-left">Return</th>
-              <th class="t-th text-right">Capacity</th>
-              <th class="t-th text-right">Amount</th>
-              <th class="t-th text-right">Amount Paid</th>
-              <th class="t-th text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr
-              v-for="(item, index) in store.waterDeliveries"
-              :key="index"
-              :class="index % 2 != 0 ? 'bg-gray-50' : ''"
-              class="hover:bg-blue-50/40 transition-colors duration-300"
-            >
-              <td class="t-td font-semibold text-gray-700">{{ item.delivery_number }}</td>
-              <td class="t-td">{{ item.client_name }}</td>
-              <td class="t-td">{{ item.phone_number }}</td>
-              <td class="t-td">{{ item.address }}</td>
-              <td class="t-td">{{ item.vehicle }}</td>
-              <td class="t-td">{{ item.driver_name }}</td>
-              <td class="t-td">{{ formatDate(item.departure_time, true) }}</td>
-              <td class="t-td">{{ formatDate(item.return_time, true) }}</td>
-              <td class="t-td text-right font-medium">{{ formatNumber(item.capacity) }} Litres</td>
-              <td class="t-td text-right font-medium">{{ formatAmount(item.amount) }}</td>
-              <td class="t-td text-right font-medium">{{ formatAmount(item.amount_paid) }}</td>
-              <td class="t-td text-center">
-                <button @click="editItem(item)" class="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-3 py-1 rounded-lg shadow-sm transition duration-300">
-                  Edit
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <td class="t-td text-end">
+                  <el-dropdown trigger="click">
+                    <span
+                      class="el-dropdown-link inline-flex w-full justify-center gap-x-1.5 rounded-md bg-gray-100 px-2 py-1 lg:px-3 lg:py-2 text-sm text-gray-900 ring-inset ring-gray-300 hover:bg-gray-50">
+                      Action
+                      <el-icon class="el-icon--right">
+                        <i class="ri-arrow-down-s-line"></i>
+                      </el-icon>
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item @click="editItem(item)">
+                          <span class="font-semibold py-2"><i class="ri-edit-line text-orange-500"></i>
+                            Edit</span>
+                        </el-dropdown-item>
+                        <el-dropdown-item v-if="item.status !== 'completed'" @click="markComplete(item)">
+                          <span class="font-semibold py-2"><i class="ri-check-line text-green-500"></i>
+                            Mark Complete</span>
+                        </el-dropdown-item>
+                        <el-dropdown-item v-if="item.status !== 'completed'" @click="recordPayment(item)">
+                          <span class="font-semibold py-2"><i class="ri-money-dollar-circle-line text-blue-500"></i>
+                            Record Payment</span>
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
   <teleport to="body">
-    <el-dialog
-      v-model="dialogVisible"
-      :show-close="false"
-      style="min-width: 300px"
-      width="40%"
-      :key="dialogVisible"
-    >
+    <el-dialog v-model="dialogVisible" :show-close="false" style="min-width: 300px" width="40%" :key="dialogVisible">
       <template #header>
         <div class="modal-header flex justify-between items-center">
           <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
@@ -103,11 +162,7 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <WaterDeliveryFormModal
-        @close-modal="dialogVisible = false"
-        :form="formData"
-        :action="action"
-      >
+      <WaterDeliveryFormModal @close-modal="dialogVisible = false" :form="formData" :action="action">
       </WaterDeliveryFormModal>
     </el-dialog>
   </teleport>
@@ -116,12 +171,14 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
+import { ElNotification } from "element-plus";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { formatDate, initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { formatDate, initDataTableWithSearch, handleSearch as dtHandleSearch, handleDateRangeFilter, handleColumnSearch, clearDateRangeFilter, clearAllFilters } from "@/composables/dataTables";
 import { useWaterDeliveriesStore } from "@/store/water-deliveries.store";
 import { formatAmount, formatNumber } from "@/composables/helper_functions";
-import LoadingSpinner from "@/components/ui/LoadingSpinner.vue";
+import moment from "moment";
 
 const WaterDeliveryFormModal = defineAsyncComponent(
   () => import("@/components/modules/wm/deliveries/WaterDeliveryFormModal.vue")
@@ -136,11 +193,77 @@ const formData = ref({});
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
+// Search and filter state
+const searchQuery = ref('');
+const dateFrom = ref('');
+const dateTo = ref('');
+const selectedStatus = ref('');
+
+// Payment status options for filtering
+const paymentStatusOptions = [
+  { value: 'Paid', label: 'Paid' },
+  { value: 'Partial', label: 'Partial' },
+  { value: 'Pending', label: 'Pending' }
+];
+
+// Filtered water deliveries
+const filteredWaterDeliveries = computed(() => {
+  let filtered = store.waterDeliveries;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((delivery: any) => 
+      delivery.id?.toString().includes(query) ||
+      delivery.water_client?.client_name?.toLowerCase().includes(query) ||
+      delivery.water_client?.phone?.toLowerCase().includes(query) ||
+      delivery.water_client?.address?.toLowerCase().includes(query) ||
+      delivery.vehicle?.plate_number?.toLowerCase().includes(query) ||
+      delivery.driver?.user_name?.toLowerCase().includes(query)
+    );
+  }
+
+  // Apply date range filter
+  if (dateFrom.value || dateTo.value) {
+    filtered = filtered.filter((delivery: any) => {
+      const deliveryDate = moment(delivery.delivery_date);
+      const fromDate = dateFrom.value ? moment(dateFrom.value) : null;
+      const toDate = dateTo.value ? moment(dateTo.value) : null;
+      
+      if (fromDate && toDate) {
+        return deliveryDate.isBetween(fromDate, toDate, 'day', '[]');
+      } else if (fromDate) {
+        return deliveryDate.isSameOrAfter(fromDate, 'day');
+      } else if (toDate) {
+        return deliveryDate.isSameOrBefore(toDate, 'day');
+      }
+      return true;
+    });
+  }
+
+  // Apply payment status filter
+  if (selectedStatus.value) {
+    filtered = filtered.filter((delivery: any) => {
+      if (selectedStatus.value === 'Paid') {
+        return delivery.status === 'completed';
+      } else if (selectedStatus.value === 'Partial') {
+        return delivery.status === 'partial';
+      } else if (selectedStatus.value === 'Pending') {
+        return delivery.status === 'pending';
+      }
+      return true;
+    });
+  }
+
+  return filtered;
+});
+
 const addItem = () => {
   action.value = "create";
   formData.value = {};
   dialogVisible.value = true;
 };
+
 
 const editItem = (item: any) => {
   action.value = "edit";
@@ -148,42 +271,72 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
-onMounted(async () => {
-  loading.value = true;
+const markComplete = async (item: any) => {
   try {
-    await store.getWaterDeliveries();
+    const res = await store.markWaterDeliveryComplete(item.id);
+    if (res.status === 200 || res.status === 201) {
+      ElNotification({
+        title: "Success",
+        message: "Delivery marked as complete",
+        type: "success",
+      });
+      // Refresh the deliveries list
+      await store.getWaterDeliveries();
+    }
   } catch (error) {
-    console.error("Failed to fetch water deliveries:", error);
-  } finally {
-    loading.value = false;
+    ElNotification({
+      title: "Error",
+      message: "Failed to mark delivery as complete",
+      type: "error",
+    });
   }
-  initDataTable(dataTableRef.value);
+};
+
+const recordPayment = (item: any) => {
+  // Navigate to water delivery payments page
+  window.location.href = `/water-deliveries/payments?delivery_id=${item.id}`;
+};
+
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleDateRange = (from: string, to: string) => {
+  dateFrom.value = from;
+  dateTo.value = to;
+  if (dataTableRef.value) {
+    handleDateRangeFilter(dataTableRef.value, 6, from, to); // Date column is index 6
+  }
+};
+
+const handleStatusFilter = (status: string) => {
+  selectedStatus.value = status;
+  // Custom filtering for payment status
+  if (dataTableRef.value && status) {
+    handleColumnSearch(dataTableRef.value, 7, status); // Status column is index 7
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  dateFrom.value = '';
+  dateTo.value = '';
+  selectedStatus.value = '';
+  if (dataTableRef.value) {
+    clearDateRangeFilter(dataTableRef.value);
+    clearAllFilters(dataTableRef.value);
+  }
+};
+
+onMounted(async () => {
+  await store.getWaterDeliveries();
+  initDataTableWithSearch(dataTableRef.value);
+  loading.value = false;
 });
 </script>
 
-<style scoped>
-/* Modern table styles */
-.t-th {
-  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
-}
-.t-td {
-  @apply px-4 py-3 text-sm text-gray-700;
-}
-
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out;
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slide-up {
-  animation: slide-up 0.7s ease-out;
-}
-</style>
+<style></style>

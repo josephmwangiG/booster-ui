@@ -33,12 +33,24 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Water Bills</h4>
-            <span class="text-gray-400 text-sm"> {{ store.clientBills.length }} items found </span>
+            <span class="text-gray-400 text-sm"> {{ filteredClientBills.length }} of {{ store.clientBills.length }} items found </span>
           </div>
           <button @click="addItem" class="btn-primary my-auto">
             Add Bill
           </button>
         </div>
+        
+        <!-- Search and Filter Component -->
+        <SearchAndFilter
+          entity-name="Water Bills"
+          :enable-date-range="true"
+          :enable-status-filter="true"
+          :status-options="paymentStatusOptions"
+          @search="handleSearch"
+          @date-range="handleDateRange"
+          @status-filter="handleStatusFilter"
+          @clear-filters="handleClearFilters"
+        />
         <div class="overflow-x-auto w-full">
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
@@ -59,7 +71,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in store.clientBills" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+              <tr v-for="(item, index) in filteredClientBills" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                 <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
                   <router-link class="font-semibold py-2" :to="{
                     name: 'tenant-bill',
@@ -144,11 +156,13 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
-import { formatDate, initDataTable } from "@/composables/dataTables";
+import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
+import { formatDate, initDataTableWithSearch, handleSearch as dtHandleSearch, handleDateRangeFilter, handleColumnSearch, clearDateRangeFilter, clearAllFilters } from "@/composables/dataTables";
 import { useWaterClientBillsStore } from "@/store/water-client-bills.store";
 import { formatAmount } from "@/composables/helper_functions";
+import moment from "moment";
 
 const WaterClientBillFormModal = defineAsyncComponent(
   () => import("@/components/modules/wm/water-client-bills/WaterClientBillFormModal.vue")
@@ -165,9 +179,83 @@ const store = useWaterClientBillsStore();
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
+// Search and filter state
+const searchQuery = ref('');
+const dateFrom = ref('');
+const dateTo = ref('');
+const selectedStatus = ref('');
+
+// Payment status options for filtering
+const paymentStatusOptions = [
+  { value: 'Paid', label: 'Paid' },
+  { value: 'Partial', label: 'Partial' },
+  { value: 'Pending', label: 'Pending' }
+];
+
+// Filtered client bills
+const filteredClientBills = computed(() => {
+  let filtered = store.clientBills;
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((bill: any) => 
+      bill.bill_number?.toLowerCase().includes(query) ||
+      bill.client_name?.toLowerCase().includes(query) ||
+      bill.client_phone?.toLowerCase().includes(query)
+    );
+  }
+
+  // Apply date range filter
+  if (dateFrom.value || dateTo.value) {
+    filtered = filtered.filter((bill: any) => {
+      const billDate = moment(bill.bill_date);
+      const fromDate = dateFrom.value ? moment(dateFrom.value) : null;
+      const toDate = dateTo.value ? moment(dateTo.value) : null;
+      
+      if (fromDate && toDate) {
+        return billDate.isBetween(fromDate, toDate, 'day', '[]');
+      } else if (fromDate) {
+        return billDate.isSameOrAfter(fromDate, 'day');
+      } else if (toDate) {
+        return billDate.isSameOrBefore(toDate, 'day');
+      }
+      return true;
+    });
+  }
+
+  // Apply payment status filter
+  if (selectedStatus.value) {
+    filtered = filtered.filter((bill: any) => {
+      const totalAmount = Number(bill.amount);
+      const paidAmount = Number(bill.amount_paid);
+      
+      if (selectedStatus.value === 'Paid') {
+        return paidAmount >= totalAmount;
+      } else if (selectedStatus.value === 'Partial') {
+        return paidAmount > 0 && paidAmount < totalAmount;
+      } else if (selectedStatus.value === 'Pending') {
+        return paidAmount === 0;
+      }
+      return true;
+    });
+  }
+
+  return filtered;
+});
+
 const addItem = () => {
   action.value = "create";
-  formData.value = {};
+  formData.value = {
+    water_client_id: "",
+    from: "",
+    to: "",
+    previous_meter_reading: "",
+    current_meter_reading: "",
+    rate: "",
+    amount: "",
+    due_date: ""
+  };
   dialogVisible.value = true;
 };
 
@@ -177,12 +265,45 @@ const editItem = (item: any) => {
   dialogVisible.value = true;
 };
 
+// Search and filter handlers
+const handleSearch = (query: string) => {
+  searchQuery.value = query;
+  if (dataTableRef.value) {
+    dtHandleSearch(dataTableRef.value, query);
+  }
+};
+
+const handleDateRange = (from: string, to: string) => {
+  dateFrom.value = from;
+  dateTo.value = to;
+  if (dataTableRef.value) {
+    handleDateRangeFilter(dataTableRef.value, from, to, 2); // Date column is index 2
+  }
+};
+
+const handleStatusFilter = (status: string) => {
+  selectedStatus.value = status;
+  // Custom filtering for payment status
+  if (dataTableRef.value && status) {
+    handleColumnSearch(dataTableRef.value, 4, status); // Status column is index 4
+  }
+};
+
+const handleClearFilters = () => {
+  searchQuery.value = '';
+  dateFrom.value = '';
+  dateTo.value = '';
+  selectedStatus.value = '';
+  if (dataTableRef.value) {
+    clearDateRangeFilter(dataTableRef.value);
+    clearAllFilters(dataTableRef.value);
+  }
+};
 
 onMounted(async () => {
   await store.getWaterClientBills();
-  initDataTable(dataTableRef.value);
+  initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
-
 });
 </script>
 

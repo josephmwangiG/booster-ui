@@ -3,7 +3,6 @@ export type WaterDeliveryForm = {
   organization_id: number;
   driver_id: number;
   vehicle_id: number;
-  delivery_number: string;
   departure_time: string; 
   return_time?: string | null; 
   capacity: number;
@@ -15,11 +14,11 @@ export type WaterDeliveryForm = {
   email?: string | null; 
   record_payment?: boolean;
   water_delivery_id?: number; 
-  payment_date?: string; 
-  payment_method?: string; 
-  payment_code?: string; 
+  payment_date?: string | null; 
+  payment_method?: string | null; 
+  payment_code?: string | null; 
   payment_reference?: string | null; 
-  notes?: string | null; 
+  notes?: string | null;
 };
 
 export type WaterDeliveryPaymentForm = {
@@ -46,5 +45,17 @@ export type CollectionPaymentForm = {
   amount: number;
   phone_number: string;
   client_name: string;
+  water_meter_id: string | null;
+  status?: string;
+};
+
+export type MoneyCollectionForm = {
+  id?: string;
+  water_meter_id?: string;
+  collection_date?: string;
+  amount?: number;
+  payment_method?: string;
+  driver_id?: string;
+  vehicle_id?: string;
 };
 

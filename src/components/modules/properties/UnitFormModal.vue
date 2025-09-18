@@ -47,6 +47,7 @@ import { usePropertiesStore } from "@/store/properties.store";
 
 const props = defineProps({
   form: Object,
+  action: String,
 });
 const emits = defineEmits(["close-modal", "submit-form"]);
 const store = usePropertiesStore();
@@ -73,13 +74,19 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
+  let res;
 
-  const res = await store.createUnit(formData);
+  if (props.action === "create") {
+    res = await store.createUnit(formData);
+  } else {
+    res = await store.updateUnit(formData);
+  }
+
   if (res.status == 200 || res.status == 201) {
     resetForm(itemFormRef.value as FormInstance);
     ElNotification({
       title: "Success",
-      message: "Property unit was created",
+      message: `Property unit was ${props.action === 'create' ? 'created' : 'updated'} successfully`,
       type: "success",
     })
     emits("close-modal");

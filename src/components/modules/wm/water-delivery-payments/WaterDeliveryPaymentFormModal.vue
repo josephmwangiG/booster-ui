@@ -35,8 +35,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
@@ -55,6 +55,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterDeliveriesStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<WaterDeliveryPaymentForm>(props.form as WaterDeliveryPaymentForm);
+const isSubmitting = ref(false);
 
 const disabledDate = (time: Date) => {
   return time.getTime() > Date.now()
@@ -82,20 +83,33 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) {
       return;
     } else {
-      const res = await store.createWaterDeliveryItemPayment(formData);
-      if (res.status == 200 || res.status == 201) {
-        resetForm(itemFormRef.value as FormInstance);
+      isSubmitting.value = true;
+      
+      try {
+        const res = await store.createWaterDeliveryItemPayment(formData);
+        if (res.status == 200 || res.status == 201) {
+          // Mark the delivery as completed since payment was recorded
+          await store.markWaterDeliveryComplete(formData.water_delivery_id);
+          
+          resetForm(itemFormRef.value as FormInstance);
+          ElNotification({
+            title: "Success",
+            message: "Payment was created and delivery marked as complete",
+            type: "success",
+          })
+          emits("close-modal");
+        }
+      } catch (error) {
         ElNotification({
-          title: "Success",
-          message: "Payment was created",
-          type: "success",
-        })
-        emits("close-modal");
+          title: "Error",
+          message: "Failed to create payment. Please try again.",
+          type: "error",
+        });
+      } finally {
+        isSubmitting.value = false;
       }
     }
   });
-
-
 };
 
 const resetForm = (formEl: FormInstance | undefined) => {

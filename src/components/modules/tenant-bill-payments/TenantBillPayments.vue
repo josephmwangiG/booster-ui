@@ -1,100 +1,118 @@
 <template>
-  <div class="content p-6 bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="top-section mb-6 animate-fade-in">
+  <div class="content">
+    <div class="top-section">
       <div class="bread-crumb">
-        <h2 class="font-bold text-2xl text-gray-800">Tenant Bill Payments</h2>
+        <h2 class="font-semibold">Tenant Bill Payments</h2>
         <span class="text-sm">
-          <span class="text-gray-400">Home ></span>
-          <span class="text-blue-600 font-medium"> Tenant Bill Payments</span>
+          <span class="text-gray-400">Home ></span> Tenant Bill Payments
         </span>
       </div>
     </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center h-64">
-      <LoadingSpinner />
-    </div>
-
-    <!-- Tenant Bill Payments Card -->
-    <div v-else class="shadow-lg rounded-2xl py-6 px-5 bg-white border border-gray-100 animate-slide-up">
-      <div class="flex justify-between items-center">
-        <div class="title">
-          <h4 class="font-semibold text-lg text-gray-800">All Tenant Bill Payments</h4>
-          <span class="text-gray-500 text-sm">
-            You have
-            <span class="font-semibold text-gray-700">
-              {{ store.tenantBillPayments?.length?.toLocaleString() || 0 }}
-            </span>
-            payments
-          </span>
+    <div class="">
+      <div class="w-full bg-white p-3 lg:p-6 mt-3 lg:mt-6">
+        <h4 class="font-semibold">Tenant Payments </h4>
+        <div class="grid grid-cols-4 mt-3 gap-6">
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">{{ store.tenantBillPayments.length.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total Payments</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ totalAmount.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total Bills</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ totalPaidAmount.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total Paid</span>
+          </div>
+          <div class="border border-dashed p-3 px-4 rounded">
+            <h2 class="font-semibold">KES {{ totalPendingAmount.toLocaleString() }}</h2>
+            <span class="text-gray-400 text-sm">Total Pending</span>
+          </div>
         </div>
-        <button
-          @click="dialogVisible = true"
-          class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-sm py-2 px-4 shadow hover:shadow-md transform hover:-translate-y-0.5 transition duration-300"
-        >
-          ➕ Add Payment
-        </button>
       </div>
 
-      <hr class="my-4" />
+      <div class="space-y-6 p-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-3">
+        <div class="flex justify-between align-center">
+          <div class="">
+            <h4 class="font-semibold">Tenant Bills</h4>
+            <span class="text-gray-400 text-sm"> {{ store.tenantBillPayments.length }} items found </span>
+          </div>
+          <div class="actions flex gap-2 my-auto">
+            <button @click="dialogVisible = true" class="btn-primary my-auto">
+              Add Payment
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full" ref="dataTableRef">
+            <thead class="t-head">
+              <tr>
 
-      <!-- Table -->
-      <div class="overflow-x-auto w-full">
-        <table class="w-full border-collapse text-sm" ref="dataTableRef">
-          <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
-            <tr>
-              <th class="t-th text-left">Payment #</th>
-              <th class="t-th text-left">Bill No.</th>
-              <th class="t-th text-left">Tenant</th>
-              <th class="t-th text-left">P. Method</th>
-              <th class="t-th text-left">Ref</th>
-              <th class="t-th text-right">Amount</th>
-              <th class="t-th text-left">Date</th>
-              <th class="t-th text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr
-              v-for="(item, index) in store.tenantBillPayments"
-              :key="index"
-              :class="index % 2 != 0 ? 'bg-gray-50' : ''"
-              class="hover:bg-blue-50/40 transition-colors duration-300"
-            >
-              <td class="t-td font-semibold text-gray-700">{{ item.payment_code }}</td>
-              <td class="t-td">{{ item.bill_number }}</td>
-              <td class="t-td">{{ item.tenant_name }}</td>
-              <td class="t-td">{{ item.payment_method }}</td>
-              <td class="t-td">{{ item.payment_ref }}</td>
-              <td class="t-td text-right font-medium">KES {{ item.amount.toLocaleString() }}</td>
-              <td class="t-td">{{ formatDate(item.payment_date) }}</td>
-              <td class="t-td text-center">
-                <span
-                  v-if="item.status == 'Complete'"
-                  class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm bg-green-100 text-green-800"
-                >
-                  {{ item.status }}
-                </span>
-                <span
-                  v-else
-                  class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm bg-red-100 text-red-800"
-                >
-                  {{ item.status }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <th class="t-th">
+                  Payment #
+                </th>
+                <th class="t-th">Bill No.</th>
+                <th class="t-th">
+                  Tenant
+                </th>
+                <th class="t-th">P. Method</th>
+                <th class="t-th">Ref</th>
+                <th class="t-th">Amount</th>
+                <th class="t-th">Date</th>
+                <th class="t-th">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-for="(item, index) in store.tenantBillPayments" :key="index"
+                :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.payment_code }}
+                </td>
+                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
+                  {{ item.bill_number }}
+                </td>
+                <td class="t-td">
+                  {{
+                    item.tenant_name
+                  }}
+                </td>
+                <td class="t-td">
+                  {{
+                    item.payment_method
+                  }}
+                </td>
+                <td class="t-td">
+                  {{
+                    item.payment_ref
+                  }}
+                </td>
+                <td class="t-td">KES {{ item.amount.toLocaleString() }} </td>
+
+                <td class="t-td">
+                  {{
+                    formatDate(item.payment_date)
+                  }}
+                </td>
+
+                <td class="t-td">
+
+                  <span v-if="item.status == 'Complete'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                    {{ item.status }}
+                  </span>
+                  <span v-else class="p-1 rounded bg-red-100 text-red-500 text-xs">
+                    {{ item.status }}
+                  </span>
+                </td>
+
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
   <teleport to="body">
-    <el-dialog
-      v-model="dialogVisible"
-      :show-close="false"
-      style="min-width: 300px"
-      width="40%"
-    >
+    <el-dialog v-model="dialogVisible" :show-close="false" style="min-width: 300px" width="40%">
       <template #header>
         <div class="modal-header flex justify-between items-center">
           <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
@@ -103,11 +121,7 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <TenantBillPaymentFormModal
-        @close-modal="dialogVisible = false"
-        :form="formData"
-        :action="action"
-      >
+      <TenantBillPaymentFormModal @close-modal="dialogVisible = false" :form="formData" :action="action">
       </TenantBillPaymentFormModal>
     </el-dialog>
   </teleport>
@@ -116,64 +130,76 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import { formatDate, initDataTable } from "@/composables/dataTables";
 import { useTenantBillsStore } from "@/store/tenant-bills.store";
-import LoadingSpinner from "@/components/ui/LoadingSpinner.vue";
 
 const TenantBillPaymentFormModal = defineAsyncComponent(
-  () =>
-    import(
-      "@/components/modules/tenant-bill-payments/TenantBillPaymentFormModal.vue"
-    )
+  () => import("@/components/modules/tenant-bill-payments/TenantBillPaymentFormModal.vue")
 );
 
 const dialogVisible = ref(false);
 const loading = ref(true);
-const formData = ref({});
+const formData = ref({
+  id: null,
+  tenant_bill_id: null,
+  amount: null,
+  payment_date: '',
+  payment_ref: '',
+  payment_method: ''
+});
 const action = ref("create");
 const store = useTenantBillsStore();
 
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
-onMounted(async () => {
-  loading.value = true;
-  try {
-    await store.getTenantBillPayments();
-  } catch (error) {
-    console.error("Failed to fetch tenant bill payments:", error);
-  } finally {
-    loading.value = false;
+// Computed properties for totals
+const totalAmount = computed(() => {
+  let total = 0;
+  
+  if (store.tenantBills && store.tenantBills.length > 0) {
+    store.tenantBills.forEach(bill => {
+      total += Number(bill.amount) || 0;
+    });
   }
+  
+  return total;
+});
+
+const totalPaidAmount = computed(() => {
+  let total = 0;
+  
+  if (store.tenantBillPayments && store.tenantBillPayments.length > 0) {
+    store.tenantBillPayments.forEach(payment => {
+      total += Number(payment.amount) || 0;
+    });
+  }
+  
+  return total;
+});
+
+const totalPendingAmount = computed(() => {
+  let total = 0;
+  
+  // Calculate pending amount as total amount minus total paid
+  const totalBillAmount = totalAmount.value;
+  const totalPaid = totalPaidAmount.value;
+  
+  total = Math.max(0, totalBillAmount - totalPaid);
+  
+  return total;
+});
+
+onMounted(async () => {
+  await Promise.all([
+    store.getTenantBillPayments(),
+    store.getTenantBills({})
+  ]);
   initDataTable(dataTableRef.value);
+  loading.value = false;
 });
 </script>
 
-<style scoped>
-/* Modern table styles */
-.t-th {
-  @apply px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider;
-}
-.t-td {
-  @apply px-4 py-3 text-sm text-gray-700;
-}
-
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out;
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slide-up {
-  animation: slide-up 0.7s ease-out;
-}
-</style>
+<style></style>

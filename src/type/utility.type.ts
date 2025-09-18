@@ -3,4 +3,5 @@ export type UtilityForm = {
   name: string;
   category: string;
   rate: number;
+  unit: string;
 };

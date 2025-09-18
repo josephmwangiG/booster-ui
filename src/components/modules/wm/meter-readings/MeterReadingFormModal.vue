@@ -3,20 +3,29 @@
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
       <el-form-item prop="water_meter_id" class="flex-1" :label="'Meter'">
-        <el-select v-model="formData.water_meter_id" placeholder="Select meter">
-          <el-option v-for="meter in store.meters" :key="meter.id" :label="meter.code_number" :value="meter.id" />
+        <el-select v-model="formData.water_meter_id" placeholder="Select meter" @change="fetchLatestReading">
+          <el-option v-for="meter in store.meters" :key="meter.id" :label="`${meter.name || 'N/A'} - ${meter.code_number}`" :value="meter.id" />
         </el-select>
       </el-form-item>
+      <el-form-item class="flex-1" :label="'Latest Meter Reading'">
+        <el-input v-model="latestReadingDisplay" placeholder="Latest reading will appear here" :disabled="true">
+          <template #suffix>
+            <el-icon v-if="isLoadingLatestReading" class="is-loading">
+              <Loading />
+            </el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
       <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">
-        <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading">
+        <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading" :disabled="true">
         </el-input>
       </el-form-item>
-      <el-form-item type="number" prop="current_meter_reading" class="flex-1" :label="'Current Reading'">
-        <el-input v-model="formData.current_meter_reading" placeholder="Enter current meter reading">
+      <el-form-item prop="current_meter_reading" class="flex-1" :label="'Current Reading'">
+        <el-input type="number" v-model="formData.current_meter_reading" placeholder="Enter current meter reading">
         </el-input>
       </el-form-item>
-      <el-form-item type="number" prop="consumption" class="flex-1" :label="'Consumption'">
-        <el-input v-model="consumption" placeholder="Consumption" :disabled="true">
+      <el-form-item prop="consumption" class="flex-1" :label="'Consumption'">
+        <el-input v-model="consumption" placeholder="Consumption" :disabled="true" type="number">
         </el-input>
       </el-form-item>
       <el-checkbox v-model="record_collections" label="Record Collections" size="large" />
@@ -30,12 +39,23 @@
         </div>
 
         <div class="flex gap-3 my-3" v-for="(collection, index) in collections" :key="index">
+          <el-date-picker 
+            v-model="collection.collection_date" 
+            type="date" 
+            placeholder="Collection Date" 
+            format="MMM DD YYYY" 
+            value-format="YYYY-MM-DD"
+            class="flex-1" 
+          />
           <el-select v-model="collection.payment_method" placeholder="Payment Method" class="flex-1">
             <el-option v-for="payment_method in store.payment_methods" :key="payment_method.id"
               :label="payment_method.name" :value="payment_method.name" />
           </el-select>
-          <el-input v-model="collection.amount" placeholder="Amount" type="number" class="flex-1">
+          <el-input v-model="collection.amount" placeholder="Amount" type="number" class="flex-1" :min="0" step="0.01">
           </el-input>
+          <button type="button" @click="removeCollection(index)" class="btn-danger-outline" v-if="collections.length > 1">
+            Remove
+          </button>
         </div>
 
       </div>
@@ -56,6 +76,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
+import { Loading } from "@element-plus/icons-vue";
 import { MeterReadingForm } from "@/type/water-meter.type";
 import { useWaterMetersStore } from "@/store/water-meters.store";
 
@@ -69,19 +90,78 @@ const itemFormRef = ref<FormInstance>();
 const formData = reactive<MeterReadingForm>(props.form as MeterReadingForm);
 
 const record_collections = ref(false)
+const latestReading = ref(0)
+const latestReadingDate = ref('')
+const isLoadingLatestReading = ref(false)
 const collections = ref([
   {
+    collection_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
     payment_method: "",
-    amount: ""
+    amount: 0
   }
 ])
 
 const addCollection = () => {
   collections.value.push({
+    collection_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
     payment_method: "",
-    amount: ""
+    amount: 0
   })
 }
+
+const removeCollection = (index: number) => {
+  collections.value.splice(index, 1);
+}
+
+const fetchLatestReading = async () => {
+  if (!formData.water_meter_id) {
+    latestReading.value = 0;
+    latestReadingDate.value = '';
+    formData.previous_meter_reading = 0;
+    return;
+  }
+  
+  isLoadingLatestReading.value = true;
+  
+  try {
+    // Add a small delay to show loading state
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Find the latest reading for the selected meter from the store
+    const latestMeterReading = store.meterReadings
+      .filter(reading => reading.water_meter_id === formData.water_meter_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    
+    if (latestMeterReading) {
+      latestReading.value = latestMeterReading.current_meter_reading || 0;
+      // Format the date for display
+      const readingDate = new Date(latestMeterReading.created_at);
+      latestReadingDate.value = readingDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      // Auto-populate the previous reading field with the latest reading
+      formData.previous_meter_reading = latestMeterReading.current_meter_reading || 0;
+    } else {
+      latestReading.value = 0;
+      latestReadingDate.value = '';
+      formData.previous_meter_reading = 0;
+    }
+  } catch (error) {
+    console.error('Error fetching latest reading:', error);
+    latestReading.value = 0;
+    latestReadingDate.value = '';
+    formData.previous_meter_reading = 0;
+  } finally {
+    isLoadingLatestReading.value = false;
+  }
+}
+
+const latestReadingDisplay = computed(() => {
+  if (latestReading.value === 0) return '';
+  return `${latestReadingDate.value}`;
+});
 
 const consumption = computed(() => {
   if (!formData.current_meter_reading || !formData.previous_meter_reading) return 0
@@ -89,7 +169,15 @@ const consumption = computed(() => {
 })
 
 const validateCurrentMeterReading = (_rule: any, _value: any, callback: any) => {
-  if (formData.current_meter_reading < formData.previous_meter_reading) {
+  const current = Number(formData.current_meter_reading);
+  const previous = Number(formData.previous_meter_reading);
+  
+  if (isNaN(current) || isNaN(previous)) {
+    callback();
+    return;
+  }
+  
+  if (current < previous) {
     callback(new Error('Current reading should be greater than previous reading'))
   } else {
     callback()
@@ -120,19 +208,26 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         }
 
         if (record_collections.value) {
+          // Ensure collection amounts are properly formatted as numbers
+          const formattedCollections = collections.value.map(collection => ({
+            ...collection,
+            amount: Number(collection.amount) || 0
+          }));
+          
           data = {
             ...formData,
-            collections: collections.value
+            collections: formattedCollections
           }
         }
         const res = await store.createMeterReading(data);
         if (res.status == 200 || res.status == 201) {
           resetForm(itemFormRef.value as FormInstance);
           emits("close-modal");
+          emits("submit-form"); // Emit to parent to refresh data
           ElNotification({
             title: "Success",
             type: "success",
-            message: "Meter was created",
+            message: "Meter reading was created successfully",
           })
         }
       } else {
@@ -140,10 +235,11 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         if (res.status == 200 || res.status == 201) {
           resetForm(itemFormRef.value as FormInstance);
           emits("close-modal");
+          emits("submit-form"); // Emit to parent to refresh data
           ElNotification({
             title: "Success",
             type: "success",
-            message: "Meter was updated",
+            message: "Meter reading was updated successfully",
           })
         }
       }
@@ -157,17 +253,31 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   formEl.resetFields();
+  
+  // Reset collections to default state
+  record_collections.value = false;
+  latestReading.value = 0;
+  latestReadingDate.value = '';
+  isLoadingLatestReading.value = false;
+  collections.value = [{
+    collection_date: new Date().toISOString().split('T')[0],
+    payment_method: "",
+    amount: 0
+  }];
 };
 
 onMounted(async () => {
-  await store.getMeters();
+  await Promise.all([
+    store.getMeters(),
+    store.getPaymentMethods()
+  ]);
 
   console.log(props.form);
 
   if (props.action == 'edit') {
-    record_collections.value = props.form?.collections.length > 0
+    record_collections.value = props.form?.collections?.length > 0
 
-    if (props.form?.collections.length > 0) {
+    if (props.form?.collections?.length > 0) {
       collections.value = props.form?.collections
     }
   }

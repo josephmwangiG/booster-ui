@@ -69,28 +69,49 @@
           <div class="grid lg:gap-6 grid-cols-1 lg:grid-cols-2">
             <div class="form-group mt-3">
               <label for="password" class="w-full text-sm">Your Password</label>
-              <input
-                type="password"
-                class="w-full border border-gray-400 py-2 lg:py-2 px-3 my-2 rounded"
-                id="password"
-                v-model="formData.password"
-                placeholder="Enter your password"
-              />
+              <div class="relative">
+                <input
+                  :type="showPassword ? 'text' : 'password'"
+                  class="w-full border border-gray-400 py-2 lg:py-2 px-3 my-2 rounded pr-10"
+                  id="password"
+                  v-model="formData.password"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  @click="togglePasswordVisibility"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <i :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'" class="text-lg"></i>
+                </button>
+              </div>
               <span class="text-[12px] text-red-400" v-if="errors.password">
                 {{ errors.password[0] }}
               </span>
             </div>
             <div class="form-group mt-3">
-              <label for="password" class="w-full text-sm"
+              <label for="password_confirmation" class="w-full text-sm"
                 >Confirm Password</label
               >
-              <input
-                type="password"
-                v-model="formData.password_confirmation"
-                class="w-full border border-gray-400 py-2 lg:py-2 px-3 my-2 rounded"
-                id="password"
-                placeholder="Confirm your password"
-              />
+              <div class="relative">
+                <input
+                  :type="showConfirmPassword ? 'text' : 'password'"
+                  v-model="formData.password_confirmation"
+                  class="w-full border border-gray-400 py-2 lg:py-2 px-3 my-2 rounded pr-10"
+                  id="password_confirmation"
+                  placeholder="Confirm your password"
+                />
+                <button
+                  type="button"
+                  @click="toggleConfirmPasswordVisibility"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <i :class="showConfirmPassword ? 'ri-eye-off-line' : 'ri-eye-line'" class="text-lg"></i>
+                </button>
+              </div>
+              <span class="text-[12px] text-red-400" v-if="errors.password_confirmation">
+                {{ errors.password_confirmation[0] }}
+              </span>
             </div>
           </div>
           <p class="text-[12px] text-gray-400">
@@ -139,9 +160,19 @@ import { useRouter } from "vue-router";
 
 const errors: any = ref({});
 const loading = ref(false);
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 const store = useAuthStore();
 const router = useRouter();
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
+
+const toggleConfirmPasswordVisibility = () => {
+  showConfirmPassword.value = !showConfirmPassword.value;
+};
 const formData = ref({
   type: router.currentRoute.value.query.type,
   user_name: "",

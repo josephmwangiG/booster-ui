@@ -3,7 +3,7 @@
     <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
 
       <el-form-item prop="property_id" class="flex-1" :label="'Property'">
-        <el-select v-model="formData.property_id" placeholder="Select a property">
+        <el-select v-model="formData.property_id" placeholder="Select a property" :loading="loading">
           <el-option v-for="item in store.properties" :key="item.id" :label="item.name" :value="item.id"></el-option>
         </el-select>
       </el-form-item>
@@ -42,8 +42,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
@@ -62,6 +62,8 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useTenantsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<TenancyForm>(props.form as TenancyForm);
+const loading = ref(true);
+const isSubmitting = ref(false);
 
 const disabledDate = (time: Date) => {
   return time.getTime() < Date.now()
@@ -99,16 +101,21 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
+  isSubmitting.value = true;
 
-  const res = await store.createTenancy(formData);
-  if (res.status == 200 || res.status == 201) {
-    resetForm(itemFormRef.value as FormInstance);
-    ElNotification({
-      title: "Success",
-      message: "Tenancy was created",
-      type: "success",
-    })
-    emits("close-modal");
+  try {
+    const res = await store.createTenancy(formData);
+    if (res.status == 200 || res.status == 201) {
+      resetForm(itemFormRef.value as FormInstance);
+      ElNotification({
+        title: "Success",
+        message: "Tenancy was created",
+        type: "success",
+      })
+      emits("close-modal");
+    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -117,8 +124,10 @@ const resetForm = (formEl: FormInstance | undefined) => {
   formEl.resetFields();
 };
 
-onMounted(() => {
-  store.getProperties();
+onMounted(async () => {
+  loading.value = true;
+  await store.getProperties();
+  loading.value = false;
 });
 </script>
 <style lang=""></style>

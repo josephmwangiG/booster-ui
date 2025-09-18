@@ -32,20 +32,37 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
       this.payment_methods = res.data.payment_methods;
     },
     async getDeliveryItems() {
-      const res = await axios.get("/api/water-collections/get/items", this.headers);
-      this.drivers = res.data.drivers;
-      this.vehicles = res.data.vehicles;
-      this.payment_methods = res.data.payment_methods;
+      try {
+        console.log('Fetching delivery items with headers:', this.headers);
+        const res = await axios.get("/api/water-collections/get/items", this.headers);
+        console.log('Delivery items API response:', res.data);
+        this.drivers = res.data.drivers || [];
+        this.vehicles = res.data.vehicles || [];
+        this.payment_methods = res.data.payment_methods || [];
+        this.meters = res.data.water_meters || [];
+        this.properties = res.data.water_clients || [];
+        return res;
+      } catch (error: any) {
+        console.error('Error fetching delivery items:', error.response || error);
+        this.drivers = [];
+        this.vehicles = [];
+        this.payment_methods = [];
+        this.meters = [];
+        this.properties = [];
+        return error.response;
+      }
     },
     async getMeters() {
       const res = await axios.get("/water-meters/get/items", this.headers);
-      this.meters = res.data.meters;
-      this.payment_methods = res.data.payment_methods;
+      this.meters = res.data;
     },
     async createWaterDelivery(data: WaterDeliveryForm) {
+      console.log('Creating water delivery with data:', data);
       const res = await axios.post("/api/water-collections", data, this.headers);
+      console.log('API response:', res.data);
 
       this.waterCollections.unshift(res.data);
+      console.log('Updated waterCollections array:', this.waterCollections);
 
       return res;
     },
@@ -75,17 +92,18 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
       this.pendingWaterCollections = res.data;
     },
 
-    async createPendingCollection(data: PendingMoneyCollectionForm) {
-      const res = await axios.post(
-        "/pending-water-collections",
-        data,
-        this.headers
-      );
+    // Note: createPendingCollection removed as the API endpoint only supports GET and HEAD methods
+    // async createPendingCollection(data: PendingMoneyCollectionForm) {
+    //   const res = await axios.post(
+    //     "/pending-water-collections",
+    //     data,
+    //     this.headers
+    //   );
 
-      this.pendingWaterCollections.unshift(res.data);
+    //   this.pendingWaterCollections.unshift(res.data);
 
-      return res;
-    },
+    //   return res;
+    // },
     async getPayments() {
       const res = await axios.get("/api/water-collection-payments", this.headers);
       this.waterCollectionsPayments = res.data;

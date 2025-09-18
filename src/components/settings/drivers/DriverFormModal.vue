@@ -75,29 +75,34 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
+  isSubmitting.value = true;
 
-  if (props.action === "create") {
-    const res = await store.createDriver(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Client was created",
-      })
+  try {
+    if (props.action === "create") {
+      const res = await store.createDriver(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Driver was created",
+        })
+      }
+    } else {
+      const res = await store.updateDriver(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Driver was updated",
+        })
+      }
     }
-  } else {
-    const res = await store.updateDriver(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Client was updated",
-      })
-    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
