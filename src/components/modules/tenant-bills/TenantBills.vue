@@ -37,8 +37,6 @@
             <span class="text-gray-400 text-sm">Total Pending</span>
           </div>
         </div>
-        
-    
       </div>
 
       <div class="space-y-6 p-3 lg:p-6 mt-3 lg:mt-6 bg-white col-span-3">

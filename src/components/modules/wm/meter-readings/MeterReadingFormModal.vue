@@ -8,11 +8,16 @@
         </el-select>
       </el-form-item>
       <el-form-item class="flex-1" :label="'Latest Meter Reading'">
-        <el-input v-model="latestReading" placeholder="Latest reading will appear here" :disabled="true" type="number">
+        <el-input v-model="latestReadingDisplay" placeholder="Latest reading will appear here" :disabled="true">
+          <template #suffix>
+            <el-icon v-if="isLoadingLatestReading" class="is-loading">
+              <Loading />
+            </el-icon>
+          </template>
         </el-input>
       </el-form-item>
       <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">
-        <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading">
+        <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading" :disabled="true">
         </el-input>
       </el-form-item>
       <el-form-item prop="current_meter_reading" class="flex-1" :label="'Current Reading'">
@@ -71,6 +76,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
+import { Loading } from "@element-plus/icons-vue";
 import { MeterReadingForm } from "@/type/water-meter.type";
 import { useWaterMetersStore } from "@/store/water-meters.store";
 
@@ -85,6 +91,8 @@ const formData = reactive<MeterReadingForm>(props.form as MeterReadingForm);
 
 const record_collections = ref(false)
 const latestReading = ref(0)
+const latestReadingDate = ref('')
+const isLoadingLatestReading = ref(false)
 const collections = ref([
   {
     collection_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
@@ -108,10 +116,17 @@ const removeCollection = (index: number) => {
 const fetchLatestReading = async () => {
   if (!formData.water_meter_id) {
     latestReading.value = 0;
+    latestReadingDate.value = '';
+    formData.previous_meter_reading = 0;
     return;
   }
   
+  isLoadingLatestReading.value = true;
+  
   try {
+    // Add a small delay to show loading state
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     // Find the latest reading for the selected meter from the store
     const latestMeterReading = store.meterReadings
       .filter(reading => reading.water_meter_id === formData.water_meter_id)
@@ -119,15 +134,34 @@ const fetchLatestReading = async () => {
     
     if (latestMeterReading) {
       latestReading.value = latestMeterReading.current_meter_reading || 0;
-      // Don't auto-populate - let user enter manually
+      // Format the date for display
+      const readingDate = new Date(latestMeterReading.created_at);
+      latestReadingDate.value = readingDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      // Auto-populate the previous reading field with the latest reading
+      formData.previous_meter_reading = latestMeterReading.current_meter_reading || 0;
     } else {
       latestReading.value = 0;
+      latestReadingDate.value = '';
+      formData.previous_meter_reading = 0;
     }
   } catch (error) {
     console.error('Error fetching latest reading:', error);
     latestReading.value = 0;
+    latestReadingDate.value = '';
+    formData.previous_meter_reading = 0;
+  } finally {
+    isLoadingLatestReading.value = false;
   }
 }
+
+const latestReadingDisplay = computed(() => {
+  if (latestReading.value === 0) return '';
+  return `${latestReadingDate.value}`;
+});
 
 const consumption = computed(() => {
   if (!formData.current_meter_reading || !formData.previous_meter_reading) return 0
@@ -223,6 +257,8 @@ const resetForm = (formEl: FormInstance | undefined) => {
   // Reset collections to default state
   record_collections.value = false;
   latestReading.value = 0;
+  latestReadingDate.value = '';
+  isLoadingLatestReading.value = false;
   collections.value = [{
     collection_date: new Date().toISOString().split('T')[0],
     payment_method: "",
@@ -233,8 +269,7 @@ const resetForm = (formEl: FormInstance | undefined) => {
 onMounted(async () => {
   await Promise.all([
     store.getMeters(),
-    store.getPaymentMethods(),
-    store.getMeterReadings()
+    store.getPaymentMethods()
   ]);
 
   console.log(props.form);

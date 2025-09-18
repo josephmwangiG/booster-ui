@@ -77,11 +77,11 @@
                   }} Units
                 </td>
                 <td class="t-td">
-                  <div v-if="item.collection_amount">
-                    <div class="text-sm">
-                      {{ formatAmount(item.collection_amount) }}
-                      <span v-if="item.collection_payment_method" class="text-gray-500 text-xs ml-1">
-                        ({{ item.collection_payment_method }})
+                  <div v-if="item.collections && item.collections.length > 0">
+                    <div v-for="(collection, collectionIndex) in item.collections" :key="collectionIndex" class="text-sm">
+                      {{ formatAmount(collection.amount) }}
+                      <span v-if="collection.payment_method" class="text-gray-500 text-xs ml-1">
+                        ({{ collection.payment_method }})
                       </span>
                     </div>
                   </div>
@@ -168,11 +168,17 @@ const editItem = (item: any) => {
 const handleFormSubmit = async () => {
   // Refresh the data table after form submission
   loading.value = true;
-  await store.getMeterReadings();
-  // Reinitialize the data table
+  
+  // For edit operations, refresh data from store
+  if (action.value === "edit") {
+    await store.getMeterReadings();
+  }
+  // For create operations, the store handles data refresh based on whether collections were involved
+  // Just reinitialize the data table to reflect the updated data
   if (dataTableRef.value) {
     initDataTable(dataTableRef.value);
   }
+  
   loading.value = false;
 };
 
