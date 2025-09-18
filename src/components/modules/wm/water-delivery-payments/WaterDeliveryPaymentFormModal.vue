@@ -89,7 +89,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         const res = await store.createWaterDeliveryItemPayment(formData);
         if (res.status == 200 || res.status == 201) {
           // Mark the delivery as completed since payment was recorded
-          await store.markWaterDeliveryComplete(formData.water_delivery_id);
+          await store.markWaterDeliveryComplete(Number(formData.water_delivery_id));
           
           resetForm(itemFormRef.value as FormInstance);
           ElNotification({

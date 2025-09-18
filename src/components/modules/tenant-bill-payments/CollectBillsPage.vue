@@ -385,6 +385,7 @@ const submitPayments = async () => {
         if (billTotal <= 0) continue;
         
         payments.push({
+          id: null,
           tenant_bill_id: bill.id,
           amount: billTotal,
           payment_date: paymentForm.payment_date,

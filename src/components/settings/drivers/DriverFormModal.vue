@@ -52,6 +52,7 @@ const props = defineProps({
 const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useDriversStore();
 const itemFormRef = ref<FormInstance>();
+const isSubmitting = ref(false);
 const formData = reactive<DriverForm>(props.form as DriverForm);
 
 const rules = reactive<FormRules<DriverForm>>({

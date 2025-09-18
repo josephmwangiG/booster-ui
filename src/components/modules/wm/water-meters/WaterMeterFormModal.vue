@@ -71,7 +71,7 @@ const rules = reactive<FormRules<WaterMeterForm>>({
   code_number: [
     { required: true, message: "Please enter code number", trigger: "blur" },
     { 
-      validator: async (rule: any, value: any, callback: any) => {
+      validator: (value: any, callback: any) => {
         if (!value) {
           callback();
           return;
@@ -99,7 +99,7 @@ const rules = reactive<FormRules<WaterMeterForm>>({
   ],
   is_master: [
     { 
-      validator: (rule: any, value: any, callback: any) => {
+      validator: (value: any, callback: any) => {
         if (value && props.action === "create") {
           // Check if there's already a master meter
           const existingMaster = store.waterMeters.find((meter: any) => meter.is_master === true);
