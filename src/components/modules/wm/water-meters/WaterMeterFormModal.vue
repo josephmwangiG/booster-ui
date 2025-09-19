@@ -27,7 +27,7 @@
         </el-select>
       </el-form-item>
 
-      <el-checkbox v-model="formData.is_master" label="This is the master meter" />
+      <el-checkbox v-model="formData.is_master" label="This is the master meter" :disabled="disableMasterCheckbox" />
       <div v-if="hasExistingMaster && props.action === 'create'" class="text-sm text-orange-600 mt-1">
         ⚠️ There is already a master meter in your organization
       </div>
@@ -62,6 +62,13 @@ const isSubmitting = ref(false);
 
 const hasExistingMaster = computed(() => {
   return store.waterMeters.some((meter: any) => meter.is_master === true);
+});
+
+const disableMasterCheckbox = computed(() => {
+  const otherMasterMeter = store.waterMeters.find(
+    (meter: any) => meter.is_master && meter.id !== formData.id
+  );
+  return !!otherMasterMeter;
 });
 
 const rules = reactive<FormRules<WaterMeterForm>>({
