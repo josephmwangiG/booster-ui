@@ -66,8 +66,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -93,6 +93,7 @@ const record_collections = ref(false)
 const latestReading = ref(0)
 const latestReadingDate = ref('')
 const isLoadingLatestReading = ref(false)
+const isSubmitting = ref(false) // Add this line
 const collections = ref([
   {
     collection_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
@@ -202,52 +203,62 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) {
       return;
     } else {
-      if (props.action === "create") {
-        let data: any = {
-          ...formData
-        }
+      isSubmitting.value = true; // Add this line
+      
+      try {
+        if (props.action === "create") {
+          let data: any = {
+            ...formData
+          }
 
-        if (record_collections.value) {
-          // Ensure collection amounts are properly formatted as numbers
-          const formattedCollections = collections.value.map(collection => ({
-            ...collection,
-            amount: Number(collection.amount) || 0
-          }));
-          
-          data = {
-            ...formData,
-            collections: formattedCollections
+          if (record_collections.value) {
+            // Ensure collection amounts are properly formatted as numbers
+            const formattedCollections = collections.value.map(collection => ({
+              ...collection,
+              amount: Number(collection.amount) || 0
+            }));
+            
+            data = {
+              ...formData,
+              collections: formattedCollections
+            }
+          }
+          const res = await store.createMeterReading(data);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            emits("close-modal");
+            emits("submit-form"); // Emit to parent to refresh data
+            ElNotification({
+              title: "Success",
+              type: "success",
+              message: "Meter reading was created successfully",
+            })
+          }
+        } else {
+          const res = await store.updateMeterReading(formData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            emits("close-modal");
+            emits("submit-form"); // Emit to parent to refresh data
+            ElNotification({
+              title: "Success",
+              type: "success",
+              message: "Meter reading was updated successfully",
+            })
           }
         }
-        const res = await store.createMeterReading(data);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          emits("close-modal");
-          emits("submit-form"); // Emit to parent to refresh data
-          ElNotification({
-            title: "Success",
-            type: "success",
-            message: "Meter reading was created successfully",
-          })
-        }
-      } else {
-        const res = await store.updateMeterReading(formData);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          emits("close-modal");
-          emits("submit-form"); // Emit to parent to refresh data
-          ElNotification({
-            title: "Success",
-            type: "success",
-            message: "Meter reading was updated successfully",
-          })
-        }
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        ElNotification({
+          title: "Error",
+          type: "error",
+          message: "An error occurred while saving the meter reading",
+        });
+      } finally {
+        isSubmitting.value = false; // Add this line
       }
     }
   });
-
-
-
 };
 
 const resetForm = (formEl: FormInstance | undefined) => {
