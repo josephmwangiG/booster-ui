@@ -23,7 +23,7 @@
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
             <h2 class="font-semibold">KES {{ store.waterDeliveries.reduce((a, b) =>
-              b.status === 'completed' ? Number(a) + Number(b.total_amount) : a, 0).toLocaleString() }}</h2>
+              b.status === 'Paid and delivery completed' ? Number(a) + Number(b.total_amount) : a, 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Paid</span>
           </div>
         </div>
@@ -205,11 +205,11 @@ const dateFrom = ref('');
 const dateTo = ref('');
 const selectedStatus = ref('');
 
-// Payment status options for filtering
+// Delivery status options for filtering (aligned with new statuses)
 const paymentStatusOptions = [
-  { value: 'Paid', label: 'Paid' },
-  { value: 'Partial', label: 'Partial' },
-  { value: 'Pending', label: 'Pending' }
+  { value: 'Paid and delivery completed', label: 'Paid and delivery completed' },
+  { value: 'Paid, but delivery not completed', label: 'Paid, but delivery not completed' },
+  { value: 'Payment and delivery not completed', label: 'Payment and delivery not completed' }
 ];
 
 // Filtered water deliveries
@@ -247,17 +247,10 @@ const filteredWaterDeliveries = computed(() => {
     });
   }
 
-  // Apply payment status filter
+  // Apply status filter
   if (selectedStatus.value) {
     filtered = filtered.filter((delivery: any) => {
-      if (selectedStatus.value === 'Paid') {
-        return delivery.status === 'completed';
-      } else if (selectedStatus.value === 'Partial') {
-        return delivery.status === 'partial';
-      } else if (selectedStatus.value === 'Pending') {
-        return delivery.status === 'pending';
-      }
-      return true;
+      return delivery.status === selectedStatus.value;
     });
   }
 
