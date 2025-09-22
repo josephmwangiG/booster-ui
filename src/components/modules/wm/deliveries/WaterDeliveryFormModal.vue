@@ -49,11 +49,11 @@
       </div>
       <div class="lg:flex gap-3">
         <el-form-item prop="departure_time" label="Departure Time">
-          <el-date-picker format="MMM DD YYYY hh:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime"
+          <el-date-picker format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime"
             v-model="formData.departure_time" aria-label="Pick a time" placeholder="Pick a time" style="width: 100%" />
         </el-form-item>
         <el-form-item prop="return_time" label="Return Time">
-          <el-date-picker format="MMM DD YYYY hh:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime" v-model="formData.return_time"
+          <el-date-picker format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime" v-model="formData.return_time"
             aria-label="Pick a time" placeholder="Pick a time" style="width: 100%" />
         </el-form-item>
 
