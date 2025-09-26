@@ -49,11 +49,11 @@
       </div>
       <div class="lg:flex gap-3">
         <el-form-item prop="departure_time" label="Departure Time">
-          <el-date-picker format="MMM DD YYYY hh:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime"
+          <el-date-picker format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime"
             v-model="formData.departure_time" aria-label="Pick a time" placeholder="Pick a time" style="width: 100%" />
         </el-form-item>
         <el-form-item prop="return_time" label="Return Time">
-          <el-date-picker format="MMM DD YYYY hh:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime" v-model="formData.return_time"
+          <el-date-picker format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" type="datetime" v-model="formData.return_time"
             aria-label="Pick a time" placeholder="Pick a time" style="width: 100%" />
         </el-form-item>
 
@@ -195,23 +195,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (props.action === "create") {
       const res = await store.createWaterDelivery(submitData);
       if (res.status == 200 || res.status == 201) {
-        // If payment recording is enabled, create the payment
-        if (formData.record_payment && formData.amount_paid) {
-          const paymentData = {
-            water_delivery_id: res.data.id,
-            amount: formData.amount_paid,
-            payment_date: formData.payment_date,
-            payment_method: formData.payment_method,
-            payment_reference: formData.payment_reference,
-            notes: formData.notes
-          };
-          
-          const paymentRes = await store.createWaterDeliveryItemPayment(paymentData);
-          if (paymentRes.status == 200 || paymentRes.status == 201) {
-            // Mark the delivery as completed since payment was recorded
-            await store.markWaterDeliveryComplete(res.data.id);
-          }
-        }
+        // Payment is created server-side during creation when record_payment is set, avoid duplicate client creation
         
         resetForm(itemFormRef.value as FormInstance);
         emits("close-modal");

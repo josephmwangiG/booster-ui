@@ -277,7 +277,7 @@ const handleDateRange = (from: string, to: string) => {
   dateFrom.value = from;
   dateTo.value = to;
   if (dataTableRef.value) {
-    handleDateRangeFilter(dataTableRef.value, from, to, 2); // Date column is index 2
+    handleDateRangeFilter(dataTableRef.value, 2, from, to); // Date column is index 2
   }
 };
 
@@ -285,7 +285,7 @@ const handleStatusFilter = (status: string) => {
   selectedStatus.value = status;
   // Custom filtering for payment status
   if (dataTableRef.value && status) {
-    handleColumnSearch(dataTableRef.value, 4, status); // Status column is index 4
+    handleColumnSearch(dataTableRef.value, 7, status); // Status column is index 7
   }
 };
 

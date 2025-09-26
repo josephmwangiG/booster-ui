@@ -88,15 +88,13 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       try {
         const res = await store.createWaterDeliveryItemPayment(formData);
         if (res.status == 200 || res.status == 201) {
-          // Mark the delivery as completed since payment was recorded
-          await store.markWaterDeliveryComplete(formData.water_delivery_id);
-          
           resetForm(itemFormRef.value as FormInstance);
           ElNotification({
             title: "Success",
-            message: "Payment was created and delivery marked as complete",
+            message: "Payment was created successfully",
             type: "success",
           })
+          emits("submit-form");
           emits("close-modal");
         }
       } catch (error) {

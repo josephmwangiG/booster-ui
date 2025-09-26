@@ -231,27 +231,7 @@ const handleClearFilters = () => {
   selectedStatus.value = '';
 };
 
-const addItem = () => {
-  action.value = "create";
-  formData.value = {};
-  dialogVisible.value = true;
-};
 
-const refreshData = async () => {
-  loading.value = true;
-  try {
-    await Promise.all([
-      store.getPayments(),
-      store.getMeters()
-    ]);
-    console.log('Collection payments refreshed:', store.waterCollectionsPayments);
-    console.log('Meters refreshed:', store.meters);
-  } catch (error) {
-    console.error('Error refreshing collection payments:', error);
-  } finally {
-    loading.value = false;
-  }
-};
 
 
 onMounted(async () => {

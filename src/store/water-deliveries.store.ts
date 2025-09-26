@@ -82,7 +82,8 @@ export const useWaterDeliveriesStore = defineStore("water-deliveries", {
         this.headers
       );
 
-      this.waterDeliveriesPayments.unshift(res.data);
+      // The component will refresh the list, so we don't need to unshift here
+      // this.waterDeliveriesPayments.unshift(res.data);
 
       return res;
     },

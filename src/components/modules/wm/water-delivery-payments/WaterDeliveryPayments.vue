@@ -105,7 +105,7 @@
                   </span>
                   <span v-else-if="item.water_delivery?.status === 'pending'"
                     class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
-                    Complete
+                    Pending
                   </span>
                   <span v-else class="p-1 rounded bg-gray-100 text-gray-500 text-xs">
                     {{ item.water_delivery?.status || 'Unknown' }}
@@ -130,7 +130,7 @@
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <WaterDeliveryPaymentFormModal @close-modal="closeModal" :form="formData" :action="action">
+      <WaterDeliveryPaymentFormModal @close-modal="closeModal" @submit-form="refreshData" :form="formData" :action="action">
       </WaterDeliveryPaymentFormModal>
     </el-dialog>
   </teleport>
@@ -223,6 +223,11 @@ const closeModal = () => {
   url.searchParams.delete('delivery_id');
   window.history.replaceState({}, '', url);
 };
+
+const refreshData = async () => {
+  await store.getPayments();
+  await store.getWaterDeliveries();
+}
 
 // Helper function to get client name from nested water_delivery object
 const getClientName = (item: any) => {

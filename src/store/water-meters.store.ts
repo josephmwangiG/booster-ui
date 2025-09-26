@@ -96,14 +96,7 @@ export const useWaterMetersStore = defineStore("water-meters", {
       // This ensures we get all the individual meter reading records created for each collection
       await this.getMeterReadings();
 
-      // If collections were provided, refresh the collections data
-      if (data.collections && data.collections.length > 0) {
-        // Import the collections store to refresh data
-        const { useWaterCollectionsStore } = await import('./water-collections.store');
-        const collectionsStore = useWaterCollectionsStore();
-        await collectionsStore.getWaterCollections();
-        await collectionsStore.getPayments();
-      }
+      
 
       return res;
     },
