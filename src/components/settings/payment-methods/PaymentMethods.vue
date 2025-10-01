@@ -125,12 +125,9 @@ const editItem = (item: any) => {
 
 
 onMounted(async () => {
-  try {
-    await store.getPaymentMethods();
-  } finally {
-    initDataTable(dataTableRef.value);
-    loading.value = false;
-  }
+  await store.getPaymentMethods();
+  initDataTable(dataTableRef.value);
+  loading.value = false;
 
 });
 </script>
