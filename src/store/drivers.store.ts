@@ -13,11 +13,11 @@ export const useDriversStore = defineStore("drivers", {
   }),
   actions: {
     async getDrivers() {
-      const res = await axios.get("/drivers", this.headers);
+      const res = await axios.get("/api/drivers", this.headers);
       this.drivers = res.data;
     },
     async createDriver(data: DriverForm) {
-      const res = await axios.post("/drivers", data, this.headers);
+      const res = await axios.post("/api/drivers", data, this.headers);
 
       this.drivers.unshift(res.data);
 
@@ -25,7 +25,7 @@ export const useDriversStore = defineStore("drivers", {
     },
     async updateDriver(data: DriverForm) {
       const res = await axios.put(
-        "/drivers/" + data.id,
+        "/api/drivers/" + data.id,
         data,
         this.headers
       );

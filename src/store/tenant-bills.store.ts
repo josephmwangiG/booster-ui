@@ -17,7 +17,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
   }),
   actions: {
     async getTenantBills(params: any) {
-      const res = await axios.get("/tenant-bills", {
+      const res = await axios.get("/api/tenant-bills", {
         ...this.headers,
         params: { ...params },
       });
@@ -57,7 +57,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     async getTenantBillPayments() {
       try {
         console.log('Fetching tenant bill payments with headers:', this.headers);
-        const res = await axios.get("/tenant-payments", {
+        const res = await axios.get("/api/tenant-payments", {
           ...this.headers,
         });
         console.log('Tenant bill payments API response:', res.data);
@@ -71,7 +71,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
 
     async generateTenantBills(data: any) {
-      const res = await axios.post("/tenant-bills", data, this.headers);
+      const res = await axios.post("/api/tenant-bills", data, this.headers);
 
       // Handle the new response format with bills array
       if (res.data?.bills) {
@@ -87,7 +87,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
     async updateTenantBillItem(data: any) {
       const res = await axios.post(
-        "/tenant-bills/items/update/" + data.id,
+        "/api/tenant-bills/items/update/" + data.id,
         data,
         this.headers
       );
@@ -100,7 +100,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     async createTenantBillPayment(data: TenantBillPaymentForm) {
       try {
         console.log('Creating tenant bill payment with data:', data);
-        const res = await axios.post("/tenant-payments", data, {
+        const res = await axios.post("/api/tenant-payments", data, {
           ...this.headers,
         });
         console.log('Tenant bill payment created successfully:', res.data);
@@ -141,7 +141,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
     async completeTenantBill(id: any) {
       const res = await axios.post(
-        "/tenant-bills/complete/" + id,
+        "/api/tenant-bills/complete/" + id,
         {},
         this.headers
       );
@@ -152,7 +152,7 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
 
     async getTenantBill(id: string) {
-      const res = await axios.get("/tenant-bills/" + id, this.headers);
+      const res = await axios.get("/api/tenant-bills/" + id, this.headers);
       this.tenantBill = res.data;
     },
 

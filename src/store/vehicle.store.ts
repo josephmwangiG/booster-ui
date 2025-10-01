@@ -15,12 +15,12 @@ export const useVehiclesStore = defineStore("vehicles", {
   actions: {
 
     async getVehicles() {
-      const res = await axios.get("/vehicles", this.headers);
+      const res = await axios.get("/api/vehicles", this.headers);
       this.vehicles = res.data;
     },
 
     async createVehicle(data: VehicleForm) {
-      const res = await axios.post("/vehicles", data, this.headers);
+      const res = await axios.post("/api/vehicles", data, this.headers);
 
       this.vehicles.unshift(res.data);
 
@@ -28,11 +28,11 @@ export const useVehiclesStore = defineStore("vehicles", {
     },
 
     async getVehicle(id: string) {
-      const res = await axios.get("/vehicles/" + id, this.headers);
+      const res = await axios.get("/api/vehicles/" + id, this.headers);
       this.vehicle = res.data;
     },
     async updateVehicle(data: VehicleForm) {
-      const res = await axios.put("/vehicles/" + data.id, data, this.headers);
+      const res = await axios.put("/api/vehicles/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.vehicles[this.vehicles.findIndex((t: any) => t.id == data.id)] =

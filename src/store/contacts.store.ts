@@ -16,19 +16,19 @@ export const useContactsStore = defineStore("contacts", {
   }),
   actions: {
     async getCustomers() {
-      const res = await axios.get("/contacts-customers", this.headers);
+      const res = await axios.get("/api/contacts-customers", this.headers);
       this.customers = res.data;
     },
     async getSuppliers() {
-      const res = await axios.get("/contacts-suppliers", this.headers);
+      const res = await axios.get("/api/contacts-suppliers", this.headers);
       this.suppliers = res.data;
     },
     async getContactGroups() {
-      const res = await axios.get("/contacts-groups", this.headers);
+      const res = await axios.get("/api/contacts-groups", this.headers);
       this.contact_groups = res.data;
     },
     async createContact(data: ContactForm) {
-      const res = await axios.post("/contacts", data, this.headers);
+      const res = await axios.post("/api/contacts", data, this.headers);
 
       if (data.contact_type == "Customer") {
         this.customers.unshift(res.data);
@@ -42,11 +42,11 @@ export const useContactsStore = defineStore("contacts", {
       return res;
     },
     async getContact(id: string) {
-      const res = await axios.get("/contacts/" + id, this.headers);
+      const res = await axios.get("/api/contacts/" + id, this.headers);
       this.contact = res.data;
     },
     async updateContact(data: ContactForm) {
-      const res = await axios.put("/contacts/" + data.id, data, this.headers);
+      const res = await axios.put("/api/contacts/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.contact = res.data;
@@ -56,7 +56,7 @@ export const useContactsStore = defineStore("contacts", {
     },
     async uploadImage(formData: any, id: string) {
       const res = await axios.post(
-        "/contacts/" + id + "/media-upload",
+        "/api/contacts/" + id + "/media-upload",
         formData,
         {
           headers: {
@@ -70,7 +70,7 @@ export const useContactsStore = defineStore("contacts", {
     },
     async uploadThumbnail(formData: any, id: string) {
       const res = await axios.post(
-        "/contacts/" + id + "/upload-thumbnail",
+        "/api/contacts/" + id + "/upload-thumbnail",
         formData,
         {
           headers: {
@@ -87,7 +87,7 @@ export const useContactsStore = defineStore("contacts", {
       return res;
     },
     async removeMedia(id: string) {
-      const res = await axios.delete("/contacts/" + id + "/media-remove", {
+      const res = await axios.delete("/api/contacts/" + id + "/media-remove", {
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
@@ -98,7 +98,7 @@ export const useContactsStore = defineStore("contacts", {
 
     // Groups
     async createGroup(data: GroupForm) {
-      const res = await axios.post("/contacts-groups", data, this.headers);
+      const res = await axios.post("/api/contacts-groups", data, this.headers);
 
      this.contact_groups.unshift(res.data);
 

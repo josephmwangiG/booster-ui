@@ -14,18 +14,18 @@ export const usePropertiesStore = defineStore("properties", {
   }),
   actions: {
     async getProperties() {
-      const res = await axios.get("/properties", this.headers);
+      const res = await axios.get("/api/properties", this.headers);
       this.properties = res.data;
     },
     async createProperty(data: PropertyForm) {
-      const res = await axios.post("/properties", data, this.headers);
+      const res = await axios.post("/api/properties", data, this.headers);
 
       this.properties.unshift(res.data);
 
       return res;
     },
     async createUnit(data: UnitForm) {
-      const res = await axios.post("/properties/units/create", data, this.headers);
+      const res = await axios.post("/api/properties/units/create", data, this.headers);
 
       this.property = res.data;
 
@@ -42,11 +42,11 @@ export const usePropertiesStore = defineStore("properties", {
       return res;
     },
     async getProperty(id: string) {
-      const res = await axios.get("/properties/" + id, this.headers);
+      const res = await axios.get("/api/properties/" + id, this.headers);
       this.property = res.data;
     },
     async updateProperty(data: PropertyForm) {
-      const res = await axios.put("/properties/" + data.id, data, this.headers);
+      const res = await axios.put("/api/properties/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.property = res.data;
@@ -56,7 +56,7 @@ export const usePropertiesStore = defineStore("properties", {
     },
     async uploadImage(formData: any, id: string) {
       const res = await axios.post(
-        "/properties/" + id + "/media-upload",
+        "/api/properties/" + id + "/media-upload",
         formData,
         {
           headers: {
@@ -70,7 +70,7 @@ export const usePropertiesStore = defineStore("properties", {
     },
     async uploadThumbnail(formData: any, id: string) {
       const res = await axios.post(
-        "/properties/" + id + "/upload-thumbnail",
+        "/api/properties/" + id + "/upload-thumbnail",
         formData,
         {
           headers: {
@@ -87,7 +87,7 @@ export const usePropertiesStore = defineStore("properties", {
       return res;
     },
     async removeMedia(id: string) {
-      const res = await axios.delete("/properties/" + id + "/media-remove", {
+      const res = await axios.delete("/api/properties/" + id + "/media-remove", {
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
@@ -97,7 +97,7 @@ export const usePropertiesStore = defineStore("properties", {
     },
     async publishProperty(id: string, is_published: boolean) {
       const res = await axios.put(
-        "/properties/" + id + "/publish",
+        "/api/properties/" + id + "/publish",
         {
           is_published: is_published,
         },

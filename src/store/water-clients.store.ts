@@ -16,15 +16,15 @@ export const useWaterClientsStore = defineStore("water-clients", {
   }),
   actions: {
     async getWaterClients() {
-      const res = await axios.get("/water-clients", this.headers);
+      const res = await axios.get("/api/water-clients", this.headers);
       this.waterClients = res.data;
     },
     async getProperties() {
-      const res = await axios.get("/properties/get/items", this.headers);
+      const res = await axios.get("/api/properties/get/items", this.headers);
       this.properties = res.data;
     },
     async createClient(data: WaterClientForm) {
-      const res = await axios.post("/water-clients", data, this.headers);
+      const res = await axios.post("/api/water-clients", data, this.headers);
 
       this.waterClients.unshift(res.data);
 
@@ -32,12 +32,12 @@ export const useWaterClientsStore = defineStore("water-clients", {
     },
 
     async getClient(id: string) {
-      const res = await axios.get("/water-clients/" + id, this.headers);
+      const res = await axios.get("/api/water-clients/" + id, this.headers);
       this.client = res.data;
     },
     async updateClient(data: WaterClientForm) {
       const res = await axios.put(
-        "/water-clients/" + data.id,
+        "/api/water-clients/" + data.id,
         data,
         this.headers
       );

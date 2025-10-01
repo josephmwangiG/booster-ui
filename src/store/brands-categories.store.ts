@@ -15,23 +15,23 @@ export const useBrandsStore = defineStore("brands", {
   }),
   actions: {
     async getBrands() {
-      const res = await axios.get("/brands", this.headers);
+      const res = await axios.get("/api/brands", this.headers);
       this.brands = res.data.brands;
       this.categories = res.data.categories;
     },
     async createBrand(data: BrandForm) {
-      const res = await axios.post("/brands", data, this.headers);
+      const res = await axios.post("/api/brands", data, this.headers);
 
       this.brands.unshift(res.data);
 
       return res;
     },
     async getBrand(id: string) {
-      const res = await axios.get("/brands/" + id, this.headers);
+      const res = await axios.get("/api/brands/" + id, this.headers);
       this.Brand = res.data;
     },
     async updateBrand(data: BrandForm) {
-      const res = await axios.put("/brands/" + data.id, data, this.headers);
+      const res = await axios.put("/api/brands/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
         this.Brand = res.data;

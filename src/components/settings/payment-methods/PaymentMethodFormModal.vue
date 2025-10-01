@@ -78,9 +78,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       }
     }
   });
-
-
-
 };
 
 const resetForm = (formEl: FormInstance | undefined) => {
