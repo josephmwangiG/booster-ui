@@ -13,8 +13,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary" :disabled="isSubmitting">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -34,6 +34,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = usePaymentMethodsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<PaymentMethodForm>(props.form as PaymentMethodForm);
+const isSubmitting = ref(false);
 
 const rules = reactive<FormRules<PaymentMethodForm>>({
   name: [
@@ -47,28 +48,33 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) {
       return
     } else {
-      if (props.action === "create") {
-        const res = await store.createPaymentMethod(formData);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          emits("close-modal");
-          ElNotification({
-            title: "Success",
-            type: "success",
-            message: "Payment method created!",
-          })
+      isSubmitting.value = true;
+      try {
+        if (props.action === "create") {
+          const res = await store.createPaymentMethod(formData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            emits("close-modal");
+            ElNotification({
+              title: "Success",
+              type: "success",
+              message: "Payment method created!",
+            })
+          }
+        } else {
+          const res = await store.updatePaymentMethod(formData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            emits("close-modal");
+            ElNotification({
+              title: "Success",
+              type: "success",
+              message: "Payment method updated!",
+            })
+          }
         }
-      } else {
-        const res = await store.updatePaymentMethod(formData);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          emits("close-modal");
-          ElNotification({
-            title: "Success",
-            type: "success",
-            message: "Payment method updated!",
-          })
-        }
+      } finally {
+        isSubmitting.value = false;
       }
     }
   });

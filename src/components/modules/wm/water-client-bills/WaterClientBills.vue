@@ -22,7 +22,7 @@
             <span class="text-gray-400 text-sm">Paid</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">{{ store.clientBills.reduce((a, b) => Number(a) + (Number(b.amount) -
+            <h2 class="font-semibold">KES {{ store.clientBills.reduce((a, b) => Number(a) + (Number(b.amount) -
               Number(b.amount_paid)), 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Pending</span>
           </div>

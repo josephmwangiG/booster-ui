@@ -39,8 +39,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          {{ action === "create" ? "Save" : "Update" }}
+        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary" :disabled="isSubmitting">
+          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
         </button>
       </div>
     </el-form>
@@ -60,6 +60,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterClientsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<WaterClientForm>(props.form as WaterClientForm);
+const isSubmitting = ref(false);
 
 const rules = reactive<FormRules<WaterClientForm>>({
   client_name: [
@@ -79,29 +80,34 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
+  isSubmitting.value = true;
 
-  if (props.action === "create") {
-    const res = await store.createClient(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Client was created",
-      })
+  try {
+    if (props.action === "create") {
+      const res = await store.createClient(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Client was created",
+        })
+      }
+    } else {
+      const res = await store.updateClient(formData);
+      if (res.status == 200 || res.status == 201) {
+        resetForm(itemFormRef.value as FormInstance);
+        emits("close-modal");
+        ElNotification({
+          title: "Success",
+          type: "success",
+          message: "Client was updated",
+        })
+      }
     }
-  } else {
-    const res = await store.updateClient(formData);
-    if (res.status == 200 || res.status == 201) {
-      resetForm(itemFormRef.value as FormInstance);
-      emits("close-modal");
-      ElNotification({
-        title: "Success",
-        type: "success",
-        message: "Client was updated",
-      })
-    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
