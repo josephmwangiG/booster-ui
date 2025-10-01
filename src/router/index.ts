@@ -100,6 +100,24 @@ const routes = [
         },
       },
       {
+        name: "notifications",
+        path: "/settings/notifications",
+        component: () => import("@/components/settings/notifications/Notifications.vue"),
+        meta: {
+          require_auth: true,
+          title: "Notifications",
+        },
+      },
+      {
+        name: "notification-details",
+        path: "/settings/notifications/:id",
+        component: () => import("@/components/settings/notifications/NotificationDetails.vue"),
+        meta: {
+          require_auth: true,
+          title: "Notification Details",
+        },
+      },
+      {
         name: "invoices",
         path: "finance/invoices",
         component: () => import("@/components/finance/Invoices.vue"),

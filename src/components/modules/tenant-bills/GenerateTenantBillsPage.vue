@@ -107,10 +107,11 @@
                   <div class="mt-3 grid grid-cols-4 gap-2">
                     <input
                       :value="getUtilityInput(tenant.id, utility.id, 'prev_reading')"
-                      @input="updateUtilityInput(tenant.id, utility.id, 'prev_reading', ($event.target as HTMLInputElement).value)"
-                      class="w-full rounded-md border-neutral-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      class="w-full rounded-md border-neutral-300 text-sm shadow-sm bg-neutral-100 text-neutral-600"
                       placeholder="Prev Reading"
                       type="text"
+                      readonly
+                      title="Previous reading from database"
                     />
                     <input
                       :value="getUtilityInput(tenant.id, utility.id, 'current_reading')"
@@ -121,14 +122,14 @@
                     />
                     <input
                       :value="utility.rate"
-                      class="w-full rounded-md border-neutral-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      class="w-full rounded-md border-neutral-300 text-sm shadow-sm bg-neutral-100 text-neutral-600"
                       placeholder="Rate"
                       type="text"
                       readonly
                     />
                     <input
                       :value="getUtilityAmount(tenant.id, utility.id)"
-                      class="w-full rounded-md border-neutral-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      class="w-full rounded-md border-neutral-300 text-sm shadow-sm bg-neutral-100 text-neutral-600"
                       placeholder="Amount"
                       type="text"
                       readonly
@@ -283,7 +284,7 @@ const isUtilitySelected = (tenantId: number, utilityId: number) => {
   return formData.selected_utilities[key] || false;
 };
 
-const toggleUtility = (tenantId: number, utilityId: number, selected: boolean) => {
+const toggleUtility = async (tenantId: number, utilityId: number, selected: boolean) => {
   const key = `${tenantId}_${utilityId}`;
   formData.selected_utilities[key] = selected;
   
@@ -291,8 +292,27 @@ const toggleUtility = (tenantId: number, utilityId: number, selected: boolean) =
   if (selected) {
     const inputKey = `${tenantId}_${utilityId}`;
     if (!formData.utility_inputs[inputKey]) {
+      // Get the tenant's unit ID for fetching previous readings
+      const tenant = allTenants.value.find(t => t.id === tenantId);
+      const activeTenancy = tenant?.tenancies?.find((t: any) => t.active);
+      const unitId = activeTenancy?.unit_id;
+      
+      let previousReading = 0;
+      
+      // Fetch previous meter reading from database
+      if (unitId) {
+        try {
+          const result = await store.getPreviousMeterReadings(tenantId.toString(), utilityId.toString(), unitId);
+          if (result.success) {
+            previousReading = result.previous_reading || 0;
+          }
+        } catch (error) {
+          console.error('Error fetching previous reading:', error);
+        }
+      }
+      
       formData.utility_inputs[inputKey] = {
-        prev_reading: '',
+        prev_reading: previousReading.toString(),
         current_reading: '',
         rate: utilities.value.find((u: any) => u.id === utilityId)?.rate || 0
       };
@@ -467,10 +487,19 @@ const submitForm = async () => {
     
     const res = await store.generateTenantBills(dataToSend);
     if (res.status == 200 || res.status == 201) {
+      let message = "Bills generated successfully";
+      
+      // Add SMS results to notification if available
+      if (res.data?.sms_results) {
+        const smsResults = res.data.sms_results;
+        message += `. SMS sent: ${smsResults.sent}, Failed: ${smsResults.failed}, Skipped: ${smsResults.skipped}`;
+      }
+      
       ElNotification({
         title: "Success",
         type: "success",
-        message: "Bills generated successfully",
+        message: message,
+        duration: 6000, // Show longer to read SMS results
       });
       // Navigate back to tenant bills page
       router.push({ name: 'tenant-bills' });

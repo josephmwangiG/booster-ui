@@ -155,5 +155,26 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
       const res = await axios.get("/tenant-bills/" + id, this.headers);
       this.tenantBill = res.data;
     },
+
+    async getPreviousMeterReadings(tenantId: string, utilityId: string, unitId: string) {
+      try {
+        const res = await axios.get("/tenant-bills/previous-readings", {
+          ...this.headers,
+          params: {
+            tenant_id: tenantId,
+            utility_id: utilityId,
+            unit_id: unitId
+          }
+        });
+        return res.data;
+      } catch (error: any) {
+        console.error('Error fetching previous meter readings:', error.response || error);
+        return {
+          success: false,
+          previous_reading: 0,
+          error: error.response?.data?.message || 'Failed to fetch previous readings'
+        };
+      }
+    },
   },
 });

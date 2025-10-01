@@ -41,7 +41,7 @@
 
       <div class="mt-5 sm:mt-6 text-right">
         <button @click="emits('close-modal')" type="button" class="btn-primary-outline">
-          Close
+        Close
         </button>
 
         <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">

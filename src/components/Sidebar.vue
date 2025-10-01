@@ -187,6 +187,12 @@
             "><i class="ri-circle-fill text-[8px] mr-2"></i> Payment Methods</router-link>
         </li>
         <li>
+          <router-link :to="{ name: 'notifications' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'notifications'
+            ? 'text-orange-500'
+            : ''
+            "><i class="ri-circle-fill text-[8px] mr-2"></i> Notifications</router-link>
+        </li>
+        <li>
           <router-link :to="{ name: 'profile' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'profile'
             ? 'text-orange-500'
             : ''
