@@ -41,7 +41,7 @@
 
       <div class="mt-5 sm:mt-6 text-right">
         <button @click="emits('close-modal')" type="button" class="btn-primary-outline">
-          Close
+        Close
         </button>
 
         <button @click="submitForm(itemFormRef)" type="button" :disabled="isSubmitting" class="btn-primary">
@@ -86,14 +86,30 @@ const rules = reactive<FormRules<TenantForm>>({
 const availableUnits = computed(() => {
   if (formData.property_id) {
     const property = store.properties.find((item: any) => item.id == formData.property_id);
-    return property?.units?.filter((unit: any) => unit.available) || [];
+    if (!property?.units) return [];
+    
+    // For updates, include the current unit even if not available
+    if (props.action === "edit" && formData.unit_id) {
+      return property.units.filter((unit: any) => 
+        unit.available || unit.id == formData.unit_id
+      );
+    }
+    
+    // For create, only show available units
+    return property.units.filter((unit: any) => unit.available);
   }
   return [];
 });
 
-// Handle property change - reset unit selection
+// Handle property change - reset unit selection only if current unit doesn't belong to new property
 const onPropertyChange = () => {
-  formData.unit_id = '';
+  if (formData.unit_id) {
+    const currentUnit = availableUnits.value.find((unit: any) => unit.id == formData.unit_id);
+    if (!currentUnit) {
+      // Current unit doesn't belong to the new property, reset it
+      formData.unit_id = '';
+    }
+  }
 };
 
 const submitForm = async (formEl: FormInstance | undefined) => {

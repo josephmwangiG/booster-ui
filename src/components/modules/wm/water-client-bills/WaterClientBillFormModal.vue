@@ -65,8 +65,8 @@
         <button @click="emits('close-modal')" type="button" class="btn-primary-outline">
           Close
         </button>
-        <button @click="submitForm(itemFormRef, 'Pending')" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef, 'Pending')" type="button" class="btn-primary" :disabled="isSubmitting">
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
@@ -99,6 +99,7 @@ const formData = reactive<WaterClientBillForm>({
   ...props.form
 } as WaterClientBillForm);
 const loading = ref(true);
+const isSubmitting = ref(false);
 
 const disabledDate = (time: Date) => {
   return time.getTime() > Date.now()
@@ -173,31 +174,36 @@ const submitForm = async (formEl: FormInstance | undefined, status: string) => {
     if (!valid) {
       return;
     } else {
-      console.log('Submitting form data:', formData);
-      console.log('Action:', props.action);
-      
-      if (props.action == "create") {
-        const res = await store.createWaterClientBill(formData);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          ElNotification({
-            title: "Success",
-            message: "Bill was created",
-            type: "success",
-          })
-          emits("close-modal");
+      isSubmitting.value = true;
+      try {
+        console.log('Submitting form data:', formData);
+        console.log('Action:', props.action);
+        
+        if (props.action == "create") {
+          const res = await store.createWaterClientBill(formData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            ElNotification({
+              title: "Success",
+              message: "Bill was created",
+              type: "success",
+            })
+            emits("close-modal");
+          }
+        } else {
+          const res = await store.updateWaterClientBill(formData);
+          if (res.status == 200 || res.status == 201) {
+            resetForm(itemFormRef.value as FormInstance);
+            ElNotification({
+              title: "Success",
+              message: "Bill was updated",
+              type: "success",
+            })
+            emits("close-modal");
+          }
         }
-      } else {
-        const res = await store.updateWaterClientBill(formData);
-        if (res.status == 200 || res.status == 201) {
-          resetForm(itemFormRef.value as FormInstance);
-          ElNotification({
-            title: "Success",
-            message: "Bill was updated",
-            type: "success",
-          })
-          emits("close-modal");
-        }
+      } finally {
+        isSubmitting.value = false;
       }
     }
   });

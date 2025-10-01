@@ -206,7 +206,26 @@ const addItem = () => {
 
 const editItem = (item: any) => {
   action.value = "edit";
-  formData.value = item;
+  
+  // Extract property_id and unit_id from active tenancy
+  let property_id = '';
+  let unit_id = '';
+  
+  if (item.tenancies && item.tenancies.length > 0) {
+    const activeTenancy = item.tenancies.find((t: any) => t.active);
+    if (activeTenancy && activeTenancy.unit) {
+      unit_id = activeTenancy.unit.id;
+      if (activeTenancy.unit.property) {
+        property_id = activeTenancy.unit.property.id;
+      }
+    }
+  }
+  
+  formData.value = {
+    ...item,
+    property_id: property_id,
+    unit_id: unit_id
+  };
   dialogVisible.value = true;
 };
 

@@ -22,7 +22,7 @@
             <span class="text-gray-400 text-sm">Paid</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">{{ store.clientBills.reduce((a, b) => Number(a) + (Number(b.amount) -
+            <h2 class="font-semibold">KES {{ store.clientBills.reduce((a, b) => Number(a) + (Number(b.amount) -
               Number(b.amount_paid)), 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Pending</span>
           </div>
@@ -277,7 +277,7 @@ const handleDateRange = (from: string, to: string) => {
   dateFrom.value = from;
   dateTo.value = to;
   if (dataTableRef.value) {
-    handleDateRangeFilter(dataTableRef.value, from, to, 2); // Date column is index 2
+    handleDateRangeFilter(dataTableRef.value, 2, from, to); // Date column is index 2
   }
 };
 
@@ -285,7 +285,7 @@ const handleStatusFilter = (status: string) => {
   selectedStatus.value = status;
   // Custom filtering for payment status
   if (dataTableRef.value && status) {
-    handleColumnSearch(dataTableRef.value, 4, status); // Status column is index 4
+    handleColumnSearch(dataTableRef.value, 7, status); // Status column is index 7
   }
 };
 

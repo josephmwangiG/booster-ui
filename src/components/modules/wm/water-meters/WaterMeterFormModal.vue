@@ -27,7 +27,7 @@
         </el-select>
       </el-form-item>
 
-      <el-checkbox v-model="formData.is_master" label="This is the master meter" />
+      <el-checkbox v-model="formData.is_master" label="This is the master meter" :disabled="disableMasterCheckbox" />
       <div v-if="hasExistingMaster && props.action === 'create'" class="text-sm text-orange-600 mt-1">
         ⚠️ There is already a master meter in your organization
       </div>
@@ -64,6 +64,13 @@ const hasExistingMaster = computed(() => {
   return store.waterMeters.some((meter: any) => meter.is_master === true);
 });
 
+const disableMasterCheckbox = computed(() => {
+  const otherMasterMeter = store.waterMeters.find(
+    (meter: any) => meter.is_master && meter.id !== formData.id
+  );
+  return !!otherMasterMeter;
+});
+
 const rules = reactive<FormRules<WaterMeterForm>>({
   name: [
     { required: true, message: "Please enter meter name", trigger: "blur" },
@@ -71,7 +78,7 @@ const rules = reactive<FormRules<WaterMeterForm>>({
   code_number: [
     { required: true, message: "Please enter code number", trigger: "blur" },
     { 
-      validator: async (rule: any, value: any, callback: any) => {
+      validator: (_rule: any, value: any, callback: any) => {
         if (!value) {
           callback();
           return;
@@ -99,7 +106,7 @@ const rules = reactive<FormRules<WaterMeterForm>>({
   ],
   is_master: [
     { 
-      validator: (rule: any, value: any, callback: any) => {
+      validator: (_rule: any, value: any, callback: any) => {
         if (value && props.action === "create") {
           // Check if there's already a master meter
           const existingMaster = store.waterMeters.find((meter: any) => meter.is_master === true);
