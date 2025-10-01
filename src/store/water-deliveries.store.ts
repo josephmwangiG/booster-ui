@@ -96,10 +96,14 @@ export const useWaterDeliveriesStore = defineStore("water-deliveries", {
       );
 
       if (res.status === 200 || res.status === 201) {
-        // Update the delivery status in the local state
+        // Sync the delivery from API response (status could be delivered-but-unpaid or paid+completed)
+        const updated = res.data;
         const deliveryIndex = this.waterDeliveries.findIndex((delivery: any) => delivery.id === deliveryId);
         if (deliveryIndex !== -1) {
-          this.waterDeliveries[deliveryIndex].status = 'completed';
+          this.waterDeliveries[deliveryIndex] = {
+            ...this.waterDeliveries[deliveryIndex],
+            ...updated,
+          };
         }
       }
 
