@@ -144,7 +144,7 @@
                             Mark Complete</span>
                         </el-dropdown-item>
                         <el-dropdown-item
-                          v-if="item.status !== 'Paid and delivery not completed' && item.status !== 'Paid, but delivery not completed' && item.status !== 'Paid and delivery completed' && item.status !== 'completed' && item.status !== 'Delivered but payment not yet received'"
+                          v-if="item.status !== 'Paid and delivery not completed' && item.status !== 'Paid, but delivery not completed' && item.status !== 'Paid and delivery completed' && item.status !== 'completed'"
                           @click="recordPayment(item)"
                         >
                           <span class="font-semibold py-2"><i class="ri-money-dollar-circle-line text-blue-500"></i>
