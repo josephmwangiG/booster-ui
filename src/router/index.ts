@@ -61,6 +61,15 @@ const routes = [
           title: "Dashboard",
         },
       },
+      {
+        name: "wm-dashboard",
+        path: "/dashboard/water-management",
+        component: () => import("@/components/dashboard/WMDashboard.vue"),
+        meta: {
+          require_auth: true,
+          title: "Water Management Dashboard",
+        },
+      },
       // INVENTORY MODULE
       {
         name: "profile",
