@@ -32,8 +32,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary" :disabled="isSubmitting">
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
@@ -53,6 +53,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = usePropertiesStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<UnitForm>(props.form as UnitForm);
+const isSubmitting = ref(false);
 
 
 
@@ -74,22 +75,28 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) return;
   });
 
-  let res;
+  isSubmitting.value = true;
 
-  if (props.action === "create") {
-    res = await store.createUnit(formData);
-  } else {
-    res = await store.updateUnit(formData);
-  }
+  try {
+    let res;
 
-  if (res.status == 200 || res.status == 201) {
-    resetForm(itemFormRef.value as FormInstance);
-    ElNotification({
-      title: "Success",
-      message: `Property unit was ${props.action === 'create' ? 'created' : 'updated'} successfully`,
-      type: "success",
-    })
-    emits("close-modal");
+    if (props.action === "create") {
+      res = await store.createUnit(formData);
+    } else {
+      res = await store.updateUnit(formData);
+    }
+
+    if (res.status == 200 || res.status == 201) {
+      resetForm(itemFormRef.value as FormInstance);
+      ElNotification({
+        title: "Success",
+        message: `Property unit was ${props.action === 'create' ? 'created' : 'updated'} successfully`,
+        type: "success",
+      })
+      emits("close-modal");
+    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

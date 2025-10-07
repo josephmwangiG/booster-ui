@@ -4,11 +4,31 @@
   [&::-webkit-scrollbar-track]:bg-gray-100
   [&::-webkit-scrollbar-thumb]:rounded-full
   [&::-webkit-scrollbar-thumb]:bg-orange-400">
-    <li class="">
-      <router-link :to="{ name: 'dashboard' }" :class="router.currentRoute.value.name === 'dashboard'
+    <li>
+      <button @click="dashboardDropdown = !dashboardDropdown" type="button" :class="['dashboard','properties','wm-dashboard'].includes(String(router.currentRoute.value.name))
         ? 'sidebar-menu-active'
         : 'sidebar-menu'
-        "><i class="ri-speed-up-line mr-2"></i> Dashboard</router-link>
+        " class="flex items-center w-full transition duration-200 ease-in-out group" aria-controls="dropdown-dashboard"
+        data-collapse-toggle="dropdown-dashboard">
+        <i class="ri-speed-up-line mr-3"></i>
+        <span class="flex-1 text-left whitespace-nowrap">Dashboard</span>
+        <i class="ri-arrow-down-s-line"></i>
+      </button>
+      <ul id="dropdown-dashboard" class="pb-2" :class="dashboardDropdown ? 'show' : 'hidden'">
+        <li>
+          <router-link :to="{ name: 'properties' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'properties'
+            ? 'text-orange-500'
+            : ''
+            "><i class="ri-circle-fill text-[8px] mr-2"></i>
+            Properties</router-link>
+        </li>
+        <li>
+          <router-link :to="{ name: 'wm-dashboard' }" class="drop-menu" :class="router.currentRoute.value.name === 'wm-dashboard'
+            ? 'text-orange-500'
+            : ''
+            "><i class="ri-circle-fill text-[8px] mr-2"></i> Water Management</router-link>
+        </li>
+      </ul>
     </li>
 
     <div>
@@ -187,6 +207,12 @@
             "><i class="ri-circle-fill text-[8px] mr-2"></i> Payment Methods</router-link>
         </li>
         <li>
+          <router-link :to="{ name: 'notifications' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'notifications'
+            ? 'text-orange-500'
+            : ''
+            "><i class="ri-circle-fill text-[8px] mr-2"></i> Notifications</router-link>
+        </li>
+        <li>
           <router-link :to="{ name: 'profile' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'profile'
             ? 'text-orange-500'
             : ''
@@ -201,6 +227,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
 
+const dashboardDropdown = ref(false);
 const settingsDropdown = ref(false);
 const deliveriesDropdown = ref(false);
 const collectionsDropdown = ref(false);

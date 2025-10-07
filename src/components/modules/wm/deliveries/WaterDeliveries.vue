@@ -23,7 +23,7 @@
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
             <h2 class="font-semibold">KES {{ store.waterDeliveries.reduce((a, b) =>
-              b.status === 'completed' ? Number(a) + Number(b.total_amount) : a, 0).toLocaleString() }}</h2>
+              b.status === 'Paid and delivery completed' ? Number(a) + Number(b.total_amount) : a, 0).toLocaleString() }}</h2>
             <span class="text-gray-400 text-sm">Paid</span>
           </div>
         </div>
@@ -98,14 +98,17 @@
                   {{ formatDate(item.delivery_date, true) }}
                 </td>
                 <td class="t-td font-semibold">
-                  <span v-if="item.status === 'completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                  <span v-if="item.status === 'Paid and delivery completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
                     Completed
                   </span>
-                  <span v-else-if="item.status === 'partial'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
-                    Partial
+                  <span v-else-if="item.status === 'Payment and delivery not completed'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
+                    Payment and delivery not completed
                   </span>
-                  <span v-else class="p-1 rounded bg-red-100 text-red-500 text-xs">
-                    Pending
+                  <span v-else-if="item.status === 'Paid, but delivery not completed'" class="p-1 rounded bg-red-100 text-red-500 text-xs">
+                    Paid, but delivery not completed
+                  </span>
+                  <span v-else-if="item.status === 'Delivered but payment not yet received'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
+                    Delivered but payment not yet received
                   </span>
                 </td>
                 <td class="t-td font-semibold">
@@ -133,11 +136,17 @@
                           <span class="font-semibold py-2"><i class="ri-edit-line text-orange-500"></i>
                             Edit</span>
                         </el-dropdown-item>
-                        <el-dropdown-item v-if="item.status !== 'completed'" @click="markComplete(item)">
+                        <el-dropdown-item
+                          v-if="item.status !== 'completed' && item.status !== 'Paid and delivery completed' && item.status !== 'Delivered but payment not yet received'"
+                          @click="markComplete(item)"
+                        >
                           <span class="font-semibold py-2"><i class="ri-check-line text-green-500"></i>
                             Mark Complete</span>
                         </el-dropdown-item>
-                        <el-dropdown-item v-if="item.status !== 'completed'" @click="recordPayment(item)">
+                        <el-dropdown-item
+                          v-if="item.status !== 'Paid and delivery not completed' && item.status !== 'Paid, but delivery not completed' && item.status !== 'Paid and delivery completed' && item.status !== 'completed'"
+                          @click="recordPayment(item)"
+                        >
                           <span class="font-semibold py-2"><i class="ri-money-dollar-circle-line text-blue-500"></i>
                             Record Payment</span>
                         </el-dropdown-item>
@@ -199,11 +208,12 @@ const dateFrom = ref('');
 const dateTo = ref('');
 const selectedStatus = ref('');
 
-// Payment status options for filtering
+// Delivery status options for filtering (aligned with new statuses)
 const paymentStatusOptions = [
-  { value: 'Paid', label: 'Paid' },
-  { value: 'Partial', label: 'Partial' },
-  { value: 'Pending', label: 'Pending' }
+  { value: 'Paid and delivery completed', label: 'Paid and delivery completed' },
+  { value: 'Paid, but delivery not completed', label: 'Paid, but delivery not completed' },
+  { value: 'Payment and delivery not completed', label: 'Payment and delivery not completed' },
+  { value: 'Delivered but payment not yet received', label: 'Delivered but payment not yet received' }
 ];
 
 // Filtered water deliveries
@@ -241,17 +251,10 @@ const filteredWaterDeliveries = computed(() => {
     });
   }
 
-  // Apply payment status filter
+  // Apply status filter
   if (selectedStatus.value) {
     filtered = filtered.filter((delivery: any) => {
-      if (selectedStatus.value === 'Paid') {
-        return delivery.status === 'completed';
-      } else if (selectedStatus.value === 'Partial') {
-        return delivery.status === 'partial';
-      } else if (selectedStatus.value === 'Pending') {
-        return delivery.status === 'pending';
-      }
-      return true;
+      return delivery.status === selectedStatus.value;
     });
   }
 

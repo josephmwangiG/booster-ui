@@ -38,8 +38,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary" :disabled="submitting">
+          {{ submitting ? 'Please wait...' : 'Save' }}
         </button>
       </div>
     </el-form>
@@ -58,6 +58,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useTenantBillsStore();
 const itemFormRef = ref<FormInstance>();
 const loading = ref(true);
+const submitting = ref(false);
 const formData = reactive<TenantBillPaymentForm>(props.form as TenantBillPaymentForm);
 const selectedBillDetails = ref<any>(null);
 
@@ -126,6 +127,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) {
       return;
           } else {
+        submitting.value = true;
         try {
           // Ensure the form data is properly formatted
           const submissionData = {
@@ -170,6 +172,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
             message: errorMessage,
             type: "error",
           });
+        } finally {
+          submitting.value = false;
         }
       }
   });

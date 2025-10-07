@@ -1,7 +1,4 @@
-import {
-  PendingMoneyCollectionForm,
-  WaterDeliveryForm,
-} from "@/type/water-delivery.type";
+import { WaterDeliveryForm } from "@/type/water-delivery.type";
 import axios from "axios";
 import { defineStore } from "pinia";
 

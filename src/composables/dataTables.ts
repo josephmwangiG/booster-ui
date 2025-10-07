@@ -83,7 +83,7 @@ export const initDataTable = (dataTableRef: any) => {
           },
         ],
         // Add error handling
-        drawCallback: function(settings: any) {
+        drawCallback: function() {
           // Handle any post-draw operations if needed
         }
       });
@@ -131,7 +131,7 @@ export const handleDateRangeFilter = (dataTableRef: any, columnIndex: number, da
   const dt = $(dataTableRef).DataTable();
   
   // Custom search function for date range
-  $.fn.dataTable.ext.search.push(function(settings: any, data: any, dataIndex: any) {
+  $.fn.dataTable.ext.search.push(function(settings: any, data: any) {
     if (settings.nTable !== dataTableRef) {
       return true;
     }

@@ -199,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatDate } from "@/composables/dataTables";
+
 import { formatAmount, formatNumber } from "@/composables/helper_functions";
 import { useReportsStore } from "@/store/report.store";
 import { onMounted, ref } from "vue";

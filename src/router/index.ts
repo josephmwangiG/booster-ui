@@ -61,6 +61,15 @@ const routes = [
           title: "Dashboard",
         },
       },
+      {
+        name: "wm-dashboard",
+        path: "/dashboard/water-management",
+        component: () => import("@/components/dashboard/WMDashboard.vue"),
+        meta: {
+          require_auth: true,
+          title: "Water Management Dashboard",
+        },
+      },
       // INVENTORY MODULE
       {
         name: "profile",
@@ -97,6 +106,24 @@ const routes = [
         meta: {
           require_auth: true,
           title: "Drivers",
+        },
+      },
+      {
+        name: "notifications",
+        path: "/settings/notifications",
+        component: () => import("@/components/settings/notifications/Notifications.vue"),
+        meta: {
+          require_auth: true,
+          title: "Notifications",
+        },
+      },
+      {
+        name: "notification-details",
+        path: "/settings/notifications/:id",
+        component: () => import("@/components/settings/notifications/NotificationDetails.vue"),
+        meta: {
+          require_auth: true,
+          title: "Notification Details",
         },
       },
       {

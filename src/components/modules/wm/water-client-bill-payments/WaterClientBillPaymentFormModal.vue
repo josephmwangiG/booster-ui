@@ -37,8 +37,8 @@
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary">
-          Save
+        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary" :disabled="isSubmitting">
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
@@ -57,6 +57,7 @@ const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterClientBillsStore();
 const itemFormRef = ref<FormInstance>();
 const formData = reactive<WaterClientBillPaymentForm>(props.form as WaterClientBillPaymentForm);
+const isSubmitting = ref(false);
 
 const disabledDate = (time: Date) => {
   return time.getTime() > Date.now()
@@ -84,6 +85,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (!valid) {
       return;
           } else {
+        isSubmitting.value = true;
         try {
           // Ensure the form data is properly formatted
           const submissionData = {
@@ -116,6 +118,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
             message: errorMessage,
             type: "error",
           });
+        } finally {
+          isSubmitting.value = false;
         }
       }
   });
