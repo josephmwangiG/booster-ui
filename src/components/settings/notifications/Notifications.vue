@@ -189,30 +189,16 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
                   <button 
-                    @click="viewNotification(notification)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    View
-                  </button>
-                  <button 
                     @click="openNotification(notification)"
                     class="text-indigo-600 hover:text-indigo-900"
                   >
-                    Open
+                    View
                   </button>
-                  <button 
-                    v-if="notification.status === 'failed' && notification.retry_count < 3"
+                  <button
                     @click="retryNotification(notification.id)"
                     class="text-green-600 hover:text-green-900"
                   >
-                    Retry
-                  </button>
-                  <button 
-                    v-if="['failed', 'delivered'].includes(notification.status)"
-                    @click="deleteNotification(notification.id)"
-                    class="text-red-600 hover:text-red-900"
-                  >
-                    Delete
+                    Resend
                   </button>
                 </div>
               </td>
@@ -447,17 +433,6 @@ const bulkRetry = async () => {
   }
 }
 
-const deleteNotification = async (id) => {
-  if (confirm('Are you sure you want to delete this notification?')) {
-    try {
-      await del(`/notifications/${id}`)
-      await loadNotifications()
-      await loadStats()
-    } catch (error) {
-      console.error('Failed to delete notification:', error)
-    }
-  }
-}
 
 const viewNotification = (notification) => {
   selectedNotification.value = notification
