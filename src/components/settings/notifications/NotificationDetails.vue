@@ -111,14 +111,6 @@ const retry = async () => {
   } catch (e) {}
 }
 
-const remove = async () => {
-  if (!confirm('Delete this notification?')) return
-  try {
-    await del(`/notifications/${id}`)
-    router.push('/settings/notifications')
-  } catch (e) {}
-}
-
 const getStatusClass = (status: string) => {
   const classes: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800',
