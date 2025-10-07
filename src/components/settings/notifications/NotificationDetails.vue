@@ -67,15 +67,10 @@
       </div>
 
       <div class="flex space-x-2">
-        <button v-if="notification.status === 'failed' && (notification.retry_count || 0) < 3"
+        <button
                 @click="retry"
                 class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-          Retry
-        </button>
-        <button v-if="['failed','delivered'].includes(notification.status)"
-                @click="remove"
-                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
-          Delete
+          Resend
         </button>
       </div>
     </div>
