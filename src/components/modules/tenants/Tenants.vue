@@ -143,7 +143,7 @@
 <script setup lang="ts">
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
-import { defineAsyncComponent, onMounted, ref, computed } from "vue";
+import { defineAsyncComponent, onMounted, ref, computed, watch, nextTick } from "vue";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
 import { initDataTableWithSearch, handleSearch as dtHandleSearch, clearAllFilters } from "@/composables/dataTables";
@@ -269,6 +269,16 @@ onMounted(async () => {
   initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
 });
+
+// Reinitialize DataTable whenever filtered data changes (e.g., after edit)
+watch(
+  () => filteredTenants.value,
+  async () => {
+    await nextTick();
+    initDataTableWithSearch(dataTableRef.value);
+  },
+  { deep: true }
+);
 </script>
 
 <style></style>

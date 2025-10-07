@@ -172,8 +172,15 @@ export const useTenantsStore = defineStore("tenants", {
       const res = await axios.put("/tenants/" + data.id, data, this.headers);
 
       if (res.status == 200 || res.status == 201) {
-        this.tenants[this.tenants.findIndex((t: any) => t.id == data.id)] =
-          res.data;
+        // Optimistically update the local tenant entry
+        const idx = this.tenants.findIndex((t: any) => t.id == data.id);
+        if (idx !== -1) {
+          // Preserve existing relations (like tenancies) if API response omits them
+          const existing = this.tenants[idx] || {};
+          this.tenants[idx] = { ...existing, ...res.data, tenancies: existing.tenancies ?? res.data.tenancies };
+        }
+        // Ensure we have fresh data including relations used by filters
+        await this.getTenants();
       }
 
       return res;
