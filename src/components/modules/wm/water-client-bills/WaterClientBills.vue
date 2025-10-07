@@ -61,8 +61,8 @@
                 <th class="t-th">
                   Client
                 </th>
-                <th class="t-th">From</th>
-                <th class="t-th">To</th>
+                <th class="t-th">Start Date</th>
+                <th class="t-th">End Date</th>
                 <th class="t-th">Amount</th>
                 <th class="t-th">Balance</th>
                 <th class="t-th">Due Date</th>
