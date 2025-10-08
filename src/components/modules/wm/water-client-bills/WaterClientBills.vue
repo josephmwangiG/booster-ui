@@ -43,11 +43,11 @@
         <!-- Search and Filter Component -->
         <SearchAndFilter
           entity-name="Water Bills"
-          :enable-date-range="true"
+          :enable-date-filter="true"
           :enable-status-filter="true"
           :status-options="paymentStatusOptions"
           @search="handleSearch"
-          @date-range="handleDateRange"
+          @date-filter="handleDateRange"
           @status-filter="handleStatusFilter"
           @clear-filters="handleClearFilters"
         />
@@ -61,6 +61,7 @@
                 <th class="t-th">
                   Client
                 </th>
+                <th class="t-th">Meter No.</th>
                 <th class="t-th">Start Date</th>
                 <th class="t-th">End Date</th>
                 <th class="t-th">Amount</th>
@@ -81,7 +82,10 @@
                   </router-link>
                 </td>
                 <td class="t-td">
-                  {{ `${item.client_name} (Meter No. ${item.meter_number || '-'})` }}
+                  {{ item.client_name }}
+                </td>
+                <td class="t-td">
+                  {{ item.meter_number || '-' }}
                 </td>
                 <td class="t-td">
                   {{
@@ -277,7 +281,7 @@ const handleDateRange = (from: string, to: string) => {
   dateFrom.value = from;
   dateTo.value = to;
   if (dataTableRef.value) {
-    handleDateRangeFilter(dataTableRef.value, 2, from, to); // Date column is index 2
+    handleDateRangeFilter(dataTableRef.value, 3, from, to); // Start Date column index updated after adding Meter No.
   }
 };
 
@@ -285,7 +289,7 @@ const handleStatusFilter = (status: string) => {
   selectedStatus.value = status;
   // Custom filtering for payment status
   if (dataTableRef.value && status) {
-    handleColumnSearch(dataTableRef.value, 7, status); // Status column is index 7
+    handleColumnSearch(dataTableRef.value, 8, status); // Status column index updated after adding Meter No.
   }
 };
 

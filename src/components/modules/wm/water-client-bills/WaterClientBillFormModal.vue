@@ -5,7 +5,7 @@
 
       <el-form-item prop="water_client_id" class="flex-1" :label="'Client'">
         <el-select v-model="formData.water_client_id" placeholder="Select a client" filterable @change="handleClientChange" :loading="loading">
-          <el-option v-for="item in store.clientItems" :key="item.id" :label="`${item.client_name} (Meter No. ${item.meter_number})`" :value="item.id">
+          <el-option v-for="item in validClientItems" :key="item.id" :label="`${item.client_name} (Meter No. ${item.meter_number})`" :value="item.id">
             <span style="float: left">{{ item.client_name }}</span>
             <span style="
               float: right;
@@ -85,6 +85,7 @@ const props = defineProps({
 const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterClientBillsStore();
 const itemFormRef = ref<FormInstance>();
+const validClientItems = computed(() => (store.clientItems || []).filter((c: any) => c.meter_number !== null && c.meter_number !== undefined && String(c.meter_number).trim() !== ''));
 const formData = reactive<WaterClientBillForm>({
   id: null,
   water_client_id: "",
@@ -119,11 +120,13 @@ const validateCurrentMeterReading = (_rule: any, _value: any, callback: any) => 
   }
 }
 const validateBillDurationStart = (_rule: any, _value: any, callback: any) => {
-  if (formData.from > formData.to) {
-    callback(new Error('Start date should be less than end date'))
-  } else {
-    callback()
+  if (!formData.from || !formData.to) {
+    return callback();
   }
+  if (formData.from > formData.to) {
+    return callback(new Error('Start date should be less than or equal to end date'))
+  }
+  return callback()
 }
 
 const rules = reactive<FormRules<WaterClientBillForm>>({
@@ -134,7 +137,7 @@ const rules = reactive<FormRules<WaterClientBillForm>>({
   ],
   from: [
     { required: true, message: "Please select start date", trigger: "change" },
-    { validator: validateBillDurationStart, message: "Start date should be less than end date", trigger: "change" },
+    { validator: validateBillDurationStart, message: "Start date should be less than or equal to end date", trigger: "change" },
   ],
   water_client_id: [
     { required: true, message: "Please select a client", trigger: "change" },
