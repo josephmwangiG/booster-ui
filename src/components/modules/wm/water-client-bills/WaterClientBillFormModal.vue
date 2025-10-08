@@ -32,8 +32,8 @@
       <div class="lg:flex gap-3">
 
         <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">
-          <el-input type="number" @focusout="getBillAmount" v-model="formData.previous_meter_reading"
-            placeholder="Enter previous meter reading">
+          <el-input type="number" v-model="formData.previous_meter_reading" :disabled="true"
+            placeholder="Auto-filled from last reading">
           </el-input>
         </el-form-item>
         <el-form-item type="number" @focusout="getBillAmount" prop="current_meter_reading" class="flex-1"
@@ -64,6 +64,9 @@
       <div class="mt-5 sm:mt-6 text-right">
         <button @click="emits('close-modal')" type="button" class="btn-primary-outline">
           Close
+        </button>
+        <button @click="submitForm(itemFormRef, 'Draft')" type="button" class="btn-primary mr-2" :disabled="isSubmitting">
+          {{ isSubmitting ? "Please wait..." : "Generate Draft Bill" }}
         </button>
         <button @click="submitForm(itemFormRef, 'Pending')" type="button" class="btn-primary" :disabled="isSubmitting">
           {{ isSubmitting ? "Please wait..." : "Save" }}
@@ -107,8 +110,10 @@ const disabledDate = (time: Date) => {
 }
 
 const consumption = computed(() => {
-  if (!formData.current_meter_reading || !formData.previous_meter_reading) return 0
-  return Number(formData.current_meter_reading) - Number(formData.previous_meter_reading)
+  const current = Number(formData.current_meter_reading)
+  const previous = Number(formData.previous_meter_reading)
+  if (Number.isNaN(current) || Number.isNaN(previous)) return 0
+  return current - previous
 })
 
 
@@ -150,8 +155,7 @@ const rules = reactive<FormRules<WaterClientBillForm>>({
     { min: 0, message: "Please enter positive value", trigger: "blur" }
   ],
   previous_meter_reading: [
-    { required: true, message: "Please enter amount", trigger: "blur" },
-    { min: 0, message: "Please enter positive value", trigger: "blur" }
+    { min: 0, message: "Please enter positive value", trigger: "change" }
   ],
   due_date: [
     { required: true, message: "Please select due date", trigger: "change" },
@@ -164,9 +168,34 @@ const getBillAmount = (_e: any) => {
 }
 
 const handleClientChange = async (client_id: string) => {
-  const lastBill = await store.getLastBill(client_id);
-  if (lastBill) {
-    formData.previous_meter_reading = lastBill.current_meter_reading;
+  loading.value = true;
+  try {
+    const fetchLastBillWithRetry = async (retries = 2, delayMs = 500): Promise<any | null> => {
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        const result = await store.getLastBill(client_id);
+        if (result && (result.current_meter_reading !== undefined && result.current_meter_reading !== null)) {
+          return result;
+        }
+        if (attempt < retries) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+      }
+      return null;
+    };
+
+    const lastBill = await fetchLastBillWithRetry();
+
+    if (lastBill) {
+      formData.previous_meter_reading = Number(lastBill.current_meter_reading) || 0;
+      if (!formData.rate || Number(formData.rate) === 0) {
+        formData.rate = Number(lastBill.rate) || formData.rate;
+      }
+    } else {
+      // No previous bill found; default to 0 so form remains submittable
+      formData.previous_meter_reading = 0;
+    }
+  } finally {
+    loading.value = false;
   }
 };
 

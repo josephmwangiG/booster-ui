@@ -246,31 +246,27 @@ const getStatusClass = (status: string) => {
 
 onMounted(async () => {
   try {
-    await reportsStore.getWMDashboardReports();
-    
-    // Populate water management data with fallback values
+    const res = await reportsStore.getWMDashboardReports();
+    const api = res?.data || reportsStore.wmDashboardReports || {};
     waterManagementData.value = {
       clientBills: {
-        total_amount: reportsStore.wmDashboardReports?.client_bills?.total_amount || 125000,
-        paid_amount: reportsStore.wmDashboardReports?.client_bills?.paid_amount || 85000,
-        pending_amount: reportsStore.wmDashboardReports?.client_bills?.pending_amount || 40000
+        total_amount: api.client_bills?.total_amount || 0,
+        paid_amount: api.client_bills?.paid_amount || 0,
+        pending_amount: api.client_bills?.pending_amount || 0
       },
       collections: {
-        total_amount: reportsStore.wmDashboardReports?.collections?.total_amount || 75000,
-        count: reportsStore.wmDashboardReports?.collections?.count || 45
+        total_amount: api.collections?.total_amount || 0,
+        count: api.collections?.count || 0
       },
       deliveries: {
-        total_amount: reportsStore.wmDashboardReports?.deliveries?.total_amount || 95000,
-        count: reportsStore.wmDashboardReports?.deliveries?.count || 28
+        total_amount: api.deliveries?.total_amount || 0,
+        count: api.deliveries?.count || 0
       },
       infrastructure: {
-        total_meters: reportsStore.wmDashboardReports?.infrastructure?.total_meters || 156,
-        active_clients: reportsStore.wmDashboardReports?.infrastructure?.active_clients || 142
+        total_meters: api.infrastructure?.total_meters || 0,
+        active_clients: api.infrastructure?.active_clients || 0
       }
     };
-    
-    console.log('Water management data populated:', waterManagementData.value);
-    
   } catch (error) {
     console.error('Error loading water management data:', error);
   } finally {

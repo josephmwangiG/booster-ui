@@ -263,9 +263,11 @@ const addItem = () => {
   dialogVisible.value = true;
 };
 
-const editItem = (item: any) => {
+const editItem = async (item: any) => {
   action.value = "edit";
-  formData.value = item;
+  await store.getWaterClientBill(item.id);
+  // Use fresh data from DB if available
+  formData.value = store.tenantBill || item;
   dialogVisible.value = true;
 };
 
