@@ -85,7 +85,7 @@
                   {{ item.client_name }}
                 </td>
                 <td class="t-td">
-                  {{ item.meter_number || '-' }}
+                  {{ getMeterNumberForBill(item) }}
                 </td>
                 <td class="t-td">
                   {{
@@ -182,6 +182,14 @@ const store = useWaterClientBillsStore();
 
 const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
+// Helper to render meter number even if API bill omits it
+const getMeterNumberForBill = (bill: any) => {
+  if (bill?.meter_number && String(bill.meter_number).trim() !== '') {
+    return bill.meter_number;
+  }
+  const client = (store.clientItems || []).find((c: any) => c.id === bill.water_client_id);
+  return client?.meter_number && String(client.meter_number).trim() !== '' ? client.meter_number : 'N/A';
+};
 
 // Search and filter state
 const searchQuery = ref('');
@@ -307,7 +315,10 @@ const handleClearFilters = () => {
 };
 
 onMounted(async () => {
-  await store.getWaterClientBills();
+  await Promise.all([
+    store.getWaterClientBills(),
+    store.getClientItems(),
+  ]);
   initDataTableWithSearch(dataTableRef.value);
   loading.value = false;
 });

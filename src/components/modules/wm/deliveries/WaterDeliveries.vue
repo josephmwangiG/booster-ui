@@ -62,7 +62,8 @@
                 <th class="t-th">Vehicle</th>
                 <th class="t-th">Driver</th>
                 <th class="t-th">Delivery Date</th>
-                <th class="t-th">Status</th>
+                <th class="t-th">Payment Status</th>
+                <th class="t-th">Delivery Status</th>
                 <th class="t-th">Capacity</th>
                 <th class="t-th">Amount</th>
                 <th class="t-th">Amount Paid</th>
@@ -98,17 +99,22 @@
                   {{ formatDate(item.delivery_date, true) }}
                 </td>
                 <td class="t-td font-semibold">
-                  <span v-if="item.status === 'Paid and delivery completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                  <span v-if="getPaymentStatus(item) === 'Paid'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                    Paid
+                  </span>
+                  <span v-else-if="getPaymentStatus(item) === 'Partial'" class="p-1 rounded bg-yellow-100 text-yellow-600 text-xs">
+                    Partial
+                  </span>
+                  <span v-else class="p-1 rounded bg-red-100 text-red-500 text-xs">
+                    Pending
+                  </span>
+                </td>
+                <td class="t-td font-semibold">
+                  <span v-if="getDeliveryStatus(item) === 'Completed'" class="p-1 rounded bg-green-100 text-green-500 text-xs">
                     Completed
                   </span>
-                  <span v-else-if="item.status === 'Payment and delivery not completed'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
-                    Payment and delivery not completed
-                  </span>
-                  <span v-else-if="item.status === 'Paid, but delivery not completed'" class="p-1 rounded bg-red-100 text-red-500 text-xs">
-                    Paid, but delivery not completed
-                  </span>
-                  <span v-else-if="item.status === 'Delivered but payment not yet received'" class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
-                    Delivered but payment not yet received
+                  <span v-else class="p-1 rounded bg-yellow-100 text-yellow-600 text-xs">
+                    Pending
                   </span>
                 </td>
                 <td class="t-td font-semibold">
@@ -208,13 +214,34 @@ const dateFrom = ref('');
 const dateTo = ref('');
 const selectedStatus = ref('');
 
-// Delivery status options for filtering (aligned with new statuses)
+// Filter options now support Payment and Delivery status separately
 const paymentStatusOptions = [
-  { value: 'Paid and delivery completed', label: 'Paid and delivery completed' },
-  { value: 'Paid, but delivery not completed', label: 'Paid, but delivery not completed' },
-  { value: 'Payment and delivery not completed', label: 'Payment and delivery not completed' },
-  { value: 'Delivered but payment not yet received', label: 'Delivered but payment not yet received' }
+  { value: 'Paid', label: 'Paid' },
+  { value: 'Partial', label: 'Partial' },
+  { value: 'Pending', label: 'Pending' }
 ];
+const deliveryStatusOptions = [
+  { value: 'Completed', label: 'Completed' },
+  { value: 'Pending', label: 'Pending' },
+];
+
+// Derive Payment Status from combined status and amounts
+const getPaymentStatus = (delivery: any) => {
+  const total = Number(delivery.total_amount) || 0;
+  const paid = Number(delivery.amount_paid || 0);
+  if (paid >= total && total > 0) return 'Paid';
+  if (paid > 0 && paid < total) return 'Partial';
+  // fallback by combined status text
+  if (delivery.status === 'Paid and delivery completed' || delivery.status === 'Paid, but delivery not completed') return 'Paid';
+  if (delivery.status === 'Delivered but payment not yet received') return 'Pending';
+  return 'Pending';
+};
+
+// Derive Delivery Status from combined status
+const getDeliveryStatus = (delivery: any) => {
+  if (delivery.status === 'Paid and delivery completed') return 'Completed';
+  return 'Pending';
+};
 
 // Filtered water deliveries
 const filteredWaterDeliveries = computed(() => {
@@ -251,11 +278,9 @@ const filteredWaterDeliveries = computed(() => {
     });
   }
 
-  // Apply status filter
+  // Apply status filter (map from combined backend status to payment-only filter)
   if (selectedStatus.value) {
-    filtered = filtered.filter((delivery: any) => {
-      return delivery.status === selectedStatus.value;
-    });
+    filtered = filtered.filter((delivery: any) => getPaymentStatus(delivery) === selectedStatus.value);
   }
 
   return filtered;
@@ -312,15 +337,15 @@ const handleDateRange = (from: string, to: string) => {
   dateFrom.value = from;
   dateTo.value = to;
   if (dataTableRef.value) {
-    handleDateRangeFilter(dataTableRef.value, 6, from, to); // Date column is index 6
+    handleDateRangeFilter(dataTableRef.value, 6, from, to); // Date column unchanged
   }
 };
 
 const handleStatusFilter = (status: string) => {
   selectedStatus.value = status;
-  // Custom filtering for payment status
+  // Filter by derived payment status (Payment Status column index is 7 now)
   if (dataTableRef.value && status) {
-    handleColumnSearch(dataTableRef.value, 7, status); // Status column is index 7
+    handleColumnSearch(dataTableRef.value, 7, status);
   }
 };
 
