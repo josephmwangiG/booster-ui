@@ -100,6 +100,15 @@ const routes = [
         },
       },
       {
+        name: "water-settings",
+        path: "/settings/water",
+        component: () => import("@/components/settings/wm/WaterSettings.vue"),
+        meta: {
+          require_auth: true,
+          title: "Water Settings",
+        },
+      },
+      {
         name: "drivers",
         path: "/settings/drivers",
         component: () => import("@/components/settings/drivers/Drivers.vue"),

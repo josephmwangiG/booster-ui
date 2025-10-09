@@ -33,7 +33,7 @@
 
         <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">
           <el-input type="number" v-model="formData.previous_meter_reading"
-            placeholder="Enter previous meter reading">
+            placeholder="Enter previous meter reading" :disabled="true">
           </el-input>
         </el-form-item>
         <el-form-item type="number" @focusout="getBillAmount" prop="current_meter_reading" class="flex-1"
@@ -80,6 +80,7 @@ import { onMounted, reactive, ref, computed } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
 import { useWaterClientBillsStore } from "@/store/water-client-bills.store";
 import { WaterClientBillForm } from "@/type/water-client.type";
+import { useWaterConfigStore } from "@/store/water-config.store";
 
 const props = defineProps({
   form: Object,
@@ -88,6 +89,7 @@ const props = defineProps({
 const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterClientBillsStore();
 const itemFormRef = ref<FormInstance>();
+const wmConfig = useWaterConfigStore();
 const validClientItems = computed(() => (store.clientItems || []).filter((c: any) => c.meter_number !== null && c.meter_number !== undefined && String(c.meter_number).trim() !== ''));
 const formData = reactive<WaterClientBillForm>({
   id: null,
@@ -265,6 +267,10 @@ onMounted(async () => {
   await store.getClientItems();
   console.log('Client items loaded:', store.clientItems);
   console.log('Form data:', formData);
+  // Prefill default rate if creating and rate not provided
+  if (props.action === "create" && (!formData.rate || Number(formData.rate) === 0)) {
+    formData.rate = Number(wmConfig.defaultRatePerCubicMeter) || 0;
+  }
   loading.value = false;
 });
 </script>
