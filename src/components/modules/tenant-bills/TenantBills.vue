@@ -173,6 +173,13 @@
                         }"><i class="ri-external-link-line text-orange-500"></i>
                           View</router-link>
                       </el-dropdown-item>
+                      <el-dropdown-item v-if="item.payment_status == 'Draft'">
+                        <router-link class="font-semibold py-2" :to="{
+                          name: 'tenant-bill',
+                          params: { id: item.id },
+                        }"><i class="ri-edit-line text-blue-500"></i>
+                          Edit</router-link>
+                      </el-dropdown-item>
                     </template>
                     </el-dropdown>
                   </div>

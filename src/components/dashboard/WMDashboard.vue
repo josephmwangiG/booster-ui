@@ -113,8 +113,8 @@
               <div class="flex justify-between">
                 <h4 class="font-semibold">Water Management Summary</h4>
               </div>
-              <div id="chart" class="flex items-center justify-center h-32">
-                <p class="text-gray-500">Chart data loading...</p>
+              <div id="chart" class="flex items-center justify-center">
+                <apexchart type="donut" :options="chartOptions" :series="chartSeries"></apexchart>
               </div>
             </div>
             <div class="col-span-2 space-y-6 p-6 mt-6 bg-white">
@@ -203,10 +203,12 @@
 import { formatAmount, formatNumber } from "@/composables/helper_functions";
 import { useReportsStore } from "@/store/report.store";
 import { onMounted, ref } from "vue";
+import VueApexCharts from 'vue3-apexcharts';
+import { useWaterManagementChart } from '@/composables/charts';
 
 const loading = ref(true);
 const reportsStore = useReportsStore();
-
+const apexchart = VueApexCharts;
 
 
 const waterManagementData = ref({
@@ -229,6 +231,7 @@ const waterManagementData = ref({
   }
 })
 
+const { chartOptions, chartSeries } = useWaterManagementChart(waterManagementData.value);
 
 
 const getStatusClass = (status: string) => {
@@ -250,9 +253,9 @@ onMounted(async () => {
     const api = res?.data || reportsStore.wmDashboardReports || {};
     waterManagementData.value = {
       clientBills: {
-        total_amount: api.client_bills?.total_amount || 0,
-        paid_amount: api.client_bills?.paid_amount || 0,
-        pending_amount: api.client_bills?.pending_amount || 0
+        total_amount: api.client_bills_summary?.total_amount || 0,
+        paid_amount: api.client_bills_summary?.paid_amount || 0,
+        pending_amount: api.client_bills_summary?.pending_amount || 0
       },
       collections: {
         total_amount: api.collections?.total_amount || 0,
@@ -267,6 +270,11 @@ onMounted(async () => {
         active_clients: api.infrastructure?.active_clients || 0
       }
     };
+    chartSeries.value = [
+      waterManagementData.value.clientBills.total_amount,
+      waterManagementData.value.collections.total_amount,
+      waterManagementData.value.deliveries.total_amount,
+    ];
   } catch (error) {
     console.error('Error loading water management data:', error);
   } finally {

@@ -9,7 +9,7 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
     clientItems: [] as any[],
     clientBillPayments: [] as any[],
     units: [] as any[],
-    tenantBill: null as any,
+    waterClientBill: null as any,
     headers: {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
@@ -103,14 +103,14 @@ export const useWaterClientBillsStore = defineStore("water-client-bills", {
         this.headers
       );
 
-      this.tenantBill = res.data;
+      this.waterClientBill = res.data;
 
       return res;
     },
 
     async getWaterClientBill(id: string) {
       const res = await axios.get("/water-client-bills/" + id, this.headers);
-      this.tenantBill = res.data;
+      this.waterClientBill = res.data;
     },
     async getLastBill(client_id: string) {
       const res = await axios.get(`/water-client-bills/last-bill/${client_id}`, this.headers);

@@ -191,6 +191,7 @@ const rules = reactive<FormRules<MeterReadingForm>>({
   ],
   previous_meter_reading: [
     { required: true, message: "Enter previous reading", trigger: "blur" },
+    { min: 0, message: "Please enter positive value", trigger: "blur" }
   ],
   current_meter_reading: [
     { validator: validateCurrentMeterReading, trigger: "blur" },

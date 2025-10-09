@@ -267,7 +267,7 @@ const editItem = async (item: any) => {
   action.value = "edit";
   await store.getWaterClientBill(item.id);
   // Use fresh data from DB if available
-  formData.value = store.tenantBill || item;
+  formData.value = store.waterClientBill || item;
   dialogVisible.value = true;
 };
 

@@ -75,9 +75,21 @@ const validateCurrentMeterReading = (_rule: any, _value: any, callback: any) => 
   }
 }
 
+const validatePreviousMeterReading = (_rule: any, value: any, callback: any) => {
+  const numValue = Number(value);
+  if (isNaN(numValue) || numValue < 0) {
+    callback(new Error('Please enter positive value'));
+  } else {
+    callback();
+  }
+};
+
 const rules = reactive<FormRules<TenantBillItemForm>>({
   current_meter_reading: [
     { validator: validateCurrentMeterReading, message: "Current reading should be greater than previous reading", trigger: "blur" },
+  ],
+  previous_meter_reading: [
+    { validator: validatePreviousMeterReading, message: "Please enter positive value", trigger: "blur" }
   ],
   amount: [
     { required: true, message: "Please enter amount", trigger: "blur" },
