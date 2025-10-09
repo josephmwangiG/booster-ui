@@ -246,7 +246,16 @@ const years = computed(() => {
 
 // Computed properties
 const tenants = computed(() => tenantsStore.tenants || []);
-const utilities = computed(() => utilitiesStore.utilities || []);
+const utilities = computed(() => {
+  const list = utilitiesStore.utilities || [];
+  const seenIds = new Set<string | number>();
+  return list.filter((u: any) => {
+    const id = u?.id;
+    if (seenIds.has(id)) return false;
+    seenIds.add(id);
+    return true;
+  });
+});
 
 // Get all tenants with their exclusion status
 const allTenants = computed(() => {
@@ -274,12 +283,10 @@ const totalRentAmount = computed(() => {
 const totalUtilitiesAmount = computed(() => {
   let total = 0;
   tenantsWithUnits.value.forEach(tenant => {
-    tenant.tenancies?.filter((tenancy: any) => tenancy.active).forEach(() => {
-      utilities.value.forEach((utility: any) => {
-        if (isUtilitySelected(tenant.id, utility.id)) {
-          total += getUtilityAmount(tenant.id, utility.id);
-        }
-      });
+    utilities.value.forEach((utility: any) => {
+      if (isUtilitySelected(tenant.id, utility.id)) {
+        total += getUtilityAmount(tenant.id, utility.id);
+      }
     });
   });
   return total;
@@ -313,7 +320,7 @@ const toggleUtility = async (tenantId: number, utilityId: number, selected: bool
       // Fetch previous meter reading from database
       if (unitId) {
         try {
-          const result = await store.getPreviousMeterReadings(tenantId.toString(), utilityId.toString(), unitId);
+          const result = await store.getPreviousMeterReadings(tenantId.toString(), utilityId.toString(), String(unitId));
           if (result.success) {
             previousReading = result.previous_reading || 0;
           }
@@ -325,7 +332,9 @@ const toggleUtility = async (tenantId: number, utilityId: number, selected: bool
       formData.utility_inputs[inputKey] = {
         prev_reading: previousReading.toString(),
         current_reading: '',
-        rate: utilities.value.find((u: any) => u.id === utilityId)?.rate || 0
+        rate: utilities.value.find((u: any) => u.id === utilityId)?.rate || 0,
+        unit_id: unitId ? String(unitId) : '',
+        tenancy_id: activeTenancy?.id ? String(activeTenancy.id) : ''
       };
     }
   }
@@ -464,23 +473,35 @@ const submitForm = async (draft = false) => {
     
     // Prepare data for submission - convert to the format expected by backend
     const utilityInputsForBackend: any = {};
+    const meterReadingsForBackend: any[] = [];
     
-    // Process utility inputs for each eligible tenant only
+    // Process utility inputs for each eligible tenant only (one entry per tenant-utility)
     tenantsWithUnits.value.forEach(tenant => {
       if (!isTenantExcluded(tenant)) {
-        tenant.tenancies?.filter((tenancy: any) => tenancy.active).forEach((tenancy: any) => {
-          utilities.value.forEach((utility: any) => {
-            if (isUtilitySelected(tenant.id, utility.id)) {
-              const key = `${tenant.id}_${tenancy.id}_${utility.id}`;
-              const utilityInput = formData.utility_inputs[`${tenant.id}_${utility.id}`];
-              if (utilityInput) {
-                const prevReading = parseFloat(utilityInput.prev_reading) || 0;
-                const currentReading = parseFloat(utilityInput.current_reading) || 0;
-                const consumption = Math.max(0, currentReading - prevReading);
+        utilities.value.forEach((utility: any) => {
+          if (isUtilitySelected(tenant.id, utility.id)) {
+            const utilityInput = formData.utility_inputs[`${tenant.id}_${utility.id}`];
+            if (utilityInput) {
+              const prevReading = parseFloat(utilityInput.prev_reading) || 0;
+              const currentReading = parseFloat(utilityInput.current_reading) || 0;
+              const consumption = Math.max(0, currentReading - prevReading);
+              const tenancyIdString = utilityInput.tenancy_id || '';
+              const unitIdString = utilityInput.unit_id || '';
+
+              if (tenancyIdString) {
+                const key = `${tenant.id}_${tenancyIdString}_${utility.id}`;
                 utilityInputsForBackend[key] = consumption;
               }
+
+              meterReadingsForBackend.push({
+                tenant_id: String(tenant.id),
+                unit_id: unitIdString,
+                utility_id: String(utility.id),
+                previous_reading: prevReading,
+                current_reading: currentReading
+              });
             }
-          });
+          }
         });
       }
     });
@@ -488,8 +509,8 @@ const submitForm = async (draft = false) => {
     const dataToSend = {
       month: formData.month,
       year: String(formData.year),
-      meter_readings: [], // No meter readings needed
-      utility_inputs: utilityInputsForBackend, // Include processed utility inputs
+      // Intentionally omit meter_readings to avoid double-counting utilities on backend
+      utility_inputs: utilityInputsForBackend,
       draft: draft
     };
     
