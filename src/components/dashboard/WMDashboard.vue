@@ -146,7 +146,7 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100">
-                    <tr v-for="(item, index) in (reportsStore.wmDashboardReports?.client_bills || [])" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
+                    <tr v-for="(item, index) in (reportsStore.wmDashboardReports?.client_bills?.list || [])" :key="index" :class="index % 2 != 0 ? 'bg-gray-50' : ''">
                       <td class="px-3 py-2 whitespace-nowrap text-[13px] text-gray-500 font-semibold hover:underline">
                         {{ item.client_name || 'Client Name' }}
                       </td>
@@ -162,7 +162,7 @@
                         {{ formatAmount(item.amount || 0) }}
                       </td>
                     </tr>
-                    <tr v-if="!reportsStore.wmDashboardReports?.client_bills?.length">
+                    <tr v-if="!reportsStore.wmDashboardReports?.client_bills?.list?.length">
                       <td colspan="4" class="px-3 py-8 text-center text-gray-500">
                         <p>No water client bills data available</p>
                         <p class="text-sm mt-1">Data will appear here when bills are created</p>
@@ -249,13 +249,13 @@ const getStatusClass = (status: string) => {
 
 onMounted(async () => {
   try {
-    const res = await reportsStore.getWMDashboardReports();
-    const api = res?.data || reportsStore.wmDashboardReports || {};
+    await reportsStore.getWMDashboardReports();
+    const api = reportsStore.wmDashboardReports || {};
     waterManagementData.value = {
       clientBills: {
-        total_amount: api.client_bills_summary?.total_amount || 0,
-        paid_amount: api.client_bills_summary?.paid_amount || 0,
-        pending_amount: api.client_bills_summary?.pending_amount || 0
+        total_amount: api.client_bills?.total_amount || 0,
+        paid_amount: api.client_bills?.paid_amount || 0,
+        pending_amount: api.client_bills?.pending_amount || 0
       },
       collections: {
         total_amount: api.collections?.total_amount || 0,
