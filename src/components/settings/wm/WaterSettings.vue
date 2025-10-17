@@ -24,7 +24,7 @@
   
 </template>
 <script setup lang="ts">
-import { reactive } from "vue";
+import { onMounted, reactive } from "vue";
 import { ElNotification } from "element-plus";
 import { useWaterConfigStore } from "@/store/water-config.store";
 
@@ -42,6 +42,14 @@ const save = () => {
 const reset = () => {
   form.rate = Number(waterConfig.defaultRatePerCubicMeter) || 0;
 };
+
+onMounted(async () => {
+  try {
+    await waterConfig.syncFromSettings();
+  } finally {
+    form.rate = Number(waterConfig.defaultRatePerCubicMeter) || 0;
+  }
+});
 </script>
 
 <style scoped>

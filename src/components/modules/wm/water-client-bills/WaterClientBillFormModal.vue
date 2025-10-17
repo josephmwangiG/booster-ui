@@ -76,7 +76,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, ref, computed } from "vue";
+import { onMounted, reactive, ref, computed, watch } from "vue";
 import { ElNotification, type FormInstance, type FormRules } from "element-plus";
 import { useWaterClientBillsStore } from "@/store/water-client-bills.store";
 import { WaterClientBillForm } from "@/type/water-client.type";
@@ -268,11 +268,26 @@ onMounted(async () => {
   console.log('Client items loaded:', store.clientItems);
   console.log('Form data:', formData);
   // Prefill default rate if creating and rate not provided
+  // Ensure local store is in sync with server-side setting before reading
+  try { await wmConfig.syncFromSettings(); } catch {}
   if (props.action === "create" && (!formData.rate || Number(formData.rate) === 0)) {
     formData.rate = Number(wmConfig.defaultRatePerCubicMeter) || 0;
   }
   loading.value = false;
 });
+
+// Reflect changes from Settings page into this modal in real-time
+watch(
+  () => wmConfig.defaultRatePerCubicMeter,
+  (newRate) => {
+    if (props.action === "create") {
+      const current = Number(formData.rate) || 0;
+      if (!current) {
+        formData.rate = Number(newRate) || 0;
+      }
+    }
+  }
+);
 </script>
 <style lang=""></style>
 

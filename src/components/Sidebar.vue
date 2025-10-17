@@ -189,10 +189,10 @@
       </button>
       <ul id="dropdown-example" :class="settingsDropdown ? 'show' : 'hidden'" class="pb-2">
         <li>
-          <router-link :to="{ name: 'water-settings' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'water-settings'
+          <router-link :to="{ name: 'settings' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'settings'
             ? 'text-orange-500'
             : ''
-            "><i class="ri-circle-fill text-[8px] mr-2"></i> Water Settings</router-link>
+            "><i class="ri-circle-fill text-[8px] mr-2"></i> Settings</router-link>
         </li>
         <li>
           <router-link :to="{ name: 'drivers' }" class="drop-menu py-3" :class="router.currentRoute.value.name === 'drivers'
