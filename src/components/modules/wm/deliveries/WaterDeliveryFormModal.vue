@@ -32,7 +32,7 @@
             <el-option
               v-for="item in client_store.clientItems"
               :key="item.id"
-              :label="`${item.client_name} ${item.phone || ''}`"
+              :label="item.client_name"
               :value="item.id"
             >
               <span style="float: left">{{ item.client_name }}</span>
