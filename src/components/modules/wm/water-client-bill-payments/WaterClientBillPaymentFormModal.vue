@@ -97,9 +97,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
             payment_ref: formData.payment_ref || ''
           };
           
-          console.log('Submitting form data:', submissionData);
-          console.log('Original form data:', formData);
-          
           const res = await store.createWaterClientBillPayment(submissionData);
           if (res.status == 200 || res.status == 201) {
             resetForm(itemFormRef.value as FormInstance);

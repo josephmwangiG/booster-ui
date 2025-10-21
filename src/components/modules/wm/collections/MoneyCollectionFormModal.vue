@@ -91,11 +91,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       notes: null
     };
 
-    console.log('Submitting API data:', apiData);
-
     if (props.action === "create") {
       const res = await store.createWaterDelivery(apiData as any);
-      console.log('Create response:', res);
       if (res.status == 200 || res.status == 201) {
         resetForm(itemFormRef.value as FormInstance);
         emits("close-modal");
@@ -114,7 +111,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       }
     } else {
       const res = await store.updateWaterDelivery(apiData as any);
-      console.log('Update response:', res);
       if (res.status == 200 || res.status == 201) {
         resetForm(itemFormRef.value as FormInstance);
         emits("close-modal");

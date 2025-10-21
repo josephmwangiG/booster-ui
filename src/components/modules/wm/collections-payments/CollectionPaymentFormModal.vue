@@ -102,9 +102,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   if (props.action === "create") {
     // Set status to completed for new payments (matching API response format)
     formData.status = "completed";
-    console.log('Creating payment with data:', formData);
     const res = await store.createPayment(formData);
-    console.log('Payment creation response:', res.data);
     if (res.status == 200 || res.status == 201) {
       resetForm(itemFormRef.value as FormInstance);
       emits("close-modal");
@@ -120,7 +118,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 const getClientBalance = async () => {
   if (!formData.phone_number) return
   const res =await store.getClientBalance(formData.phone_number);
-  console.log(res)
   res.data.balance ? balance.value = res.data.balance : balance.value = 0
 };
 

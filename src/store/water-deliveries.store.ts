@@ -32,9 +32,7 @@ export const useWaterDeliveriesStore = defineStore("water-deliveries", {
     },
     async getDeliveryItems() {
       try {
-        console.log('Fetching delivery items with headers:', this.headers);
         const res = await axios.get("/water-deliveries/get/items", this.headers);
-        console.log('Delivery items API response:', res.data);
         this.drivers = res.data.drivers || [];
         this.vehicles = res.data.vehicles || [];
         this.payment_methods = res.data.payment_methods || [];

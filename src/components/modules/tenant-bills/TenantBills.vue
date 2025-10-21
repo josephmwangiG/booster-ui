@@ -347,27 +347,14 @@ const utilityAmount = computed(() => {
   // Calculate utilities from bill items where item_name is NOT "Rent"
   // Note: Some utilities might not have utility_id, so we check for non-rent items
   if (store.tenantBillItems && store.tenantBillItems.length > 0) {
-    console.log('Calculating utility amount from bill items:', store.tenantBillItems.length, 'items');
     store.tenantBillItems.forEach(item => {
-      console.log('Processing bill item:', {
-        id: item.id,
-        item_name: item.item_name,
-        amount: item.amount,
-        utility_id: item.utility_id,
-        tenant_bill_id: item.tenant_bill_id
-      });
-      
       if (item.item_name !== 'Rent') {
         const amount = Number(item.amount) || 0;
         total += amount;
-        console.log(`Adding utility item ${item.item_name}: ${amount}, total: ${total}`);
       }
     });
-  } else {
-    console.log('No tenant bill items available for utility calculation');
   }
   
-  console.log('Total utility amount calculated:', total);
   return total;
 });
 
@@ -502,7 +489,6 @@ const handleClearFilters = () => {
 // Function to get utilities for a specific bill
 const getBillUtilities = (billId: string) => {
   if (!store.tenantBillItems || store.tenantBillItems.length === 0) {
-    console.log('No tenant bill items available for bill utilities');
     return [];
   }
   
@@ -510,7 +496,6 @@ const getBillUtilities = (billId: string) => {
     item.tenant_bill_id === billId && item.item_name !== 'Rent'
   );
   
-  console.log(`Utilities for bill ${billId}:`, utilities);
   return utilities;
 };
 
@@ -531,15 +516,6 @@ onMounted(async () => {
       store.getBillItems(),
       store.getTenantBillPayments()
     ]);
-    
-    console.log('Initial data loaded:', {
-      bills: store.tenantBills.length,
-      billItems: store.tenantBillItems.length,
-      payments: store.tenantBillPayments.length,
-      totalAmount: totalAmount.value,
-      totalPaid: totalPaidAmount.value,
-      totalPending: totalPendingAmount.value
-    });
     
     if (dataTableRef.value && filteredTenantBills.value && filteredTenantBills.value.length > 0) {
       initDataTableWithSearch(dataTableRef.value);

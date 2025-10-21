@@ -158,11 +158,9 @@ const paymentStatusOptions = [
 // Helper function to get meter code by ID
 const getMeterCode = (meterId: string) => {
   if (!meterId || !store.meters) {
-    console.log('No meterId or meters:', { meterId, metersLength: store.meters?.length });
     return 'N/A';
   }
   const meter = store.meters.find(m => m.id === meterId);
-  console.log('Meter lookup:', { meterId, foundMeter: meter });
   return meter?.code_number || 'N/A';
 };
 
@@ -236,14 +234,11 @@ const handleClearFilters = () => {
 
 onMounted(async () => {
   try {
-    console.log('Loading collection payments and meters...');
     // Load both payments and meters in parallel
     await Promise.all([
       store.getPayments(),
       store.getMeters()
     ]);
-    console.log('Collection payments loaded:', store.waterCollectionsPayments);
-    console.log('Meters loaded:', store.meters);
     loading.value = false;
     // Initialize DataTable after data is loaded
     await nextTick();

@@ -21,9 +21,7 @@ export const useTenantsStore = defineStore("tenants", {
     },
     async getProperties() {
       try {
-        console.log('Fetching properties with headers:', this.headers);
         const res = await axios.get("/properties/get/items", this.headers);
-        console.log('Properties API response:', res.data);
         this.properties = res.data || [];
         return res;
       } catch (error: any) {

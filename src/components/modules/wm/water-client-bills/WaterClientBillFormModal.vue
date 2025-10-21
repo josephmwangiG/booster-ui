@@ -33,7 +33,7 @@
 
         <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">
           <el-input type="number" v-model="formData.previous_meter_reading"
-            placeholder="Enter previous meter reading" :disabled="true">
+            placeholder="Enter previous meter reading">
           </el-input>
         </el-form-item>
         <el-form-item type="number" @focusout="getBillAmount" prop="current_meter_reading" class="flex-1"
@@ -222,9 +222,6 @@ const submitForm = async (formEl: FormInstance | undefined, status: string) => {
     } else {
       isSubmitting.value = true;
       try {
-        console.log('Submitting form data:', formData);
-        console.log('Action:', props.action);
-        
         if (props.action == "create") {
           const res = await store.createWaterClientBill(formData);
           if (res.status == 200 || res.status == 201) {
@@ -265,8 +262,6 @@ const resetForm = (formEl: FormInstance | undefined) => {
 onMounted(async () => {
   loading.value = true;
   await store.getClientItems();
-  console.log('Client items loaded:', store.clientItems);
-  console.log('Form data:', formData);
   // Prefill default rate if creating and rate not provided
   if (props.action === "create" && (!formData.rate || Number(formData.rate) === 0)) {
     formData.rate = Number(wmConfig.defaultRatePerCubicMeter) || 0;

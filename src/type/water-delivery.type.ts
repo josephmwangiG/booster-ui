@@ -1,16 +1,18 @@
 export type WaterDeliveryForm = {
+  create_client: boolean | false;
   id: string | null;
+  water_client_id: string;
   organization_id: number;
   driver_id: number;
   vehicle_id: number;
   departure_time: string; 
   return_time?: string | null; 
-  capacity: number;
-  amount: number;
+  quantity_liters: number;
+  total_amount: number;
   amount_paid?: number | null; 
   client_name: string;
   address: string;
-  phone_number: string;
+  phone: string;
   email?: string | null; 
   record_payment?: boolean;
   water_delivery_id?: number; 

@@ -139,9 +139,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
             payment_ref: formData.payment_ref || ''
           };
           
-          console.log('Submitting form data:', submissionData);
-          console.log('Original form data:', formData);
-          
           const res = await store.createTenantBillPayment(submissionData);
           if (res.status == 200 || res.status == 201) {
             // Show success message with utility breakdown

@@ -25,12 +25,9 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
     async getBillItems() {
       try {
-        console.log('Fetching tenant bill items with headers:', this.headers);
         const res = await axios.get("/tenant-bill-items", {
           ...this.headers,
         });
-        console.log('Tenant bill items API response:', res.data);
-        console.log('First item structure:', res.data[0]);
         this.tenantBillItems = res.data || [];
         return res;
       } catch (error: any) {
@@ -41,11 +38,9 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
     async getTenantBillsForPayment() {
       try {
-        console.log('Fetching tenant bills for payment with headers:', this.headers);
         const res = await axios.get("/tenant-bills-for-payment", {
           ...this.headers,
         });
-        console.log('Tenant bills for payment API response:', res.data);
         this.tenantBillItems = res.data || [];
         return res;
       } catch (error: any) {
@@ -56,11 +51,9 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
     },
     async getTenantBillPayments() {
       try {
-        console.log('Fetching tenant bill payments with headers:', this.headers);
         const res = await axios.get("/tenant-payments", {
           ...this.headers,
         });
-        console.log('Tenant bill payments API response:', res.data);
         this.tenantBillPayments = res.data || [];
         return res;
       } catch (error: any) {
@@ -99,11 +92,9 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
 
     async createTenantBillPayment(data: TenantBillPaymentForm) {
       try {
-        console.log('Creating tenant bill payment with data:', data);
         const res = await axios.post("/tenant-payments", data, {
           ...this.headers,
         });
-        console.log('Tenant bill payment created successfully:', res.data);
         
         // Handle the new response format with payment and updated bill
         if (res.data.payment && res.data.updated_bill) {

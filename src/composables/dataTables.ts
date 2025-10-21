@@ -213,11 +213,6 @@ export const initDataTableWithSearch = (dataTableRef: any, options: any = {}) =>
       return $(this).find('td').length > 0;
     });
     
-    console.log('DataTable Debug Info:');
-    console.log('- Header cells:', headerCells);
-    console.log('- Total tbody rows:', tbody.find('tr').length);
-    console.log('- Data rows (non-loading/empty):', dataRows.length);
-    
     if (dataRows.length === 0) {
       console.warn('No data rows found, skipping DataTable initialization');
       return;
@@ -225,9 +220,6 @@ export const initDataTableWithSearch = (dataTableRef: any, options: any = {}) =>
     
     const firstDataRow = dataRows.first();
     const dataCells = firstDataRow.find('td').length;
-    
-    console.log('- First data row cells:', dataCells);
-    console.log('- First data row HTML:', firstDataRow[0]?.outerHTML);
     
     // Only initialize if we have matching column counts
     if (headerCells > 0 && headerCells === dataCells) {

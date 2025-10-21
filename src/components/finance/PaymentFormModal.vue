@@ -137,7 +137,6 @@ const resetForm = (formEl: FormInstance | undefined) => {
 };
 
 onMounted(() => {
-  console.log(props.form);
   if (props.action == 'edit' && (props.form as any).invoice?.payment_status == "Paid") {
     store.invoicesList.push((props.form as any).invoice)
   }

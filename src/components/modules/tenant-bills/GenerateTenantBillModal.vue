@@ -201,13 +201,11 @@ const totalUtilitiesAmount = computed(() => {
           if (!isNaN(numQuantity)) {
             const utilityTotal = numQuantity * (Number(utility.rate) || 0);
             total += utilityTotal;
-            console.log(`Adding utility ${utility.name} for tenant ${tenant.tenant_name}: ${numQuantity} x ${utility.rate} = ${utilityTotal}, running total: ${total}`);
           }
         }
       });
     });
   });
-  console.log('Total utilities amount:', total);
   return total;
 });
 
@@ -228,7 +226,6 @@ const updateUtilityInput = (tenantId: number, tenancyId: number, utilityId: numb
   const numValue = parseFloat(value);
   const finalValue = isNaN(numValue) ? '' : numValue;
   formData.utility_inputs[key] = finalValue;
-  console.log(`Updated utility input for key ${key}: "${value}" -> ${finalValue}`);
 };
 
 const rules = reactive<FormRules>({
@@ -255,8 +252,6 @@ const submitForm = async () => {
       meter_readings: [], // No meter readings needed
       utility_inputs: formData.utility_inputs // Include manual utility inputs
     };
-    
-    console.log("Form data being sent:", dataToSend);
     
     const res = await store.generateTenantBills(dataToSend);
     
@@ -327,10 +322,6 @@ onMounted(async () => {
     tenantsStore.getTenants(),
     utilitiesStore.getUtilities()
   ]);
-  
-  // Debug: Log utilities to see if they're loaded
-  console.log('Utilities loaded:', utilities.value);
-  console.log('Tenants with units:', tenantsWithUnits.value);
 });
 </script>
 <style scoped>

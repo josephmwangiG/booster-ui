@@ -17,7 +17,7 @@
         </el-input>
       </el-form-item>
       <el-form-item prop="previous_meter_reading" class="flex-1" :label="'Previous Reading'">
-        <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading" :disabled="true">
+        <el-input type="number" v-model="formData.previous_meter_reading" placeholder="Enter previous meter reading">
         </el-input>
       </el-form-item>
       <el-form-item prop="current_meter_reading" class="flex-1" :label="'Current Reading'">
@@ -283,8 +283,6 @@ onMounted(async () => {
     store.getMeters(),
     store.getPaymentMethods()
   ]);
-
-  console.log(props.form);
 
   if (props.action == 'edit') {
     record_collections.value = props.form?.collections?.length > 0

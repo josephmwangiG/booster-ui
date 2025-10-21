@@ -60,9 +60,7 @@ export const useWaterMetersStore = defineStore("water-meters", {
     },
     async getMeters() {
       try {
-        console.log('Fetching meters with headers:', this.headers);
         const res = await axios.get("/water-meters/get/items", this.headers);
-        console.log('Meters API response:', res.data);
         // API returns an array of meters: [{ id, code_number }, ...]
         this.meters = res.data;
         return res;
@@ -74,9 +72,7 @@ export const useWaterMetersStore = defineStore("water-meters", {
     },
     async getClientItems() {
       try {
-        console.log('Fetching client items with headers:', this.headers);
         const res = await axios.get("/water-client-items", this.headers);
-        console.log('Client items API response:', res.data);
         this.clientItems = res.data;
         return res;
       } catch (error: any) {

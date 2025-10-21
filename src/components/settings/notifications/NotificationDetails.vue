@@ -79,12 +79,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useApi } from '@/composables/useApi'
 
 const route = useRoute()
-const router = useRouter()
-const { get, post, del } = useApi()
+const { get, post } = useApi()
 
 const id = route.params.id as string
 const loading = ref(true)

@@ -1,15 +1,29 @@
 <template>
   <div class="mt-2">
-    <el-form ref="itemFormRef" :model="formData" :rules="rules" label-width="auto" status-icon label-position="top">
-
+    <el-form
+      ref="itemFormRef"
+      :model="formData"
+      :rules="rules"
+      label-width="auto"
+      status-icon
+      label-position="top"
+    >
       <div class="lg:flex gap-3">
         <el-form-item prop="client_name" class="flex-1" :label="'Client Name'">
-          <el-input v-model="formData.client_name" placeholder="Enter client name" />
+          <el-input
+            v-model="formData.client_name"
+            placeholder="Enter client name"
+          />
         </el-form-item>
-        <el-form-item prop="meter_number" class="flex-1" :label="'Meter Number'">
-          <el-select v-model="formData.meter_number" placeholder="Select available meter" filterable :loading="loadingMeters">
-            <el-option v-for="m in availableMeters" :key="m.id || m.code_number" :label="m.code_number || m.meter_number || m.label" :value="m.code_number || m.meter_number || m.value" />
-          </el-select>
+        <el-form-item
+          prop="meter_number"
+          class="flex-1"
+          :label="'Meter Number'"
+        >
+          <el-input
+            v-model="formData.meter_number"
+            placeholder="Enter Meter Number"
+          />
         </el-form-item>
       </div>
       <div class="lg:flex gap-3">
@@ -21,13 +35,23 @@
         </el-form-item>
       </div>
 
-      <el-form-item prop="alternative_phone" class="flex-1" :label="'Alternative Number'">
-        <el-input v-model="formData.alternative_phone" placeholder="Enter alternative phone number" />
+      <el-form-item
+        prop="alternative_phone"
+        class="flex-1"
+        :label="'Alternative Number'"
+      >
+        <el-input
+          v-model="formData.alternative_phone"
+          placeholder="Enter alternative phone number"
+        />
       </el-form-item>
 
       <div class="lg:flex gap-3 py-2">
         <el-form-item prop="id_number" class="flex-1" :label="'National ID'">
-          <el-input v-model="formData.id_number" placeholder="Enter national id" />
+          <el-input
+            v-model="formData.id_number"
+            placeholder="Enter national id"
+          />
         </el-form-item>
       </div>
       <div class="lg:flex gap-3 py-2">
@@ -37,20 +61,39 @@
       </div>
 
       <div class="mt-5 sm:mt-6 text-right">
-        <button @click="emits('close-modal')" type="button" class="btn-primary-outline">
+        <button
+          @click="emits('close-modal')"
+          type="button"
+          class="btn-primary-outline"
+        >
           Close
         </button>
 
-        <button @click="submitForm(itemFormRef)" type="button" class="btn-primary" :disabled="isSubmitting">
-          {{ isSubmitting ? "Please wait..." : (action === "create" ? "Save" : "Update") }}
+        <button
+          @click="submitForm(itemFormRef)"
+          type="button"
+          class="btn-primary"
+          :disabled="isSubmitting"
+        >
+          {{
+            isSubmitting
+              ? "Please wait..."
+              : action === "create"
+              ? "Save"
+              : "Update"
+          }}
         </button>
       </div>
     </el-form>
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, ref, computed } from "vue";
-import { ElNotification, type FormInstance, type FormRules } from "element-plus";
+import { onMounted, reactive, ref } from "vue";
+import {
+  ElNotification,
+  type FormInstance,
+  type FormRules,
+} from "element-plus";
 import { WaterClientForm } from "@/type/water-client.type";
 import { useWaterClientsStore } from "@/store/water-clients.store";
 import { useWaterMetersStore } from "@/store/water-meters.store";
@@ -66,29 +109,19 @@ const itemFormRef = ref<FormInstance>();
 const formData = reactive<WaterClientForm>(props.form as WaterClientForm);
 const isSubmitting = ref(false);
 const loadingMeters = ref(false);
-const takenMeterNumbers = computed(() => new Set((store.waterClients || []).map((c: any) => c.meter_number).filter((v: any) => v !== null && v !== undefined && String(v).trim() !== '')));
-const availableMeters = computed(() => {
-  const meters = metersStore.meters || [];
-  const current = formData.meter_number;
-  const taken = takenMeterNumbers.value;
-  return meters.filter((m: any) => {
-    const code = m?.code_number || m?.meter_number || m?.value;
-    if (!code) return false;
-    // Allow currently selected code (editing) or exclude if taken by someone else
-    return code === current || !taken.has(code);
-  });
-});
 
 const rules = reactive<FormRules<WaterClientForm>>({
   client_name: [
     { required: true, message: "Please enter name", trigger: "blur" },
   ],
   meter_number: [
-    { required: true, message: "Please select meter number", trigger: "change" },
+    {
+      required: true,
+      message: "Please select meter number",
+      trigger: "change",
+    },
   ],
-  phone: [
-    { required: true, message: "Please enter phone", trigger: "blur" },
-  ],
+  phone: [{ required: true, message: "Please enter phone", trigger: "blur" }],
 });
 
 const submitForm = async (formEl: FormInstance | undefined) => {
@@ -109,7 +142,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
           title: "Success",
           type: "success",
           message: "Client was created",
-        })
+        });
       }
     } else {
       const res = await store.updateClient(formData);
@@ -120,7 +153,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
           title: "Success",
           type: "success",
           message: "Client was updated",
-        })
+        });
       }
     }
   } finally {

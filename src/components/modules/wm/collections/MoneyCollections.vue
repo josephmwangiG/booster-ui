@@ -192,7 +192,6 @@ const handleFormSubmit = async () => {
     await store.getWaterCollections();
     // Also refresh payments data since a new payment record is created
     await store.getPayments();
-    console.log('Collections and payments refreshed after form submission');
   } catch (error) {
     console.error('Error refreshing collections:', error);
   }
@@ -237,10 +236,7 @@ const handleClearFilters = () => {
 
 onMounted(async () => {
   try {
-    console.log('Loading water collections...');
     await store.getWaterCollections();
-    console.log('Water collections loaded:', store.waterCollections);
-    console.log('Filtered collections:', filteredWaterCollections.value);
     loading.value = false;
     
     // Wait for DOM to be fully updated
@@ -249,8 +245,6 @@ onMounted(async () => {
     // Additional wait to ensure Vue has rendered all data
     setTimeout(() => {
       if (dataTableRef.value) {
-        console.log('Initializing DataTable for Money Collections');
-        console.log('Data count:', filteredWaterCollections.value.length);
         initDataTableWithSearch(dataTableRef.value);
       }
     }, 100);

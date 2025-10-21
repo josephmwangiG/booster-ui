@@ -30,9 +30,7 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
     },
     async getDeliveryItems() {
       try {
-        console.log('Fetching delivery items with headers:', this.headers);
         const res = await axios.get("/water-collections/get/items", this.headers);
-        console.log('Delivery items API response:', res.data);
         this.drivers = res.data.drivers || [];
         this.vehicles = res.data.vehicles || [];
         this.payment_methods = res.data.payment_methods || [];
@@ -40,7 +38,6 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
         this.properties = res.data.water_clients || [];
         return res;
       } catch (error: any) {
-        console.error('Error fetching delivery items:', error.response || error);
         this.drivers = [];
         this.vehicles = [];
         this.payment_methods = [];
@@ -54,13 +51,8 @@ export const useWaterCollectionsStore = defineStore("water-collections", {
       this.meters = res.data;
     },
     async createWaterDelivery(data: WaterDeliveryForm) {
-      console.log('Creating water delivery with data:', data);
       const res = await axios.post("/water-collections", data, this.headers);
-      console.log('API response:', res.data);
-
       this.waterCollections.unshift(res.data);
-      console.log('Updated waterCollections array:', this.waterCollections);
-
       return res;
     },
 
