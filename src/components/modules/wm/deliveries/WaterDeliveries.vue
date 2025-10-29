@@ -34,13 +34,7 @@
               KES
               {{
                 store.waterDeliveries
-                  .reduce(
-                    (a, b) =>
-                      b.status === "Paid and delivery completed"
-                        ? Number(a) + Number(b.total_amount)
-                        : a,
-                    0
-                  )
+                  .reduce((a, b) => Number(a) + Number(b.amount_paid), 0)
                   .toLocaleString()
               }}
             </h2>
@@ -54,7 +48,6 @@
           <div class="">
             <h4 class="font-semibold">Deliveries</h4>
             <span class="text-gray-400 text-sm">
-              {{ filteredWaterDeliveries.length }} of
               {{ store.waterDeliveries.length }} items found
             </span>
           </div>
@@ -81,15 +74,12 @@
                 <th class="t-th">Delivery ID</th>
                 <th class="t-th">Client</th>
                 <th class="t-th">Contacts</th>
-                <th class="t-th">Address</th>
-                <th class="t-th">Vehicle</th>
-                <th class="t-th">Driver</th>
                 <th class="t-th">Delivery Date</th>
-                <th class="t-th">Payment Status</th>
-                <th class="t-th">Delivery Status</th>
                 <th class="t-th">Capacity</th>
                 <th class="t-th">Amount</th>
-                <th class="t-th">Amount Paid</th>
+                <th class="t-th">Paid</th>
+                <th class="t-th">Payment</th>
+                <th class="t-th">Delivery</th>
                 <th class="t-th text-end">Actions</th>
               </tr>
             </thead>
@@ -102,7 +92,7 @@
                 <td
                   class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400"
                 >
-                  <span>#{{ item.id }}</span>
+                  <span>#{{ item.ref }}</span>
                 </td>
                 <td
                   class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400"
@@ -112,29 +102,29 @@
                 <td class="t-td">
                   {{ item.water_client?.phone || "N/A" }}
                 </td>
-                <td class="t-td">
-                  {{ item.water_client?.address || "N/A" }}
-                </td>
-                <td class="t-td">
-                  {{
-                    item.vehicle
-                      ? `${item.vehicle.plate_number}`
-                      : "N/A"
-                  }}
-                </td>
-                <td class="t-td">{{ item.driver?.user_name || "N/A" }}</td>
                 <td class="t-td font-semibold">
                   {{ formatDate(item.delivery_date, true) }}
                 </td>
                 <td class="t-td font-semibold">
+                  {{ formatNumber(item.quantity_liters) }} Litres
+                </td>
+                <td class="t-td font-semibold">
+                  {{ formatAmount(item.total_amount) }}
+                </td>
+                <td class="t-td font-semibold">
+                  {{
+                      formatAmount(item.amount_paid)
+                  }}
+                </td>
+                <td class="t-td font-semibold">
                   <span
-                    v-if="getPaymentStatus(item) === 'Paid'"
+                    v-if="Number(item.amount_paid) >= Number(item.total_amount)"
                     class="p-1 rounded bg-green-100 text-green-500 text-xs"
                   >
                     Paid
                   </span>
                   <span
-                    v-else-if="getPaymentStatus(item) === 'Partial'"
+                    v-else-if="Number(item.amount_paid) > 0"
                     class="p-1 rounded bg-yellow-100 text-yellow-600 text-xs"
                   >
                     Partial
@@ -148,32 +138,18 @@
                 </td>
                 <td class="t-td font-semibold">
                   <span
-                    v-if="getDeliveryStatus(item) === 'Completed'"
+                    v-if="item.status === 'completed'"
                     class="p-1 rounded bg-green-100 text-green-500 text-xs"
                   >
                     Completed
                   </span>
                   <span
                     v-else
-                    class="p-1 rounded bg-yellow-100 text-yellow-600 text-xs"
+                    class="p-1 rounded bg-yellow-100 text-yellow-600 text-xs capitalize"
                   >
-                    Pending
+                    {{ item.status }}
                   </span>
                 </td>
-                <td class="t-td font-semibold">
-                  {{ formatNumber(item.quantity_liters) }} Litres
-                </td>
-                <td class="t-td font-semibold">
-                  {{ formatAmount(item.total_amount) }}
-                </td>
-                <td class="t-td font-semibold">
-                  {{
-                    item.status === "completed"
-                      ? formatAmount(item.total_amount)
-                      : "KES 0.00"
-                  }}
-                </td>
-
                 <td class="t-td text-end">
                   <el-dropdown trigger="click">
                     <span
@@ -193,12 +169,7 @@
                           >
                         </el-dropdown-item>
                         <el-dropdown-item
-                          v-if="
-                            item.status !== 'completed' &&
-                            item.status !== 'Paid and delivery completed' &&
-                            item.status !==
-                              'Delivered but payment not yet received'
-                          "
+                          v-if="item.status !== 'completed'"
                           @click="markComplete(item)"
                         >
                           <span class="font-semibold py-2"
@@ -207,13 +178,7 @@
                           >
                         </el-dropdown-item>
                         <el-dropdown-item
-                          v-if="
-                            item.status !== 'Paid and delivery not completed' &&
-                            item.status !==
-                              'Paid, but delivery not completed' &&
-                            item.status !== 'Paid and delivery completed' &&
-                            item.status !== 'completed'
-                          "
+                          v-if="item.amount_paid < item.total_amount"
                           @click="recordPayment(item)"
                         >
                           <span class="font-semibold py-2"
@@ -309,29 +274,6 @@ const paymentStatusOptions = [
   { value: "Pending", label: "Pending" },
 ];
 
-// Derive Payment Status from combined status and amounts
-const getPaymentStatus = (delivery: any) => {
-  const total = Number(delivery.total_amount) || 0;
-  const paid = Number(delivery.amount_paid || 0);
-  if (paid >= total && total > 0) return "Paid";
-  if (paid > 0 && paid < total) return "Partial";
-  // fallback by combined status text
-  if (
-    delivery.status === "Paid and delivery completed" ||
-    delivery.status === "Paid, but delivery not completed"
-  )
-    return "Paid";
-  if (delivery.status === "Delivered but payment not yet received")
-    return "Pending";
-  return "Pending";
-};
-
-// Derive Delivery Status from combined status
-const getDeliveryStatus = (delivery: any) => {
-  if (delivery.status === "Paid and delivery completed") return "Completed";
-  return "Pending";
-};
-
 // Filtered water deliveries
 const filteredWaterDeliveries = computed(() => {
   let filtered = store.waterDeliveries;
@@ -371,7 +313,7 @@ const filteredWaterDeliveries = computed(() => {
   // Apply status filter (map from combined backend status to payment-only filter)
   if (selectedStatus.value) {
     filtered = filtered.filter(
-      (delivery: any) => getPaymentStatus(delivery) === selectedStatus.value
+      (delivery: any) => delivery.status === selectedStatus.value
     );
   }
 
@@ -380,13 +322,13 @@ const filteredWaterDeliveries = computed(() => {
 
 const addItem = () => {
   action.value = "create";
-  formData.value = {create_client: false};
+  formData.value = { create_client: false };
   dialogVisible.value = true;
 };
 
 const editItem = (item: any) => {
   action.value = "edit";
-  formData.value =  item
+  formData.value = item;
   dialogVisible.value = true;
 };
 

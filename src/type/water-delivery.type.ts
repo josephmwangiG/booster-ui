@@ -21,6 +21,7 @@ export type WaterDeliveryForm = {
   payment_code?: string | null; 
   payment_reference?: string | null; 
   notes?: string | null;
+  status?: string | null;
 };
 
 export type WaterDeliveryPaymentForm = {

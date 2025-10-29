@@ -10,21 +10,47 @@
     </div>
     <div class="">
       <div class="w-full bg-white p-3 lg:p-6 mt-3 lg:mt-6">
-        <h4 class="font-semibold">Water Deliveries Payments </h4>
+        <h4 class="font-semibold">Water Deliveries Payments</h4>
         <div class="grid grid-cols-3 mt-3 gap-6">
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">{{ store.waterDeliveriesPayments.length.toLocaleString() }}</h2>
+            <h2 class="font-semibold">
+              {{ store.waterDeliveriesPayments.length.toLocaleString() }}
+            </h2>
             <span class="text-gray-400 text-sm">Water Payments</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ store.waterDeliveriesPayments.reduce((a, b) => b.water_delivery?.status === "completed" ?
-              Number(a) + Number(b.amount) : a, 0).toLocaleString() }}</h2>
+            <h2 class="font-semibold">
+              KES
+              {{
+                store.waterDeliveriesPayments
+                  .reduce(
+                    (a, b) =>
+                      b.water_delivery?.status === "completed"
+                        ? Number(a) + Number(b.amount)
+                        : a,
+                    0
+                  )
+                  .toLocaleString()
+              }}
+            </h2>
             <span class="text-gray-400 text-sm">Complete</span>
           </div>
           <div class="border border-dashed p-3 px-4 rounded">
-            <h2 class="font-semibold">KES {{ store.waterDeliveriesPayments.reduce((a, b) => b.water_delivery?.status === "pending" ?
-              Number(a) + Number(b.amount) : a, 0).toLocaleString() }}</h2>
-            <span class="text-gray-400 text-sm">Complete</span>
+            <h2 class="font-semibold">
+              KES
+              {{
+                store.waterDeliveriesPayments
+                  .reduce(
+                    (a, b) =>
+                      b.water_delivery?.status === "pending"
+                        ? Number(a) + Number(b.amount)
+                        : a,
+                    0
+                  )
+                  .toLocaleString()
+              }}
+            </h2>
+            <span class="text-gray-400 text-sm">Pending</span>
           </div>
         </div>
       </div>
@@ -33,7 +59,10 @@
         <div class="flex justify-between align-center">
           <div class="">
             <h4 class="font-semibold">Water Bills</h4>
-            <span class="text-gray-400 text-sm"> {{ filteredWaterDeliveryPayments.length }} of {{ store.waterDeliveriesPayments.length }} items found </span>
+            <span class="text-gray-400 text-sm">
+              {{ filteredWaterDeliveryPayments.length }} of
+              {{ store.waterDeliveriesPayments.length }} items found
+            </span>
           </div>
           <div class="actions flex gap-2 my-auto">
             <button @click="addItem" class="btn-primary my-auto">
@@ -41,7 +70,7 @@
             </button>
           </div>
         </div>
-        
+
         <!-- Search and Filter Component -->
         <SearchAndFilter
           entity-name="Water Delivery Payments"
@@ -57,62 +86,60 @@
           <table class="w-full" ref="dataTableRef">
             <thead class="t-head">
               <tr>
-
-                <th class="t-th">
-                  Payment #
-                </th>
+                <th class="t-th">Payment #</th>
                 <th class="t-th">Delivery No.</th>
-                <th class="t-th">
-                  Client
-                </th>
+                <th class="t-th">Client</th>
                 <th class="t-th">P. Method</th>
-                <th class="t-th">Ref</th>
                 <th class="t-th">Amount</th>
                 <th class="t-th">Date</th>
                 <th class="t-th">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="(item, index) in filteredWaterDeliveryPayments" :key="index"
-                :class="index % 2 != 0 ? 'bg-gray-50' : ''">
-                <td class="t-td font-semibold text-gray-500 cursor-pointer hover:text-blue-400">
-                  #{{ item.id }}
+              <tr
+                v-for="(item, index) in filteredWaterDeliveryPayments"
+                :key="index"
+                :class="index % 2 != 0 ? 'bg-gray-50' : ''"
+              >
+                <td class="t-td">
+                  {{ item.reference_number || "N/A" }}
                 </td>
                 <td class="t-td">
-                  {{ item.water_delivery?.id || 'N/A' }}
+                  {{ item.water_delivery?.ref || "N/A" }}
                 </td>
                 <td class="t-td">
                   {{ getClientName(item) }}
                 </td>
                 <td class="t-td">
-                  {{ item.payment_method?.name || 'N/A' }}
+                  {{ item.payment_method?.name || "N/A" }}
                 </td>
-                <td class="t-td">
-                  {{ item.reference_number || 'N/A' }}
-                </td>
-                <td class="t-td">{{ formatAmount(item.amount) }} </td>
+
+                <td class="t-td">{{ formatAmount(item.amount) }}</td>
 
                 <td class="t-td">
-                  {{
-                    formatDate(item.payment_date)
-                  }}
+                  {{ formatDate(item.payment_date) }}
                 </td>
 
                 <td class="t-td">
-                  <span v-if="item.water_delivery?.status === 'completed'"
-                    class="p-1 rounded bg-green-100 text-green-500 text-xs">
+                  <span
+                    v-if="item.status === 'completed'"
+                    class="p-1 rounded bg-green-100 text-green-500 text-xs"
+                  >
                     Complete
                   </span>
-                  <span v-else-if="item.water_delivery?.status === 'pending'"
-                    class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs">
+                  <span
+                    v-else-if="item.status === 'pending'"
+                    class="p-1 rounded bg-yellow-100 text-yellow-500 text-xs"
+                  >
                     Pending
                   </span>
-                  <span v-else class="p-1 rounded bg-gray-100 text-gray-500 text-xs">
-                    {{ item.water_delivery?.status || 'Unknown' }}
+                  <span
+                    v-else
+                    class="p-1 rounded bg-gray-100 text-gray-500 text-xs"
+                  >
+                    {{ item.status || "Unknown" }}
                   </span>
                 </td>
-
-
               </tr>
             </tbody>
           </table>
@@ -121,16 +148,29 @@
     </div>
   </div>
   <teleport to="body">
-    <el-dialog v-model="dialogVisible" :show-close="false" style="min-width: 300px" width="40%">
+    <el-dialog
+      v-model="dialogVisible"
+      :show-close="false"
+      style="min-width: 300px"
+      width="40%"
+    >
       <template #header>
         <div class="modal-header flex justify-between items-center">
-          <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+          <h3
+            class="text-base font-semibold leading-6 text-gray-900"
+            id="modal-title"
+          >
             Add Payment
           </h3>
           <CloseBtnComponent @click="dialogVisible = false" />
         </div>
       </template>
-      <WaterDeliveryPaymentFormModal @close-modal="closeModal" @submit-form="refreshData" :form="formData" :action="action">
+      <WaterDeliveryPaymentFormModal
+        @close-modal="closeModal"
+        @submit-form="refreshData"
+        :form="formData"
+        :action="action"
+      >
       </WaterDeliveryPaymentFormModal>
     </el-dialog>
   </teleport>
@@ -143,12 +183,20 @@ import { defineAsyncComponent, onMounted, ref, computed } from "vue";
 import { ElNotification } from "element-plus";
 import CloseBtnComponent from "@/components/shared/CloseBtnComponent.vue";
 import SearchAndFilter from "@/components/shared/SearchAndFilter.vue";
-import { formatDate, initDataTable, handleSearch as dtHandleSearch, clearAllFilters } from "@/composables/dataTables";
+import {
+  formatDate,
+  initDataTable,
+  handleSearch as dtHandleSearch,
+  clearAllFilters,
+} from "@/composables/dataTables";
 import { useWaterDeliveriesStore } from "@/store/water-deliveries.store";
 import { formatAmount } from "@/composables/helper_functions";
 
 const WaterDeliveryPaymentFormModal = defineAsyncComponent(
-  () => import("@/components/modules/wm/water-delivery-payments/WaterDeliveryPaymentFormModal.vue")
+  () =>
+    import(
+      "@/components/modules/wm/water-delivery-payments/WaterDeliveryPaymentFormModal.vue"
+    )
 );
 
 const dialogVisible = ref(false);
@@ -161,15 +209,15 @@ const dataTableRef = ref(null);
 DataTable.use(DataTablesCore);
 
 // Search and filter state
-const searchQuery = ref('');
-const selectedStatus = ref('');
+const searchQuery = ref("");
+const selectedStatus = ref("");
 const dateRange = ref<[string, string] | null>(null);
 
 // Payment status options for filtering
 const paymentStatusOptions = [
-  { value: 'Paid', label: 'Paid' },
-  { value: 'Pending', label: 'Pending' },
-  { value: 'Failed', label: 'Failed' }
+  { value: "Paid", label: "Paid" },
+  { value: "Pending", label: "Pending" },
+  { value: "Failed", label: "Failed" },
 ];
 
 // Filtered water delivery payments
@@ -179,20 +227,25 @@ const filteredWaterDeliveryPayments = computed(() => {
   // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    filtered = filtered.filter((payment: any) => 
-      payment.id?.toString().toLowerCase().includes(query) ||
-      payment.water_delivery?.id?.toString().toLowerCase().includes(query) ||
-      getClientName(payment).toLowerCase().includes(query) ||
-      payment.payment_method?.name?.toLowerCase().includes(query) ||
-      payment.reference_number?.toLowerCase().includes(query)
+    filtered = filtered.filter(
+      (payment: any) =>
+        payment.id?.toString().toLowerCase().includes(query) ||
+        payment.water_delivery?.id?.toString().toLowerCase().includes(query) ||
+        getClientName(payment).toLowerCase().includes(query) ||
+        payment.payment_method?.name?.toLowerCase().includes(query) ||
+        payment.reference_number?.toLowerCase().includes(query)
     );
   }
 
   // Apply status filter
   if (selectedStatus.value) {
     filtered = filtered.filter((payment: any) => {
-      const status = payment.water_delivery?.status === 'completed' ? 'Paid' : 
-                    payment.water_delivery?.status === 'pending' ? 'Pending' : 'Unknown';
+      const status =
+        payment.water_delivery?.status === "completed"
+          ? "Paid"
+          : payment.water_delivery?.status === "pending"
+          ? "Pending"
+          : "Unknown";
       return status === selectedStatus.value;
     });
   }
@@ -220,20 +273,24 @@ const closeModal = () => {
   dialogVisible.value = false;
   // Clear URL parameters to prevent reopening
   const url = new URL(window.location.href);
-  url.searchParams.delete('delivery_id');
-  window.history.replaceState({}, '', url);
+  url.searchParams.delete("delivery_id");
+  window.history.replaceState({}, "", url);
 };
 
 const refreshData = async () => {
-  await store.getPayments();
   await store.getWaterDeliveries();
-}
+  initDataTable(dataTableRef.value);
+};
 
 // Helper function to get client name from nested water_delivery object
 const getClientName = (item: any) => {
   // Check if water_delivery exists and has water_client information
   if (item.water_delivery?.water_client) {
-    return item.water_delivery.water_client.name || item.water_delivery.water_client.client_name || 'N/A';
+    return (
+      item.water_delivery.water_client.name ||
+      item.water_delivery.water_client.client_name ||
+      "N/A"
+    );
   }
   // Check if there's a client name directly in water_delivery
   if (item.water_delivery?.client_name) {
@@ -243,7 +300,7 @@ const getClientName = (item: any) => {
   if (item.water_delivery?.water_client_id) {
     return `Client ${item.water_delivery.water_client_id}`;
   }
-  return 'N/A';
+  return "N/A";
 };
 
 // Search and filter handlers
@@ -263,8 +320,8 @@ const handleDateRange = (range: [string, string] | null) => {
 };
 
 const handleClearFilters = () => {
-  searchQuery.value = '';
-  selectedStatus.value = '';
+  searchQuery.value = "";
+  selectedStatus.value = "";
   dateRange.value = null;
   if (dataTableRef.value) {
     clearAllFilters(dataTableRef.value);
@@ -272,26 +329,24 @@ const handleClearFilters = () => {
 };
 
 onMounted(async () => {
-  // Fetch water delivery payments from API
   await store.getPayments();
-  
-  // Fetch water deliveries to have access to delivery data
-  await store.getWaterDeliveries();
-  
+
   initDataTable(dataTableRef.value);
   loading.value = false;
 
   // Check for delivery_id parameter in URL
   const urlParams = new URLSearchParams(window.location.search);
-  const deliveryId = urlParams.get('delivery_id');
-  
+  const deliveryId = urlParams.get("delivery_id");
+
   if (deliveryId) {
     // Find the delivery data and pre-fill the form
     const delivery = store.waterDeliveries.find((d: any) => d.id == deliveryId);
     if (delivery) {
       // Check if payment already exists for this delivery
-      const existingPayment = store.waterDeliveriesPayments.find((p: any) => p.water_delivery_id == deliveryId);
-      
+      const existingPayment = store.waterDeliveriesPayments.find(
+        (p: any) => p.water_delivery_id == deliveryId
+      );
+
       if (existingPayment) {
         ElNotification({
           title: "Payment Already Exists",
@@ -300,13 +355,13 @@ onMounted(async () => {
         });
         // Clear URL parameters
         const url = new URL(window.location.href);
-        url.searchParams.delete('delivery_id');
-        window.history.replaceState({}, '', url);
+        url.searchParams.delete("delivery_id");
+        window.history.replaceState({}, "", url);
         return;
       }
-      
+
       // Check if delivery is already completed
-      if (delivery.status === 'completed') {
+      if (delivery.status === "completed") {
         ElNotification({
           title: "Delivery Already Completed",
           message: `Delivery #${delivery.id} has already been completed and paid for`,
@@ -314,15 +369,15 @@ onMounted(async () => {
         });
         // Clear URL parameters
         const url = new URL(window.location.href);
-        url.searchParams.delete('delivery_id');
-        window.history.replaceState({}, '', url);
+        url.searchParams.delete("delivery_id");
+        window.history.replaceState({}, "", url);
         return;
       }
-      
+
       const prefilledData = {
         water_delivery_id: delivery.id,
         amount: delivery.total_amount,
-        payment_date: new Date().toISOString().split('T')[0]
+        payment_date: new Date().toISOString().split("T")[0],
       };
       // Open the payment modal with pre-filled data
       addItem(prefilledData);

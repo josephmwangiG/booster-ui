@@ -114,13 +114,6 @@ const rules = reactive<FormRules<WaterClientForm>>({
   client_name: [
     { required: true, message: "Please enter name", trigger: "blur" },
   ],
-  meter_number: [
-    {
-      required: true,
-      message: "Please select meter number",
-      trigger: "change",
-    },
-  ],
   phone: [{ required: true, message: "Please enter phone", trigger: "blur" }],
 });
 

@@ -222,64 +222,43 @@
         </div>
       </div>
 
-      <div class="mt-5 sm:mt-6 text-right">
+      <div class="mt-5 sm:mt-6 flex justify-end gap-3">
         <button
           @click="emits('close-modal')"
           type="button"
-          class="btn-primary-outline"
+          class="btn-primary-outline !mr-0"
         >
           Close
         </button>
 
         <button
-          @click="submitForm(itemFormRef)"
+          v-if="
+            (action === 'create' || formData.status == 'draft') &&
+            formData.status != 'draft'
+          "
+          @click="submitForm(itemFormRef, 'draft')"
           type="button"
           :disabled="isSubmitting"
           class="btn-primary"
         >
-          {{
-            isSubmitting
-              ? "Please wait..."
-              : action === "create"
-              ? "Save"
-              : "Update"
-          }}
+          {{ isSubmitting ? "Please wait..." : "Save as Draft" }}
+        </button>
+
+        <button
+          v-if="formData.status != 'completed'"
+          @click="submitForm(itemFormRef, 'pending')"
+          type="button"
+          :disabled="isSubmitting"
+          class="btn-primary"
+        >
+          {{ isSubmitting ? "Please wait..." : "Save" }}
         </button>
       </div>
     </el-form>
   </div>
-
-  <!-- Driver Modal -->
-  <teleport to="body">
-    <el-dialog
-      v-model="driverModalVisible"
-      :show-close="false"
-      style="min-width: 300px"
-      width="40%"
-    >
-      <template #header>
-        <div class="modal-header flex justify-between items-center">
-          <h3 class="text-base font-semibold leading-6 text-gray-900">
-            Add Driver
-          </h3>
-          <button
-            @click="driverModalVisible = false"
-            class="text-gray-400 hover:text-gray-600"
-          >
-            <i class="ri-close-line text-xl"></i>
-          </button>
-        </div>
-      </template>
-      <DriverFormModal
-        @close-modal="closeDriverModal"
-        :form="{}"
-        action="create"
-      />
-    </el-dialog>
-  </teleport>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, ref, defineAsyncComponent } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import {
   ElNotification,
   type FormInstance,
@@ -290,16 +269,11 @@ import { useWaterDeliveriesStore } from "@/store/water-deliveries.store";
 import { useWaterClientBillsStore } from "@/store/water-client-bills.store";
 import { useAuthStore } from "@/store/auth.store";
 
-const DriverFormModal = defineAsyncComponent(
-  () => import("@/components/settings/drivers/DriverFormModal.vue")
-);
-
 const props = defineProps({
   form: Object,
   action: String,
 });
 
-console.log(props);
 const emits = defineEmits(["close-modal", "submit-form"]);
 const store = useWaterDeliveriesStore();
 const client_store = useWaterClientBillsStore();
@@ -309,7 +283,6 @@ const formData = reactive<WaterDeliveryForm>({
   ...(props.form as WaterDeliveryForm),
   organization_id: authStore.user?.organization_id || 1, // Set organization_id from user data
 });
-const driverModalVisible = ref(false);
 const loading = ref(true);
 const isSubmitting = ref(false);
 
@@ -342,7 +315,7 @@ const rules = reactive<FormRules<WaterDeliveryForm>>({
   ],
 });
 
-const submitForm = async (formEl: FormInstance | undefined) => {
+const submitForm = async (formEl: FormInstance | undefined, status: string) => {
   if (!formEl) return;
   await formEl.validate((valid, _fields) => {
     if (!valid) return;
@@ -354,6 +327,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     // Ensure numeric fields are properly converted
     const submitData = {
       ...formData,
+      status: status,
       capacity: Number(formData.quantity_liters) || 0,
       amount: Number(formData.total_amount) || 0,
       amount_paid: formData.amount_paid ? Number(formData.amount_paid) : null,
@@ -402,18 +376,11 @@ const resetForm = (formEl: FormInstance | undefined) => {
   formData.notes = undefined;
 };
 
-const closeDriverModal = async () => {
-  driverModalVisible.value = false;
-  // Refresh the drivers list after adding a new driver
-  await store.getDeliveryItems();
-};
-
 onMounted(async () => {
   loading.value = true;
   await store.getDeliveryItems();
 
   await client_store.getClientItems();
-  console.log(client_store.clientItems);
   // Ensure organization_id is set
   if (!formData.organization_id) {
     formData.organization_id = authStore.user?.organization_id || 1;

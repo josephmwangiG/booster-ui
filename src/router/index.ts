@@ -135,33 +135,6 @@ const routes = [
           title: "Notification Details",
         },
       },
-      {
-        name: "invoices",
-        path: "finance/invoices",
-        component: () => import("@/components/finance/Invoices.vue"),
-        meta: {
-          require_auth: true,
-          title: "Invoices",
-        },
-      },
-      {
-        name: "invoice-details",
-        path: "finance/invoices/:id",
-        component: () => import("@/components/finance/Invoice.vue"),
-        meta: {
-          require_auth: true,
-          title: "Invoice Details",
-        },
-      },
-      {
-        name: "payments",
-        path: "finance/payments",
-        component: () => import("@/components/finance/Payments.vue"),
-        meta: {
-          require_auth: true,
-          title: "Payments",
-        },
-      },
       // PROPERTIES MODULE
       {
         name: "properties",
