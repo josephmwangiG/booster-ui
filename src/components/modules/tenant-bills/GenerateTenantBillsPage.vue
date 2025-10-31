@@ -51,12 +51,12 @@
         </div>
 
         <!-- Tenant Bills Section -->
-        <div v-if="allTenants.length > 0" class="space-y-6">
+        <div v-if="formData.bills.length > 0" class="space-y-6">
           <div
-            v-for="tenant in allTenants"
-            :key="tenant.id"
-            class="rounded shadow-sm !bg-gray-50"
-            :class="getTenantCardClass(tenant)"
+            v-for="bill in formData.bills"
+            :key="bill.tenant_id"
+            class="rounded shadow !bg-gray-50 border border-gray-100"
+            :class="getTenantCardClass(bill)"
           >
             <div class="p-4">
               <div class="flex items-start justify-between gap-4">
@@ -65,56 +65,53 @@
                     <p
                       class="text-lg font-bold"
                       :class="
-                        isTenantExcluded(tenant)
+                        isTenantExcluded(bill)
                           ? 'text-red-600'
                           : 'text-neutral-800'
                       "
                     >
-                      {{ tenant.tenant_name }}
+                      {{ bill.tenant_name }}
                     </p>
                     <div
-                      v-if="isTenantExcluded(tenant)"
+                      v-if="isTenantExcluded(bill)"
                       class="flex items-center gap-1 text-red-500"
                     >
                       <i class="ri-close-circle-fill text-lg"></i>
                       <span class="text-xs font-medium">EXCLUDED</span>
                     </div>
                   </div>
-                  <div
-                    v-for="tenancy in tenant.tenancies.filter((t: any) => t.active)"
-                    :key="tenancy.id"
-                  >
+                  <div>
                     <p
                       class="text-sm"
                       :class="
-                        isTenantExcluded(tenant)
+                        isTenantExcluded(bill)
                           ? 'text-red-400'
                           : 'text-neutral-500'
                       "
                     >
-                      Unit: {{ tenancy.unit?.unit_code || "N/A" }} | Rent:
+                      Unit: {{ bill.unit_name }} | Rent:
                       <span
                         class="font-medium"
                         :class="
-                          isTenantExcluded(tenant)
+                          isTenantExcluded(bill)
                             ? 'text-red-500'
                             : 'text-neutral-600'
                         "
                         >KES
                         {{
-                          Number(tenancy.rent_amount || 0).toLocaleString()
+                          Number(bill.rent_amount || 0).toLocaleString()
                         }}</span
                       >
                     </p>
                   </div>
                   <!-- Exclusion reason -->
                   <div
-                    v-if="isTenantExcluded(tenant)"
+                    v-if="isTenantExcluded(bill)"
                     class="mt-2 p-2 bg-red-50 border border-red-200 rounded-md"
                   >
                     <p class="text-sm text-red-700 font-medium">
                       <i class="ri-information-line mr-1"></i>
-                      {{ getExclusionReason(tenant) }}
+                      {{ getExclusionReason(bill) }}
                     </p>
                   </div>
                 </div>
@@ -122,31 +119,32 @@
 
               <!-- Utility Checkboxes -->
               <div
-                v-if="!isTenantExcluded(tenant)"
+                v-if="!isTenantExcluded(bill)"
                 class="mt-4 flex items-center space-x-4"
               >
                 <div
-                  v-for="utility in utilities"
+                  v-for="utility in bill.utilities"
                   :key="utility.id"
                   class="flex items-center gap-2"
                 >
                   <input
-                    :checked="isUtilitySelected(tenant.id, utility.id)"
+                    v-model="utility.is_checked"
                     @change="
                       toggleUtility(
-                        tenant.id,
-                        utility.id,
-                        ($event.target as HTMLInputElement).checked
+                        bill.id,
+                        utility,
+                        ($event.target as HTMLInputElement).checked,
+                        bill.unit_id
                       )
                     "
                     class="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
-                    :id="`${utility.name.toLowerCase()}-${tenant.id}`"
-                    :name="`${utility.name.toLowerCase()}-${tenant.id}`"
+                    :id="`${utility.name.toLowerCase()}-${bill.id}`"
+                    :name="`${utility.name.toLowerCase()}-${bill.id}`"
                     type="checkbox"
                   />
                   <label
                     class="text-sm font-medium text-gray-700"
-                    :for="`${utility.name.toLowerCase()}-${tenant.id}`"
+                    :for="`${utility.name.toLowerCase()}-${bill.id}`"
                     >{{ utility.name }}</label
                   >
                 </div>
@@ -155,19 +153,19 @@
               <!-- Disabled utilities for excluded tenants -->
               <div v-else class="mt-4 flex items-center space-x-4 opacity-50">
                 <div
-                  v-for="utility in utilities"
+                  v-for="utility in bill.utilities"
                   :key="utility.id"
                   class="flex items-center gap-2"
                 >
                   <input
                     disabled
                     class="h-4 w-4 rounded border border-gray-300 text-gray-400"
-                    :id="`${utility.name.toLowerCase()}-${tenant.id}`"
+                    :id="`${utility.name.toLowerCase()}-${bill.id}`"
                     type="checkbox"
                   />
                   <label
                     class="text-sm font-medium text-gray-400"
-                    :for="`${utility.name.toLowerCase()}-${tenant.id}`"
+                    :for="`${utility.name.toLowerCase()}-${bill.id}`"
                     >{{ utility.name }}</label
                   >
                 </div>
@@ -176,14 +174,14 @@
 
             <!-- Utility Inputs -->
             <div
-              v-if="utilities.length > 0 && !isTenantExcluded(tenant)"
+              v-if="bill.utilities.length > 0 && !isTenantExcluded(bill)"
               class="px-4 py-3"
             >
               <div class="space-y-4 border-t border-gray-300">
                 <div
-                  v-for="utility in utilities"
+                  v-for="utility in bill.utilities"
                   :key="utility.id"
-                  v-show="isUtilitySelected(tenant.id, utility.id)"
+                  v-show="utility.is_checked"
                 >
                   <div class="flex items-center justify-between">
                     <div class="flex flex-col">
@@ -193,9 +191,7 @@
                     </div>
                     <p class="font-medium text-neutral-800">
                       KES
-                      {{
-                        getUtilityAmount(tenant.id, utility.id).toLocaleString()
-                      }}
+                      {{ utility.amount ? utility.amount.toLocaleString() : 0 }}
                     </p>
                   </div>
                   <div class="mt-3 grid grid-cols-4 gap-2">
@@ -204,14 +200,12 @@
                         Prev. Reading
                       </label>
                       <input
-                        :value="
-                          getUtilityInput(tenant.id, utility.id, 'prev_reading')
-                        "
-                        class="w-full rounded-md border border-gray-300 text-sm shadow-sm bg-neutral-100 text-neutral-600 p-2"
+                        v-model="utility.prev_reading"
+                        class="w-full rounded-md border border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 p-2"
                         placeholder="Prev Reading"
                         type="number"
-                        readonly
-                        title="Previous reading from database"
+                        title="Previous reading"
+                        @input="getUtilityTotal(utility)"
                       />
                     </div>
                     <div class="space-y-1">
@@ -219,21 +213,8 @@
                         Current Reading
                       </label>
                       <input
-                        :value="
-                          getUtilityInput(
-                            tenant.id,
-                            utility.id,
-                            'current_reading'
-                          )
-                        "
-                        @input="
-                          updateUtilityInput(
-                            tenant.id,
-                            utility.id,
-                            'current_reading',
-                            ($event.target as HTMLInputElement).value
-                          )
-                        "
+                        v-model="utility.current_reading"
+                        @input="getUtilityTotal(utility)"
                         class="w-full rounded-md border border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 p-2"
                         placeholder="Current Reading"
                         type="number"
@@ -256,7 +237,7 @@
                         Total Amount
                       </label>
                       <input
-                        :value="getUtilityAmount(tenant.id, utility.id)"
+                        v-model="utility.amount"
                         class="w-full rounded-md border border-gray-300 text-sm shadow-sm bg-neutral-100 text-neutral-600 p-2"
                         placeholder="Amount"
                         type="number"
@@ -271,25 +252,25 @@
             <!-- Individual Tenant Summary -->
             <div
               class="flex items-center justify-between rounded-b-xl px-4 py-3"
-              :class="isTenantExcluded(tenant) ? 'bg-red-50' : 'bg-neutral-100'"
+              :class="isTenantExcluded(bill) ? 'bg-red-50' : 'bg-neutral-100'"
             >
               <p
                 class="font-semibold"
                 :class="
-                  isTenantExcluded(tenant) ? 'text-red-700' : 'text-neutral-800'
+                  isTenantExcluded(bill) ? 'text-red-700' : 'text-neutral-800'
                 "
               >
                 {{
-                  isTenantExcluded(tenant)
+                  isTenantExcluded(bill)
                     ? "Excluded from Billing"
                     : "Bill Summary"
                 }}
               </p>
               <p
-                v-if="!isTenantExcluded(tenant)"
+                v-if="!isTenantExcluded(bill)"
                 class="font-bold text-lg text-neutral-900"
               >
-                KES {{ getTenantTotal(tenant.id).toLocaleString() }}
+                KES {{ getTenantTotal(bill).toLocaleString() }}
               </p>
               <p v-else class="font-bold text-lg text-red-600">N/A</p>
             </div>
@@ -419,9 +400,7 @@ const isDraft = ref(false);
 const formData = reactive<any>({
   month: "",
   year: "",
-  meter_readings: [],
-  utility_inputs: {}, // Store manual utility inputs per tenant/unit
-  selected_utilities: {}, // Store selected utilities per tenant
+  bills: [],
 });
 
 const months = [
@@ -476,146 +455,66 @@ const tenantsWithUnits = computed(() => {
   return allTenants.value.filter((tenant) => !isTenantExcluded(tenant));
 });
 
-const totalRentAmount = computed(() => {
-  let total = 0;
-  tenantsWithUnits.value.forEach((tenant) => {
-    tenant.tenancies
-      ?.filter((tenancy: any) => tenancy.active)
-      .forEach((tenancy: any) => {
-        total += Number(tenancy.rent_amount) || 0;
-      });
-  });
-  return total;
-});
-
-const totalUtilitiesAmount = computed(() => {
-  let total = 0;
-  tenantsWithUnits.value.forEach((tenant) => {
-    utilities.value.forEach((utility: any) => {
-      if (isUtilitySelected(tenant.id, utility.id)) {
-        total += getUtilityAmount(tenant.id, utility.id);
-      }
-    });
-  });
-  return total;
-});
-
 const totalEstimatedAmount = computed(() => {
-  return totalRentAmount.value + totalUtilitiesAmount.value;
+  let total = 0;
+  formData.bills.forEach((bill: any) => {
+    total += getTenantTotal(bill);
+  });
+  return total;
 });
 
-// Methods for managing utility selection and inputs
-const isUtilitySelected = (tenantId: number, utilityId: number) => {
-  const key = `${tenantId}_${utilityId}`;
-  return formData.selected_utilities[key] || false;
-};
 
 const toggleUtility = async (
   tenantId: number,
-  utilityId: number,
-  selected: boolean
+  utility: any,
+  selected: boolean,
+  unitId: string
 ) => {
-  const key = `${tenantId}_${utilityId}`;
-  formData.selected_utilities[key] = selected;
-
   // Initialize utility inputs when selected
   if (selected) {
-    const inputKey = `${tenantId}_${utilityId}`;
-    if (!formData.utility_inputs[inputKey]) {
-      // Get the tenant's unit ID for fetching previous readings
-      const tenant = allTenants.value.find((t) => t.id === tenantId);
-      const activeTenancy = tenant?.tenancies?.find((t: any) => t.active);
-      const unitId = activeTenancy?.unit_id;
+    let previousReading = 0;
 
-      let previousReading = 0;
-
-      // Fetch previous meter reading from database
-      if (unitId) {
-        try {
-          const result = await store.getPreviousMeterReadings(
-            tenantId.toString(),
-            utilityId.toString(),
-            String(unitId)
-          );
-          if (result.success) {
-            previousReading = result.previous_reading || 0;
-          }
-        } catch (error) {
-          console.error("Error fetching previous reading:", error);
+    // Fetch previous meter reading from database
+    if (unitId) {
+      try {
+        const result = await store.getPreviousMeterReadings(
+          tenantId.toString(),
+          utility.id.toString(),
+          String(unitId)
+        );
+        if (result.success) {
+          previousReading = result.previous_reading || 0;
         }
+      } catch (error) {
+        console.error("Error fetching previous reading:", error);
       }
-
-      formData.utility_inputs[inputKey] = {
-        prev_reading: previousReading.toString(),
-        current_reading: "",
-        rate: utilities.value.find((u: any) => u.id === utilityId)?.rate || 0,
-        unit_id: unitId ? String(unitId) : "",
-        tenancy_id: activeTenancy?.id ? String(activeTenancy.id) : "",
-      };
     }
+
+    utility.prev_reading = previousReading;
+  } else {
+    utility.prev_reading = 0;
   }
 };
 
-const getUtilityInput = (
-  tenantId: number,
-  utilityId: number,
-  field: string
-) => {
-  const key = `${tenantId}_${utilityId}`;
-  const utilityInput = formData.utility_inputs[key];
-  if (!utilityInput) return "";
-  return utilityInput[field] || "";
+const getUtilityTotal = (utility: any) => {
+  const amount =
+    (Number(utility.current_reading) - Number(utility.prev_reading)) *
+    Number(utility.rate);
+  utility.amount = amount > 0 ? amount : 0;
 };
 
-const updateUtilityInput = (
-  tenantId: number,
-  utilityId: number,
-  field: string,
-  value: string
-) => {
-  const key = `${tenantId}_${utilityId}`;
-  if (!formData.utility_inputs[key]) {
-    formData.utility_inputs[key] = {
-      prev_reading: "",
-      current_reading: "",
-      rate: utilities.value.find((u: any) => u.id === utilityId)?.rate || 0,
-    };
-  }
-  formData.utility_inputs[key][field] = value;
-};
-
-const getUtilityAmount = (tenantId: number, utilityId: number) => {
-  const key = `${tenantId}_${utilityId}`;
-  const utilityInput = formData.utility_inputs[key];
-  if (!utilityInput) return 0;
-
-  const prevReading = parseFloat(utilityInput.prev_reading) || 0;
-  const currentReading = parseFloat(utilityInput.current_reading) || 0;
-  const rate = parseFloat(utilityInput.rate) || 0;
-
-  const consumption = Math.max(0, currentReading - prevReading);
-  return consumption * rate;
-};
-
-const getTenantTotal = (tenantId: number) => {
-  const tenant = tenantsWithUnits.value.find((t) => t.id === tenantId);
-  if (!tenant) return 0;
-
+const getTenantTotal = (bill: any) => {
   let total = 0;
 
   // Add rent amount
-  tenant.tenancies
-    ?.filter((tenancy: any) => tenancy.active)
-    .forEach((tenancy: any) => {
-      total += Number(tenancy.rent_amount) || 0;
-    });
+  total += Number(bill.rent_amount) || 0;
 
   // Add utility amounts
-  utilities.value.forEach((utility: any) => {
-    if (isUtilitySelected(tenantId, utility.id)) {
-      total += getUtilityAmount(tenantId, utility.id);
-    }
-  });
+  bill.utilities
+    .filter((utility: any) => utility.is_checked)
+    .forEach((utility: any) => {
+      total += utility.amount || 0;
+    });
 
   return total;
 };
@@ -631,11 +530,11 @@ const isTenantExcluded = (tenant: any) => {
   // Check if tenant has no active tenancies
   const hasActiveTenancies =
     tenant.tenancies && tenant.tenancies.some((tenancy: any) => tenancy.active);
-  if (!hasActiveTenancies) return true;
+  if (!hasActiveTenancies) return false;
 
   // Check if tenant joined after billing period
   const tenantCreatedAt = new Date(tenant.created_at);
-  if (tenantCreatedAt > endOfMonth) return true;
+  if (tenantCreatedAt > endOfMonth) return false;
 
   // Note: We can't check for existing bills or monthly limits here without API calls
   // This would need to be handled by the backend and passed to the frontend
@@ -700,52 +599,10 @@ const submitForm = async (draft = false) => {
     loading.value = true;
     isDraft.value = draft;
 
-    // Prepare data for submission - convert to the format expected by backend
-    const utilityInputsForBackend: any = {};
-    const meterReadingsForBackend: any[] = [];
+    formData.draft = draft;
+    formData.year = Number(formData.year).toString();
 
-    // Process utility inputs for each eligible tenant only (one entry per tenant-utility)
-    tenantsWithUnits.value.forEach((tenant) => {
-      if (!isTenantExcluded(tenant)) {
-        utilities.value.forEach((utility: any) => {
-          if (isUtilitySelected(tenant.id, utility.id)) {
-            const utilityInput =
-              formData.utility_inputs[`${tenant.id}_${utility.id}`];
-            if (utilityInput) {
-              const prevReading = parseFloat(utilityInput.prev_reading) || 0;
-              const currentReading =
-                parseFloat(utilityInput.current_reading) || 0;
-              const consumption = Math.max(0, currentReading - prevReading);
-              const tenancyIdString = utilityInput.tenancy_id || "";
-              const unitIdString = utilityInput.unit_id || "";
-
-              if (tenancyIdString) {
-                const key = `${tenant.id}_${tenancyIdString}_${utility.id}`;
-                utilityInputsForBackend[key] = consumption;
-              }
-
-              meterReadingsForBackend.push({
-                tenant_id: String(tenant.id),
-                unit_id: unitIdString,
-                utility_id: String(utility.id),
-                previous_reading: prevReading,
-                current_reading: currentReading,
-              });
-            }
-          }
-        });
-      }
-    });
-
-    const dataToSend = {
-      month: formData.month,
-      year: String(formData.year),
-      // Intentionally omit meter_readings to avoid double-counting utilities on backend
-      utility_inputs: utilityInputsForBackend,
-      draft: draft,
-    };
-
-    const res = await store.generateTenantBills(dataToSend);
+    const res = await store.generateTenantBills(formData);
     if (res.status == 200 || res.status == 201) {
       let message = draft
         ? "Draft bills generated"
@@ -771,7 +628,7 @@ const submitForm = async (draft = false) => {
     ElNotification({
       title: "Error",
       type: "error",
-      message: error.response?.data?.message || "Failed to generate bills",
+      message: error.response?.data?.message || "Failed to generate bills. Fill all required fields.",
     });
   } finally {
     loading.value = false;
@@ -781,5 +638,31 @@ const submitForm = async (draft = false) => {
 
 onMounted(async () => {
   await Promise.all([tenantsStore.getTenants(), utilitiesStore.getUtilities()]);
+
+  let bills = allTenants.value.map((tenant: any) => {
+    const items = tenant.tenancies
+      .filter((tenancy: any) => tenancy.active)
+      .map((tenancy: any) => {
+        return {
+          id: tenant.id,
+          tenant_name: tenant.tenant_name,
+          tenant_id: tenant.id,
+          tenancy_id: tenancy.id,
+          unit_id: tenancy.unit_id,
+          unit_name: tenancy.unit.unit_code,
+          rent_amount: tenancy.rent_amount,
+          utilities: utilities.value.map((u: any) => ({
+            ...u,
+            prev_reading: 0,
+            current_reading: 0,
+            amount: 0,
+          })),
+        };
+      });
+
+    return items;
+  });
+
+  formData.bills = bills.flat();
 });
 </script>

@@ -99,7 +99,7 @@
                             View</router-link>
                         </el-dropdown-item>
                         <el-dropdown-item @click="editItem(item)">
-                          <span class="font-semibold py-2"><i class="ri-edit-line text-orange-500"></i>
+                          <span class="font-semibold"><i class="ri-edit-line text-orange-500"></i>
                             Edit</span>
                         </el-dropdown-item>
                       </el-dropdown-menu>

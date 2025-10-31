@@ -163,7 +163,7 @@
                     <template #dropdown>
                       <el-dropdown-menu>
                         <el-dropdown-item @click="editItem(item)">
-                          <span class="font-semibold py-2"
+                          <span class="font-semibold"
                             ><i class="ri-edit-line text-orange-500"></i>
                             Edit</span
                           >
@@ -172,7 +172,7 @@
                           v-if="item.status !== 'completed'"
                           @click="markComplete(item)"
                         >
-                          <span class="font-semibold py-2"
+                          <span class="font-semibold"
                             ><i class="ri-check-line text-green-500"></i> Mark
                             Complete</span
                           >
@@ -181,7 +181,7 @@
                           v-if="item.amount_paid < item.total_amount"
                           @click="recordPayment(item)"
                         >
-                          <span class="font-semibold py-2"
+                          <span class="font-semibold"
                             ><i
                               class="ri-money-dollar-circle-line text-blue-500"
                             ></i>

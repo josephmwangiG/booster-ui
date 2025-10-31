@@ -31,7 +31,10 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
         this.tenantBillItems = res.data || [];
         return res;
       } catch (error: any) {
-        console.error('Error fetching tenant bill items:', error.response || error);
+        console.error(
+          "Error fetching tenant bill items:",
+          error.response || error
+        );
         this.tenantBillItems = [];
         return error.response;
       }
@@ -44,7 +47,10 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
         this.tenantBillItems = res.data || [];
         return res;
       } catch (error: any) {
-        console.error('Error fetching tenant bills for payment:', error.response || error);
+        console.error(
+          "Error fetching tenant bills for payment:",
+          error.response || error
+        );
         this.tenantBillItems = [];
         return error.response;
       }
@@ -57,7 +63,10 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
         this.tenantBillPayments = res.data || [];
         return res;
       } catch (error: any) {
-        console.error('Error fetching tenant bill payments:', error.response || error);
+        console.error(
+          "Error fetching tenant bill payments:",
+          error.response || error
+        );
         this.tenantBillPayments = [];
         return error.response;
       }
@@ -95,26 +104,33 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
         const res = await axios.post("/tenant-payments", data, {
           ...this.headers,
         });
-        
+
         // Handle the new response format with payment and updated bill
         if (res.data.payment && res.data.updated_bill) {
           this.tenantBillPayments.unshift(res.data.payment);
-          
+
           // Update the tenant bill if it's currently loaded
-          if (this.tenantBill && this.tenantBill.id === res.data.updated_bill.id) {
+          if (
+            this.tenantBill &&
+            this.tenantBill.id === res.data.updated_bill.id
+          ) {
             this.tenantBill = res.data.updated_bill;
           }
-          
+
           // Update tenant bills list if it contains this bill
-          const billIndex = this.tenantBills.findIndex(bill => bill.id === res.data.updated_bill.id);
+          const billIndex = this.tenantBills.findIndex(
+            (bill) => bill.id === res.data.updated_bill.id
+          );
           if (billIndex !== -1) {
             this.tenantBills[billIndex] = res.data.updated_bill;
           }
-          
+
           // Also update bill items if they exist
           if (res.data.updated_bill.bill_items) {
             // Remove old items for this bill
-            this.tenantBillItems = this.tenantBillItems.filter(item => item.tenant_bill_id !== res.data.updated_bill.id);
+            this.tenantBillItems = this.tenantBillItems.filter(
+              (item) => item.tenant_bill_id !== res.data.updated_bill.id
+            );
             // Add new items
             this.tenantBillItems.push(...res.data.updated_bill.bill_items);
           }
@@ -122,11 +138,14 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
           // Fallback for old response format
           this.tenantBillPayments.unshift(res.data);
         }
-        
+
         return res;
       } catch (error: any) {
-        console.error('Error creating tenant bill payment:', error.response?.data || error.message);
-        console.error('Request data that failed:', data);
+        console.error(
+          "Error creating tenant bill payment:",
+          error.response?.data || error.message
+        );
+        console.error("Request data that failed:", data);
         throw error;
       }
     },
@@ -147,23 +166,32 @@ export const useTenantBillsStore = defineStore("tenant-bills", {
       this.tenantBill = res.data;
     },
 
-    async getPreviousMeterReadings(tenantId: string, utilityId: string, unitId: string) {
+    async getPreviousMeterReadings(
+      tenantId: string,
+      utilityId: string,
+      unitId: string
+    ) {
       try {
         const res = await axios.get("/tenant-bills/previous-readings", {
           ...this.headers,
           params: {
             tenant_id: tenantId,
             utility_id: utilityId,
-            unit_id: unitId
-          }
+            unit_id: unitId,
+          },
         });
         return res.data;
       } catch (error: any) {
-        console.error('Error fetching previous meter readings:', error.response || error);
+        console.error(
+          "Error fetching previous meter readings:",
+          error.response || error
+        );
         return {
           success: false,
           previous_reading: 0,
-          error: error.response?.data?.message || 'Failed to fetch previous readings'
+          error:
+            error.response?.data?.message ||
+            "Failed to fetch previous readings",
         };
       }
     },

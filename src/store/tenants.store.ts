@@ -25,7 +25,7 @@ export const useTenantsStore = defineStore("tenants", {
         this.properties = res.data || [];
         return res;
       } catch (error: any) {
-        console.error('Error fetching properties:', error.response || error);
+        console.error("Error fetching properties:", error.response || error);
         this.properties = [];
         return error.response;
       }
@@ -40,8 +40,9 @@ export const useTenantsStore = defineStore("tenants", {
 
     async checkExistingTenant(data: TenantForm) {
       // Check if tenant exists by email or ID number
-      const existingTenant = this.tenants.find((tenant: any) => 
-        tenant.email === data.email || tenant.id_number === data.id_number
+      const existingTenant = this.tenants.find(
+        (tenant: any) =>
+          tenant.email === data.email || tenant.id_number === data.id_number
       );
       return existingTenant;
     },
@@ -49,24 +50,29 @@ export const useTenantsStore = defineStore("tenants", {
     async createTenantWithTenancy(data: TenantForm) {
       // Check for existing tenant
       const existingTenant = await this.checkExistingTenant(data);
-      
+
       if (existingTenant) {
         // Check if tenant has active tenancy
-        const hasActiveTenancy = existingTenant.tenancies && existingTenant.tenancies.some((t: any) => t.active);
-        
+        const hasActiveTenancy =
+          existingTenant.tenancies &&
+          existingTenant.tenancies.some((t: any) => t.active);
+
         if (hasActiveTenancy) {
           return {
             status: 400,
             data: {
-              error: 'DUPLICATE_ACTIVE_TENANT',
-              message: 'A tenant with this email or ID number already has an active tenancy',
-              existingTenant: existingTenant
-            }
+              error: "DUPLICATE_ACTIVE_TENANT",
+              message:
+                "A tenant with this email or ID number already has an active tenancy",
+              existingTenant: existingTenant,
+            },
           };
         }
 
         // Tenant exists but no active tenancy - add new tenancy to existing tenant
-        const property = this.properties.find((p: any) => p.id == data.property_id);
+        const property = this.properties.find(
+          (p: any) => p.id == data.property_id
+        );
         const unit = property?.units?.find((u: any) => u.id == data.unit_id);
         const rentAmount = unit?.rent || 0;
 
@@ -74,13 +80,17 @@ export const useTenantsStore = defineStore("tenants", {
           property_id: data.property_id,
           unit_id: data.unit_id,
           tenant_id: existingTenant.id,
-          start_date: new Date().toISOString().split('T')[0],
-          end_date: '',
-          rent_amount: rentAmount
+          start_date: new Date().toISOString().split("T")[0],
+          end_date: "",
+          rent_amount: rentAmount,
         };
 
-        const tenancyRes = await axios.post("/tenants/tenancies/create", tenancyData, this.headers);
-        
+        const tenancyRes = await axios.post(
+          "/tenants/tenancies/create",
+          tenancyData,
+          this.headers
+        );
+
         // Refresh the tenants list to get updated tenancy data
         await this.getTenants();
 
@@ -89,23 +99,29 @@ export const useTenantsStore = defineStore("tenants", {
           data: {
             tenant: existingTenant,
             tenancy: tenancyRes.data,
-            isExistingTenant: true
-          }
+            isExistingTenant: true,
+          },
         };
       }
 
       // Create new tenant
-      const tenantRes = await axios.post("/tenants", {
-        tenant_name: data.tenant_name,
-        email: data.email,
-        phone: data.phone,
-        emergency_phone: data.emergency_phone,
-        id_number: data.id_number
-      }, this.headers);
+      const tenantRes = await axios.post(
+        "/tenants",
+        {
+          tenant_name: data.tenant_name,
+          email: data.email,
+          phone: data.phone,
+          emergency_phone: data.emergency_phone,
+          id_number: data.id_number,
+        },
+        this.headers
+      );
 
       if (tenantRes.status === 200 || tenantRes.status === 201) {
         // Get the rent amount from the selected unit
-        const property = this.properties.find((p: any) => p.id == data.property_id);
+        const property = this.properties.find(
+          (p: any) => p.id == data.property_id
+        );
         const unit = property?.units?.find((u: any) => u.id == data.unit_id);
         const rentAmount = unit?.rent || 0;
 
@@ -114,13 +130,17 @@ export const useTenantsStore = defineStore("tenants", {
           property_id: data.property_id,
           unit_id: data.unit_id,
           tenant_id: tenantRes.data.id,
-          start_date: new Date().toISOString().split('T')[0], // Today's date
-          end_date: '', // Will be set later
-          rent_amount: rentAmount
+          start_date: new Date().toISOString().split("T")[0], // Today's date
+          end_date: "", // Will be set later
+          rent_amount: rentAmount,
         };
 
-        const tenancyRes = await axios.post("/tenants/tenancies/create", tenancyData, this.headers);
-        
+        const tenancyRes = await axios.post(
+          "/tenants/tenancies/create",
+          tenancyData,
+          this.headers
+        );
+
         // Refresh the tenants list to get updated tenancy data
         await this.getTenants();
 
@@ -129,8 +149,8 @@ export const useTenantsStore = defineStore("tenants", {
           data: {
             tenant: tenantRes.data,
             tenancy: tenancyRes.data,
-            isExistingTenant: false
-          }
+            isExistingTenant: false,
+          },
         };
       }
 
@@ -149,6 +169,17 @@ export const useTenantsStore = defineStore("tenants", {
       return res;
     },
 
+    async updateTenancy(data: TenancyForm) {
+      const res = await axios.post(
+        "/tenants/tenancies/update/" + data.id,
+        data,
+        this.headers
+      );
+
+      this.tenant = res.data;
+
+      return res;
+    },
 
     async endTenancy(data: TenancyForm) {
       const res = await axios.post(
@@ -175,7 +206,11 @@ export const useTenantsStore = defineStore("tenants", {
         if (idx !== -1) {
           // Preserve existing relations (like tenancies) if API response omits them
           const existing = this.tenants[idx] || {};
-          this.tenants[idx] = { ...existing, ...res.data, tenancies: existing.tenancies ?? res.data.tenancies };
+          this.tenants[idx] = {
+            ...existing,
+            ...res.data,
+            tenancies: existing.tenancies ?? res.data.tenancies,
+          };
         }
         // Ensure we have fresh data including relations used by filters
         await this.getTenants();

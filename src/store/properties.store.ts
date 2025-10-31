@@ -25,19 +25,27 @@ export const usePropertiesStore = defineStore("properties", {
       return res;
     },
     async createUnit(data: UnitForm) {
-      const res = await axios.post("/properties/units/create", data, this.headers);
-
-      this.property = res.data;
+      const res = await axios.post(
+        "/properties/units/create",
+        data,
+        this.headers
+      );
 
       return res;
     },
     async updateUnit(data: any) {
-      const res = await axios.post(`/properties/units/update/${data.id}`, data, this.headers);
-      this.property = res.data;
+      const res = await axios.post(
+        `/properties/units/update/${data.id}`,
+        data,
+        this.headers
+      );
       return res;
     },
     async deleteUnit(id: string) {
-      const res = await axios.delete(`/properties/units/delete/${id}`, this.headers);
+      const res = await axios.delete(
+        `/properties/units/delete/${id}`,
+        this.headers
+      );
       this.property = res.data;
       return res;
     },

@@ -128,7 +128,7 @@
                     </span>
                     <template #dropdown>
                       <el-dropdown-item @click="editItem(item)" v-if="item.payment_status == 'Draft'">
-                        <span class="font-semibold py-2"><i class="ri-edit-line text-orange-500"></i>
+                        <span class="font-semibold"><i class="ri-edit-line text-orange-500"></i>
                           Edit</span>
                       </el-dropdown-item>
                     </template>
